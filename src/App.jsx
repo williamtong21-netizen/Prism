@@ -1077,7 +1077,7 @@ function OnboardingScreen({ email, onSubmit }) {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Will"
+            placeholder="Your name"
             style={{ width: "100%", marginTop: 6, background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
           />
         </label>
