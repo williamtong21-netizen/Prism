@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "./lib/useAuth";
 import { usePackingState } from "./lib/usePackingState";
+import { useNotifications } from "./lib/useNotifications";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -419,17 +420,9 @@ const DM_THREADS = {
   ],
 };
 
-// Seed notification history — a mix of already-seen and unread items, tied
-// to real content already in the app (the Mia DM, GRiZ's artist post) so
-// the inbox reflects things that actually exist elsewhere rather than
-// invented one-off strings.
-const NOTIFICATIONS_SEED = [
-  { id: "n1", type: "dm", title: "New message from Mia", body: "no worries, we're grabbing food near Plaza 2 first anyway", time: "48m ago", read: false, meta: { friendId: "mia" } },
-  { id: "n2", type: "artist", title: "GRiZ posted an update", body: "What Stage tonight is going to be a bass-heavy one, bring your energy", time: "3h ago", read: true, meta: { festival: "bonnaroo" } },
-  { id: "n3", type: "artist", title: "Wet Leg posted an update", body: "Closing weekend one with a couple songs we've never played live before", time: "5h ago", read: true, meta: { festival: "coachella" } },
-  { id: "n4", type: "set", title: "Excision starts in 15 minutes", body: "Mainstage · Lost Lands", time: "1d ago", read: true, meta: { festival: "lost-lands", setId: 209 } },
-];
-
+// Pool the "Simulate a notification" button picks from — stands in for
+// server-side events (a DM, an artist post, a set reminder) until those
+// are real.
 const NOTIFICATION_POOL = [
   { type: "set", title: "OBSIDIAN starts in 15 minutes", body: "What Stage · your #1 match tonight" },
   { type: "artist", title: "RÜFÜS DU SOL posted an update", body: "Closing set is a full production reset — new visuals, new edits" },
@@ -921,6 +914,16 @@ function matchColor(match) {
   return "#5B5470";
 }
 
+function relativeTime(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 const voteBtnStyle = { background: "none", border: "none", color: "#5B5470", fontSize: 13, cursor: "pointer", padding: 4, lineHeight: 1 };
 
 // ---------------------------------------------------------------------------
@@ -1114,7 +1117,7 @@ export default function FestivalOptimizer() {
   const [sentMessages, setSentMessages] = useState({}); // friendId -> [message, ...]
   const [messageDraft, setMessageDraft] = useState("");
   const [unreadDMs, setUnreadDMs] = useState(["mia"]); // Mia's last message hasn't been seen yet
-  const [notifications, setNotifications] = useState(NOTIFICATIONS_SEED);
+  const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [toast, setToast] = useState(null);
@@ -1224,10 +1227,9 @@ export default function FestivalOptimizer() {
     setInviteOpen(true);
   }
 
-  function pushNotification(base) {
-    const notif = { id: `notif-${Date.now()}`, time: "just now", read: false, meta: {}, ...base };
-    setNotifications((prev) => [notif, ...prev]);
-    if (pushEnabled) {
+  async function pushNotification(base) {
+    const notif = await persistNotification(base);
+    if (pushEnabled && notif) {
       setToastLeaving(false);
       setToast(notif);
       setTimeout(() => setToastLeaving(true), 3600);
@@ -1241,7 +1243,7 @@ export default function FestivalOptimizer() {
   }
 
   function openNotification(n) {
-    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    markNotificationRead(n.id);
     setNotificationsOpen(false);
     if (n.type === "dm" && n.meta?.friendId) {
       setMessagesOpen(true);
@@ -2280,7 +2282,7 @@ export default function FestivalOptimizer() {
                           {!n.read && <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />}
                         </div>
                         <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 2 }}>{n.body}</div>
-                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", marginTop: 4 }}>{n.time}</div>
+                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", marginTop: 4 }}>{relativeTime(n.created_at)}</div>
                       </div>
                     </button>
                   );
