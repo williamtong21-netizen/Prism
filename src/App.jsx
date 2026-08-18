@@ -1187,6 +1187,7 @@ export default function FestivalOptimizer() {
   const [splashFading, setSplashFading] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [joinCrewOpen, setJoinCrewOpen] = useState(false);
+  const [crewActionError, setCrewActionError] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -1296,11 +1297,14 @@ export default function FestivalOptimizer() {
     if (!isOnline) setQueuedActions((n) => n + 1);
   }
   async function createCrew() {
+    setCrewActionError("");
     const festivalName = FESTIVALS.find((f) => f.id === currentFestival)?.name || "New";
     const result = await createCrewRemote(`${festivalName} Crew`, currentFestival);
     if (result?.data) {
       setActiveCrewId(result.data.id);
       setInviteOpen(true);
+    } else {
+      setCrewActionError(result?.error?.message || "Couldn't create the crew — try again.");
     }
   }
 
@@ -1903,6 +1907,12 @@ export default function FestivalOptimizer() {
                 >
                   Join with a code
                 </button>
+              </div>
+            )}
+
+            {crewActionError && (
+              <div style={{ border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", borderRadius: 12, padding: "10px 12px", marginBottom: 12, fontSize: 12.5, color: "#FF3DA6" }}>
+                {crewActionError}
               </div>
             )}
 
