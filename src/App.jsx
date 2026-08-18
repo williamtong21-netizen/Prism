@@ -4,6 +4,7 @@ import { usePackingState } from "./lib/usePackingState";
 import { useNotifications } from "./lib/useNotifications";
 import { useCrews } from "./lib/useCrews";
 import { useDMs } from "./lib/useDMs";
+import { usePushSubscription } from "./lib/usePushSubscription";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -1184,6 +1185,26 @@ export default function FestivalOptimizer() {
   const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
+  const { subscribed: pushSubscribed, subscribe: subscribeToPush, unsubscribe: unsubscribeFromPush } = usePushSubscription(profile?.id);
+  const [pushError, setPushError] = useState("");
+  // Syncs the toggle to whether a real OS push subscription actually
+  // exists, rather than defaulting to "on" and lying about it until the
+  // user first touches the toggle.
+  useEffect(() => setPushEnabled(pushSubscribed), [pushSubscribed]);
+  async function togglePushEnabled() {
+    setPushError("");
+    if (pushEnabled) {
+      await unsubscribeFromPush();
+      setPushEnabled(false);
+      return;
+    }
+    const result = await subscribeToPush();
+    if (result?.error) {
+      setPushError(result.error.message);
+      return;
+    }
+    setPushEnabled(true);
+  }
   const [toast, setToast] = useState(null);
   const [toastLeaving, setToastLeaving] = useState(false);
   const [festivalSearch, setFestivalSearch] = useState("");
@@ -2305,12 +2326,13 @@ export default function FestivalOptimizer() {
               <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>SETTINGS</div>
                 <button
-                  onClick={() => setPushEnabled((v) => !v)}
+                  onClick={togglePushEnabled}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", background: "none", border: "none", cursor: "pointer" }}
                 >
                   <span style={{ fontSize: 13, color: "#F5F0FF" }}>Push notifications</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: pushEnabled ? "#3DF2E0" : "#5B5470" }}>{pushEnabled ? "On" : "Off"}</span>
                 </button>
+                {pushError && <div style={{ fontSize: 11.5, color: "#FF3DA6", padding: "0 0 8px" }}>{pushError}</div>}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
                   <span style={{ fontSize: 13 }}>Camp pin visible to crew</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#3DF2E0" }}>On</span>
@@ -2472,7 +2494,7 @@ export default function FestivalOptimizer() {
                   <div style={{ fontSize: 11, color: "#5B5470", marginTop: 1 }}>{pushEnabled ? "On — you'll see banners when things happen" : "Off — still logged here, just no banners"}</div>
                 </div>
                 <button
-                  onClick={() => setPushEnabled((v) => !v)}
+                  onClick={togglePushEnabled}
                   style={{
                     width: 42, height: 24, borderRadius: 12, border: "none", cursor: "pointer", position: "relative", flexShrink: 0,
                     background: pushEnabled ? "#3DF2E0" : "#2A2440",
@@ -2481,6 +2503,7 @@ export default function FestivalOptimizer() {
                   <span style={{ position: "absolute", top: 2, left: pushEnabled ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#0F0B1A", transition: "left .15s ease" }} />
                 </button>
               </div>
+              {pushError && <div style={{ fontSize: 11.5, color: "#FF3DA6", marginTop: 4 }}>{pushError}</div>}
 
               <button
                 onClick={simulateNotification}

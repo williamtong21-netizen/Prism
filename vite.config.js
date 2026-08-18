@@ -7,6 +7,13 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // A hand-written service worker (src/sw.js) instead of a fully
+      // generated one — needed so it can also handle 'push' and
+      // 'notificationclick' events for real push notifications, not just
+      // offline caching.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
@@ -25,7 +32,7 @@ export default defineConfig({
           { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
       },
     }),
