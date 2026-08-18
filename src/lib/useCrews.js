@@ -8,6 +8,14 @@ function randomCode() {
   return `${s.slice(0, 3)}-${s.slice(3)}`;
 }
 
+// Codes are shown/shared as "XXX-XXX", but people retype them without the
+// dash, with lowercase, with extra spaces, etc. — reconstruct the canonical
+// form so the lookup isn't brittle about exact formatting.
+function normalizeCode(input) {
+  const cleaned = input.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return cleaned.length === 6 ? `${cleaned.slice(0, 3)}-${cleaned.slice(3)}` : input.trim().toUpperCase();
+}
+
 // Real crews, backed by crews/crew_members. Shape stays close to the old
 // mock CREWS_SEED (id, festival, name, code, persistent, members) so the
 // existing crew UI needs minimal changes — `members` here is real profile
@@ -66,7 +74,7 @@ export function useCrews(profileId) {
     const { data: crew, error } = await supabase
       .from("crews")
       .select("id, name")
-      .eq("code", code.trim().toUpperCase())
+      .eq("code", normalizeCode(code))
       .maybeSingle();
     if (error) return { error };
     if (!crew) return { error: { message: "No crew found with that code." } };
