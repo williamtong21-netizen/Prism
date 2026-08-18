@@ -3,6 +3,7 @@ import { useAuth } from "./lib/useAuth";
 import { usePackingState } from "./lib/usePackingState";
 import { useNotifications } from "./lib/useNotifications";
 import { useCrews } from "./lib/useCrews";
+import { useDMs } from "./lib/useDMs";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -1177,6 +1178,9 @@ export default function FestivalOptimizer() {
   const [sentMessages, setSentMessages] = useState({}); // friendId -> [message, ...]
   const [messageDraft, setMessageDraft] = useState("");
   const [unreadDMs, setUnreadDMs] = useState(["mia"]); // Mia's last message hasn't been seen yet
+  const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
+  const [activeRealThreadId, setActiveRealThreadId] = useState(null);
+  const [realMessageDraft, setRealMessageDraft] = useState("");
   const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -1298,6 +1302,20 @@ export default function FestivalOptimizer() {
     setSentMessages((prev) => ({ ...prev, [friendId]: [...(prev[friendId] || []), newMsg] }));
     setMessageDraft("");
     if (!isOnline) setQueuedActions((n) => n + 1);
+  }
+  async function openRealThread(otherProfileId) {
+    const result = await openThreadWith(otherProfileId);
+    if (result?.data) {
+      setActiveThread(null);
+      setActiveRealThreadId(result.data);
+      setMessagesOpen(true);
+    }
+  }
+  async function sendDM() {
+    if (!realMessageDraft.trim() || !activeRealThreadId) return;
+    const text = realMessageDraft.trim();
+    setRealMessageDraft("");
+    await sendRealMessage(activeRealThreadId, text);
   }
   async function createCrew() {
     setCrewActionError("");
@@ -1965,6 +1983,29 @@ export default function FestivalOptimizer() {
                     + Invite
                   </button>
                 </div>
+
+                {activeCrew.members.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                    {activeCrew.members.map((m) => (
+                      <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #2A2440", borderRadius: 12, padding: "9px 12px" }}>
+                        <span style={{ width: 30, height: 30, borderRadius: "50%", background: colorForId(m.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {m.name[0].toUpperCase()}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>@{m.handle}</div>
+                        </div>
+                        <button
+                          onClick={() => openRealThread(m.id)}
+                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "5px 11px", color: "#8B85A3", cursor: "pointer", flexShrink: 0 }}
+                        >
+                          Message
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <CrewCompare
                   friends={toDisplayFriends(activeCrew.members)}
                   sharing={{ ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing }}
@@ -2487,17 +2528,41 @@ export default function FestivalOptimizer() {
 
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); }}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
             <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
-              {!activeThread ? (
+              {!activeThread && !activeRealThreadId ? (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Messages</div>
                     <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+                    {realThreads.filter((t) => t.other).map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setActiveRealThreadId(t.id)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, textAlign: "left",
+                          border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px",
+                          background: "transparent", cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(t.other.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {t.other.name[0].toUpperCase()}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 13.5, fontWeight: 700 }}>{t.other.name}</span>
+                          {t.lastMessage && (
+                            <div style={{ fontSize: 12, color: "#8B85A3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                              {t.lastMessage.from === "you" ? "You: " : ""}{t.lastMessage.text}
+                            </div>
+                          )}
+                        </div>
+                        {t.lastMessage && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>{relativeTime(t.lastMessage.created_at)}</span>}
+                      </button>
+                    ))}
                     {FRIENDS.map((f) => {
                       const thread = [...(DM_THREADS[f.id] || []), ...(sentMessages[f.id] || [])];
                       const last = thread[thread.length - 1];
@@ -2530,6 +2595,64 @@ export default function FestivalOptimizer() {
                     })}
                   </div>
                 </>
+              ) : activeRealThreadId ? (
+                (() => {
+                  const t = realThreads.find((th) => th.id === activeRealThreadId);
+                  if (!t || !t.other) return null;
+                  return (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <button onClick={() => setActiveRealThreadId(null)} aria-label="Back to inbox" style={{ background: "none", border: "none", color: "#8B85A3", cursor: "pointer", padding: 0, display: "flex" }}>
+                          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                        </button>
+                        <span style={{ width: 28, height: 28, borderRadius: "50%", background: colorForId(t.other.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {t.other.name[0].toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 700, flex: 1 }}>{t.other.name}</span>
+                        <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, minHeight: 160 }}>
+                        {t.messages.length === 0 && <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center" }}>Say hi.</p>}
+                        {t.messages.map((m) => (
+                          <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
+                            <div style={{
+                              maxWidth: "78%", borderRadius: 14, padding: "8px 12px",
+                              background: m.from === "you" ? "rgba(61,242,224,0.14)" : "#1E1832",
+                              border: `1px solid ${m.from === "you" ? "#3DF2E0" : "#2A2440"}`,
+                            }}>
+                              <div style={{ fontSize: 13.5, color: "#F5F0FF", lineHeight: 1.4 }}>{m.text}</div>
+                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 3, textAlign: m.from === "you" ? "right" : "left" }}>{relativeTime(m.created_at)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                        <input
+                          value={realMessageDraft}
+                          onChange={(e) => setRealMessageDraft(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") sendDM(); }}
+                          placeholder={`Message ${t.other.name}…`}
+                          style={{
+                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#F5F0FF",
+                            background: "#1A1428", border: "1px solid #2A2440", borderRadius: 20,
+                            padding: "10px 14px", outline: "none",
+                          }}
+                        />
+                        <button
+                          onClick={sendDM}
+                          style={{
+                            fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 16px", borderRadius: 20,
+                            border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer", whiteSpace: "nowrap",
+                          }}
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()
               ) : (
                 (() => {
                   const f = FRIENDS.find((fr) => fr.id === activeThread);
