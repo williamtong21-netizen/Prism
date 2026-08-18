@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "./lib/useAuth";
 import { usePackingState } from "./lib/usePackingState";
 import { useNotifications } from "./lib/useNotifications";
+import { useCrews } from "./lib/useCrews";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -446,16 +447,6 @@ const FRIEND_MATCHES = {
   43: { jax: 80 },
   46: { mia: 92, jax: 87, theo: 90 },
 };
-
-// Crews are scoped to one festival each — "your Bonnaroo crew" and "your
-// Coachella crew" are different groups, not one persona that follows you
-// everywhere. `members` references FRIENDS ids; the same person can belong
-// to multiple crews across different festivals.
-const CREWS_SEED = [
-  { id: "crew-bon-1", festival: "bonnaroo", name: "Horizon Weekend", persistent: true, code: "HZN-7QPK", members: ["mia", "jax", "theo"] },
-  { id: "crew-coa-1", festival: "coachella", name: "Desert Squad", persistent: false, code: "CCH-3LKD", members: ["mia", "jax"] },
-  { id: "crew-ef-1", festival: "electric-forest", name: "Forest Fam", persistent: true, code: "EF-9QRX", members: ["theo", "jax"] },
-];
 
 const ME = {
   name: "Will",
@@ -914,6 +905,21 @@ function matchColor(match) {
   return "#5B5470";
 }
 
+const MEMBER_COLORS = ["#3DF2E0", "#FF3DA6", "#9D6BFF", "#FFB23D", "#5FD97A"];
+function colorForId(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return MEMBER_COLORS[hash % MEMBER_COLORS.length];
+}
+
+// Adapts real crew members `{id, name, handle}` into the shape the
+// (mock-data-era) CrewCompare/CampMap components expect. Real members won't
+// have FRIEND_MATCHES or camp-pin data yet, so those views degrade to "no
+// data" for them rather than crashing — that's honest, not a bug.
+function toDisplayFriends(members) {
+  return (members || []).map((m) => ({ id: m.id, name: m.name, initial: m.name[0].toUpperCase(), color: colorForId(m.id) }));
+}
+
 function relativeTime(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
@@ -1101,6 +1107,57 @@ function OnboardingScreen({ email, onSubmit }) {
   );
 }
 
+// Bottom sheet for redeeming a crew's invite code — separate from the
+// invite sheet above, which only ever shows a code to share, never one to
+// enter.
+function JoinCrewSheet({ onClose, onSubmit }) {
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!code.trim() || submitting) return;
+    setSubmitting(true);
+    setError("");
+    const result = await onSubmit(code.trim());
+    setSubmitting(false);
+    if (result?.error) setError(result.error.message);
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+      <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Join a crew</div>
+          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+        </div>
+        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>
+          Enter the code someone shared with you.
+        </p>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="ABC-123"
+            autoCapitalize="characters"
+            style={{ width: "100%", background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{ width: "100%", background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? "Joining…" : "Join"}
+          </button>
+          {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
@@ -1129,6 +1186,8 @@ export default function FestivalOptimizer() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [joinCrewOpen, setJoinCrewOpen] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
@@ -1157,8 +1216,8 @@ export default function FestivalOptimizer() {
   const [claimTarget, setClaimTarget] = useState(null);
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [notifiedCrew, setNotifiedCrew] = useState(false);
-  const [crews, setCrews] = useState(CREWS_SEED);
-  const [activeCrewId, setActiveCrewId] = useState("crew-bon-1");
+  const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote } = useCrews(profile?.id);
+  const [activeCrewId, setActiveCrewId] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [queuedActions, setQueuedActions] = useState(0);
   const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover
@@ -1189,11 +1248,11 @@ export default function FestivalOptimizer() {
     }
   }, [currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [crewPersistentOverrides, setCrewPersistentOverrides] = useState({});
-  const crewPersistent = activeCrew ? (crewPersistentOverrides[activeCrew.id] ?? activeCrew.persistent) : true;
+  const crewPersistent = activeCrew ? activeCrew.persistent : true;
   function setCrewPersistent(fn) {
     if (!activeCrew) return;
-    setCrewPersistentOverrides((prev) => ({ ...prev, [activeCrew.id]: typeof fn === "function" ? fn(prev[activeCrew.id] ?? activeCrew.persistent) : fn }));
+    const next = typeof fn === "function" ? fn(activeCrew.persistent) : fn;
+    setCrewPersistentRemote(activeCrew.id, next);
   }
 
   // Switching festivals lands you on that festival's first day rather than
@@ -1236,19 +1295,22 @@ export default function FestivalOptimizer() {
     setMessageDraft("");
     if (!isOnline) setQueuedActions((n) => n + 1);
   }
-  function createCrew() {
+  async function createCrew() {
     const festivalName = FESTIVALS.find((f) => f.id === currentFestival)?.name || "New";
-    const newCrew = {
-      id: `crew-${currentFestival}-${Date.now()}`,
-      festival: currentFestival,
-      name: `${festivalName} Crew`,
-      persistent: false,
-      code: `NEW-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-      members: [],
-    };
-    setCrews((prev) => [...prev, newCrew]);
-    setActiveCrewId(newCrew.id);
-    setInviteOpen(true);
+    const result = await createCrewRemote(`${festivalName} Crew`, currentFestival);
+    if (result?.data) {
+      setActiveCrewId(result.data.id);
+      setInviteOpen(true);
+    }
+  }
+
+  async function submitJoinCrew(code) {
+    const result = await joinCrew(code);
+    if (result?.data) {
+      setActiveCrewId(result.data.id);
+      setJoinCrewOpen(false);
+    }
+    return result;
   }
 
   async function pushNotification(base) {
@@ -1830,6 +1892,17 @@ export default function FestivalOptimizer() {
                 >
                   + New crew
                 </button>
+                <button
+                  onClick={() => setJoinCrewOpen(true)}
+                  className="tab-btn"
+                  style={{
+                    flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
+                    padding: "7px 13px", borderRadius: 20, border: "1px dashed #3A3552",
+                    background: "transparent", color: "#5B5470", cursor: "pointer",
+                  }}
+                >
+                  Join with a code
+                </button>
               </div>
             )}
 
@@ -1838,15 +1911,26 @@ export default function FestivalOptimizer() {
                 <div style={{ fontSize: 14, color: "#8B85A3", marginBottom: 12 }}>
                   No crew yet for {FESTIVALS.find((f) => f.id === currentFestival)?.name}.
                 </div>
-                <button
-                  onClick={createCrew}
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 18px", borderRadius: 10,
-                    border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: "pointer",
-                  }}
-                >
-                  + Create a crew
-                </button>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                  <button
+                    onClick={createCrew}
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 18px", borderRadius: 10,
+                      border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: "pointer",
+                    }}
+                  >
+                    + Create a crew
+                  </button>
+                  <button
+                    onClick={() => setJoinCrewOpen(true)}
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 18px", borderRadius: 10,
+                      border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer",
+                    }}
+                  >
+                    Join with a code
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -1868,7 +1952,14 @@ export default function FestivalOptimizer() {
                     + Invite
                   </button>
                 </div>
-                <CrewCompare friends={FRIENDS.filter((f) => activeCrew.members.includes(f.id))} sharing={sharing} onToggleSharing={toggleSharing} onSelect={setSelected} currentDay={currentDay} currentFestival={currentFestival} />
+                <CrewCompare
+                  friends={toDisplayFriends(activeCrew.members)}
+                  sharing={{ ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing }}
+                  onToggleSharing={toggleSharing}
+                  onSelect={setSelected}
+                  currentDay={currentDay}
+                  currentFestival={currentFestival}
+                />
               </>
             )}
           </div>
@@ -1876,7 +1967,14 @@ export default function FestivalOptimizer() {
 
         {view === "map" && (
           <div style={{ padding: "0 14px" }}>
-            <CampMap key={currentFestival} friends={activeCrew ? FRIENDS.filter((f) => activeCrew.members.includes(f.id)) : []} sharing={sharing} isOnline={isOnline} onQueue={() => setQueuedActions((n) => n + 1)} currentFestival={currentFestival} />
+            <CampMap
+              key={currentFestival}
+              friends={activeCrew ? toDisplayFriends(activeCrew.members) : []}
+              sharing={activeCrew ? { ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing } : sharing}
+              isOnline={isOnline}
+              onQueue={() => setQueuedActions((n) => n + 1)}
+              currentFestival={currentFestival}
+            />
           </div>
         )}
 
@@ -1980,7 +2078,13 @@ export default function FestivalOptimizer() {
 
               <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", marginBottom: 14, opacity: isOnline ? 1 : 0.5 }}>
                 <span style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px", color: "#3DF2E0" }}>{activeCrew?.code}</span>
-                <button disabled={!isOnline} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "6px 11px", borderRadius: 7, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed" }}>Copy</button>
+                <button
+                  disabled={!isOnline}
+                  onClick={() => { navigator.clipboard?.writeText(activeCrew?.code || ""); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1500); }}
+                  style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "6px 11px", borderRadius: 7, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed" }}
+                >
+                  {codeCopied ? "Copied" : "Copy"}
+                </button>
               </div>
 
               <button disabled={!isOnline} style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: isOnline ? "#F5F0FF" : "#5B5470", cursor: isOnline ? "pointer" : "not-allowed", marginBottom: 6 }}>
@@ -2020,6 +2124,11 @@ export default function FestivalOptimizer() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Join a crew by code */}
+        {joinCrewOpen && (
+          <JoinCrewSheet onClose={() => setJoinCrewOpen(false)} onSubmit={submitJoinCrew} />
         )}
 
         {/* Profile sheet */}
@@ -2125,7 +2234,7 @@ export default function FestivalOptimizer() {
                       <div>
                         <div style={{ fontSize: 13.5, fontWeight: 700 }}>{c.name}</div>
                         <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>
-                          {FESTIVALS.find((f) => f.id === c.festival)?.name} · {(crewPersistentOverrides[c.id] ?? c.persistent) ? "Persists after this festival" : "This festival only"}
+                          {FESTIVALS.find((f) => f.id === c.festival)?.name} · {c.persistent ? "Persists after this festival" : "This festival only"}
                         </div>
                       </div>
                       <button
