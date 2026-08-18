@@ -1207,7 +1207,7 @@ export default function FestivalOptimizer() {
           onClick={() => openNotification(toast)}
           className="splash-fade"
           style={{
-            position: "fixed", top: 14, left: "50%", transform: toastLeaving ? "translate(-50%, -12px)" : "translate(-50%, 0)",
+            position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: "50%", transform: toastLeaving ? "translate(-50%, -12px)" : "translate(-50%, 0)",
             opacity: toastLeaving ? 0 : 1, transition: "transform .3s ease, opacity .3s ease",
             zIndex: 60, width: "calc(100% - 28px)", maxWidth: 402,
             background: "#1A1428", border: "1px solid #3DF2E0", borderRadius: 14,
@@ -1231,7 +1231,7 @@ export default function FestivalOptimizer() {
 
       <div className="frame" style={{ paddingBottom: 84 }}>
         {/* Header */}
-        <div className={`reveal ${revealed ? "on" : ""}`} style={{ padding: "24px 18px 16px" }}>
+        <div className={`reveal ${revealed ? "on" : ""}`} style={{ padding: "calc(env(safe-area-inset-top, 0px) + 24px) 18px 16px" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             {view === "home" ? (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1728,7 +1728,7 @@ export default function FestivalOptimizer() {
         {/* Detail sheet */}
         {selected && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
@@ -1807,7 +1807,7 @@ export default function FestivalOptimizer() {
         {/* Invite sheet */}
         {inviteOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setInviteOpen(false)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Invite to {activeCrew?.name}</div>
@@ -1864,7 +1864,7 @@ export default function FestivalOptimizer() {
         {/* Profile sheet */}
         {profileOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1956,7 +1956,7 @@ export default function FestivalOptimizer() {
         {/* Artist claim sheet */}
         {claimTarget && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setClaimTarget(null)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>Claim {claimTarget.artist}</div>
@@ -1988,7 +1988,7 @@ export default function FestivalOptimizer() {
         {/* Festival picker */}
         {festivalPickerOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Your festivals</div>
@@ -2088,7 +2088,7 @@ export default function FestivalOptimizer() {
         {/* Notifications inbox */}
         {notificationsOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Notifications</div>
@@ -2158,7 +2158,7 @@ export default function FestivalOptimizer() {
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); }}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               {!activeThread ? (
@@ -2266,7 +2266,7 @@ export default function FestivalOptimizer() {
         {/* Safety sheet — reachable from any tab via the header */}
         {safetyOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
-            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px 28px", maxHeight: "85vh", overflowY: "auto" }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85vh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
