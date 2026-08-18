@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "./lib/useAuth";
+import { usePackingState } from "./lib/usePackingState";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -967,14 +969,74 @@ function Icon({ name, active }) {
 }
 
 // ---------------------------------------------------------------------------
+// Auth gate — shown instead of the app when there's no signed-in session.
+// Passwordless (magic link) so there's no password to manage.
+// ---------------------------------------------------------------------------
+
+function SignInScreen({ onSubmit, sent, error }) {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!email.trim() || submitting) return;
+    setSubmitting(true);
+    await onSubmit(email.trim());
+    setSubmitting(false);
+  }
+
+  return (
+    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');`}</style>
+      <PrismLogo size={56} />
+      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 30, letterSpacing: "3px", marginTop: 12, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+        PRISM
+      </div>
+
+      {sent ? (
+        <div style={{ marginTop: 28, maxWidth: 320 }}>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>Check your email</div>
+          <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 8, lineHeight: 1.5 }}>
+            We sent a sign-in link to <span style={{ color: "#F5F0FF" }}>{email}</span>. Open it on this device to finish signing in.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ marginTop: 28, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ fontSize: 13, color: "#8B85A3", marginBottom: 4, lineHeight: 1.5 }}>
+            Enter your email — we'll send a link to sign in, no password needed.
+          </p>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            style={{ width: "100%", background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14 }}
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{ width: "100%", background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? "Sending…" : "Send magic link"}
+          </button>
+          {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
+        </form>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
 
 export default function FestivalOptimizer() {
+  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, signOut } = useAuth();
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
-  const [packedItems, setPackedItems] = useState([]);
+  const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [activeThread, setActiveThread] = useState(null); // friend id, or null for inbox list
@@ -1140,6 +1202,13 @@ export default function FestivalOptimizer() {
   ];
   // "mine" is now the single Lineup destination; lineupSubview picks the lens.
 
+  if (authLoading) {
+    return <div style={{ minHeight: "100svh", background: "#0F0B1A" }} />;
+  }
+  if (!session || !profile) {
+    return <SignInScreen onSubmit={signInWithEmail} sent={magicLinkSent} error={authError} />;
+  }
+
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: "#0F0B1A", color: "#F5F0FF", minHeight: "100%", display: "flex", justifyContent: "center" }}>
       <style>{`
@@ -1232,7 +1301,7 @@ export default function FestivalOptimizer() {
                     PRISM
                   </h1>
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3", marginTop: 3 }}>
-                    Hey {ME.name}
+                    Hey {profile.name}
                   </div>
                 </div>
               </div>
@@ -1310,7 +1379,7 @@ export default function FestivalOptimizer() {
                   fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 12, color: "#0F0B1A",
                 }}
               >
-                {ME.name[0]}
+                {profile.name[0]}
               </button>
             </div>
           </div>
@@ -1402,7 +1471,7 @@ export default function FestivalOptimizer() {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => setPackedItems((prev) => (checked ? prev.filter((id) => id !== item.id) : [...prev, item.id]))}
+                      onClick={() => togglePackedItem(item.id)}
                       style={{
                         display: "flex", alignItems: "center", gap: 10, background: "none", border: "none",
                         padding: "3px 0", cursor: "pointer", textAlign: "left",
@@ -1442,7 +1511,7 @@ export default function FestivalOptimizer() {
                   background: "linear-gradient(135deg, #3DF2E0, #9D6BFF)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10, color: "#0F0B1A",
-                }}>{ME.name[0]}</span>
+                }}>{profile.name[0]}</span>
                 <span style={{ fontSize: 12.5, color: "#F5F0FF", textAlign: "left" }}>Your profile</span>
               </button>
             </div>
@@ -1856,11 +1925,11 @@ export default function FestivalOptimizer() {
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
-                  {ME.name[0]}
+                  {profile.name[0]}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{ME.name}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>{ME.handle}</div>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{profile.name}</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{profile.handle}</div>
                   <div style={{ marginTop: 4 }}><TierBadge username="you" /></div>
                 </div>
                 <button onClick={() => setProfileOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
@@ -1933,7 +2002,7 @@ export default function FestivalOptimizer() {
                 </div>
               </div>
 
-              <button style={{ width: "100%", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: "pointer" }}>
+              <button onClick={signOut} style={{ width: "100%", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: "pointer" }}>
                 Sign out
               </button>
             </div>
