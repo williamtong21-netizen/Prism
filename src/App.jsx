@@ -1142,6 +1142,9 @@ function JoinCrewSheet({ onClose, onSubmit }) {
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="ABC-123"
             autoCapitalize="characters"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck="false"
             style={{ width: "100%", background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
           />
           <button
