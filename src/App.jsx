@@ -1124,19 +1124,6 @@ export default function FestivalOptimizer() {
     }
   }
 
-  // A demo push, a few seconds after launch, using the same real Mia DM
-  // that's already unread — so the very first thing this feature shows you
-  // is grounded in data that exists elsewhere in the app, not an invented
-  // one-off toast.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (unreadDMs.includes("mia")) {
-        pushNotification({ type: "dm", title: "New message from Mia", body: "no worries, we're grabbing food near Plaza 2 first anyway", meta: { friendId: "mia" } });
-      }
-    }, 3200);
-    return () => clearTimeout(t);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const passesFriendFilter = (s) => {
     if (activeFriends.length === 0) return true;
     const fm = FRIEND_MATCHES[s.id] || {};
