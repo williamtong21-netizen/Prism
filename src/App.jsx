@@ -1130,6 +1130,30 @@ export default function FestivalOptimizer() {
   const [splashFading, setSplashFading] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editHandle, setEditHandle] = useState("");
+  const [profileEditError, setProfileEditError] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  function startEditingProfile() {
+    setEditName(profile.name);
+    setEditHandle(profile.handle);
+    setProfileEditError("");
+    setEditingProfile(true);
+  }
+
+  async function saveProfileEdits() {
+    if (!editName.trim() || !editHandle.trim() || savingProfile) return;
+    setSavingProfile(true);
+    const result = await updateProfile({ name: editName.trim(), handle: editHandle.trim().toLowerCase() });
+    setSavingProfile(false);
+    if (result?.error) {
+      setProfileEditError(result.error.code === "23505" ? "That handle's taken — try another." : result.error.message);
+      return;
+    }
+    setEditingProfile(false);
+  }
   const [claimTarget, setClaimTarget] = useState(null);
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [notifiedCrew, setNotifiedCrew] = useState(false);
@@ -2008,13 +2032,60 @@ export default function FestivalOptimizer() {
                 <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
                   {profile.name[0]}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{profile.name}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{profile.handle}</div>
-                  <div style={{ marginTop: 4 }}><TierBadge username="you" /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editingProfile ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Display name"
+                        style={{ width: "100%", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "6px 10px", color: "#F5F0FF", fontSize: 14 }}
+                      />
+                      <div style={{ display: "flex", alignItems: "center", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "0 10px" }}>
+                        <span style={{ color: "#5B5470", fontSize: 13 }}>@</span>
+                        <input
+                          value={editHandle}
+                          onChange={(e) => setEditHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                          placeholder="handle"
+                          style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "#F5F0FF", fontSize: 14 }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{profile.name}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{profile.handle}</div>
+                      <div style={{ marginTop: 4 }}><TierBadge username="you" /></div>
+                    </>
+                  )}
                 </div>
+                {!editingProfile && (
+                  <button onClick={startEditingProfile} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", color: "#8B85A3", cursor: "pointer", flexShrink: 0 }}>
+                    Edit
+                  </button>
+                )}
                 <button onClick={() => setProfileOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
+              {editingProfile && (
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  <button
+                    onClick={saveProfileEdits}
+                    disabled={savingProfile}
+                    style={{ flex: 1, background: "#3DF2E0", border: "none", borderRadius: 8, padding: "8px", color: "#0F0B1A", fontWeight: 700, fontSize: 12.5, cursor: savingProfile ? "default" : "pointer", opacity: savingProfile ? 0.7 : 1 }}
+                  >
+                    {savingProfile ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    onClick={() => setEditingProfile(false)}
+                    style={{ flex: 1, background: "none", border: "1px solid #2A2440", borderRadius: 8, padding: "8px", color: "#8B85A3", fontSize: 12.5, cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              {editingProfile && profileEditError && (
+                <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 8 }}>{profileEditError}</div>
+              )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
                 <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
