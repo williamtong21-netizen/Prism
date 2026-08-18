@@ -32,7 +32,7 @@ export function useAuth() {
     async function loadProfile(attempt = 0) {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, handle, name")
+        .select("id, handle, name, onboarded")
         .eq("id", session.user.id)
         .maybeSingle();
       if (cancelled) return;
@@ -72,6 +72,18 @@ export function useAuth() {
     await supabase.auth.signOut();
   }
 
+  async function updateProfile(fields) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(fields)
+      .eq("id", session.user.id)
+      .select("id, handle, name, onboarded")
+      .single();
+    if (error) return { error };
+    setProfile(data);
+    return { data };
+  }
+
   return {
     session,
     profile,
@@ -82,5 +94,6 @@ export function useAuth() {
     authError,
     signInWithEmail,
     signOut,
+    updateProfile,
   };
 }

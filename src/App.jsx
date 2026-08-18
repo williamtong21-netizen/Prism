@@ -1003,7 +1003,7 @@ function SignInScreen({ onSubmit, sent, error }) {
       ) : (
         <form onSubmit={handleSubmit} style={{ marginTop: 28, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
           <p style={{ fontSize: 13, color: "#8B85A3", marginBottom: 4, lineHeight: 1.5 }}>
-            Enter your email — we'll send a link to sign in, no password needed.
+            Enter your email — we'll send a link to sign in or create your account, no password needed.
           </p>
           <input
             type="email"
@@ -1027,12 +1027,83 @@ function SignInScreen({ onSubmit, sent, error }) {
   );
 }
 
+// First-time setup after a brand new account's first sign-in — magic-link
+// auth collects nothing but an email, so this is where a real name and
+// handle actually get set. Skipped entirely on every sign-in after this
+// one, once profile.onboarded is true.
+function OnboardingScreen({ email, onSubmit }) {
+  const suggestedHandle = email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "");
+  const [name, setName] = useState("");
+  const [handle, setHandle] = useState(suggestedHandle);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!name.trim() || !handle.trim() || submitting) return;
+    setSubmitting(true);
+    setError("");
+    const result = await onSubmit(name.trim(), handle.trim().toLowerCase());
+    setSubmitting(false);
+    if (result?.error) {
+      setError(result.error.code === "23505" ? "That handle's taken — try another." : result.error.message);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');`}</style>
+      <PrismLogo size={56} />
+      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "1px", marginTop: 14 }}>
+        Welcome to Prism
+      </div>
+      <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 6, maxWidth: 300, lineHeight: 1.5 }}>
+        One last thing before you're in — how should your crew see you?
+      </p>
+
+      <form onSubmit={handleSubmit} style={{ marginTop: 24, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
+        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+          Display name
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Will"
+            style={{ width: "100%", marginTop: 6, background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+          />
+        </label>
+        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+          Handle
+          <div style={{ display: "flex", alignItems: "center", marginTop: 6, background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "0 14px" }}>
+            <span style={{ color: "#5B5470", fontSize: 14 }}>@</span>
+            <input
+              required
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+              placeholder="willrides"
+              style={{ flex: 1, background: "none", border: "none", padding: "12px 6px", color: "#F5F0FF", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+            />
+          </div>
+        </label>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{ width: "100%", marginTop: 6, background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
+        >
+          {submitting ? "Saving…" : "Continue"}
+        </button>
+        {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
+      </form>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
 
 export default function FestivalOptimizer() {
-  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, signOut } = useAuth();
+  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, signOut, updateProfile } = useAuth();
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
@@ -1207,6 +1278,14 @@ export default function FestivalOptimizer() {
   }
   if (!session || !profile) {
     return <SignInScreen onSubmit={signInWithEmail} sent={magicLinkSent} error={authError} />;
+  }
+  if (!profile.onboarded) {
+    return (
+      <OnboardingScreen
+        email={session.user.email}
+        onSubmit={(name, handle) => updateProfile({ name, handle, onboarded: true })}
+      />
+    );
   }
 
   return (
