@@ -984,9 +984,11 @@ function Icon({ name, active }) {
 // Passwordless (magic link) so there's no password to manage.
 // ---------------------------------------------------------------------------
 
-function SignInScreen({ onSubmit, sent, error }) {
+function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -994,6 +996,14 @@ function SignInScreen({ onSubmit, sent, error }) {
     setSubmitting(true);
     await onSubmit(email.trim());
     setSubmitting(false);
+  }
+
+  async function handleVerify(e) {
+    e.preventDefault();
+    if (!code.trim() || verifying) return;
+    setVerifying(true);
+    await onVerifyCode(email.trim(), code.trim());
+    setVerifying(false);
   }
 
   return (
@@ -1005,11 +1015,29 @@ function SignInScreen({ onSubmit, sent, error }) {
       </div>
 
       {sent ? (
-        <div style={{ marginTop: 28, maxWidth: 320 }}>
+        <div style={{ marginTop: 28, width: "100%", maxWidth: 320 }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}>Check your email</div>
           <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 8, lineHeight: 1.5 }}>
-            We sent a sign-in link to <span style={{ color: "#F5F0FF" }}>{email}</span>. Open it on this device to finish signing in.
+            We sent a code and a link to <span style={{ color: "#F5F0FF" }}>{email}</span>. If this app is on your home screen, type the 6-digit code below instead of tapping the link — the link opens in your regular browser, which won't sign in the home-screen app.
           </p>
+          <form onSubmit={handleVerify} style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="123456"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              style={{ width: "100%", background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
+            />
+            <button
+              type="submit"
+              disabled={verifying}
+              style={{ width: "100%", background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: verifying ? "default" : "pointer", opacity: verifying ? 0.7 : 1 }}
+            >
+              {verifying ? "Verifying…" : "Verify code"}
+            </button>
+            {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
+          </form>
         </div>
       ) : (
         <form onSubmit={handleSubmit} style={{ marginTop: 28, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1168,7 +1196,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 // ---------------------------------------------------------------------------
 
 export default function FestivalOptimizer() {
-  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, signOut, updateProfile } = useAuth();
+  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, verifyCode, signOut, updateProfile } = useAuth();
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
@@ -1411,7 +1439,7 @@ export default function FestivalOptimizer() {
     return <div style={{ minHeight: "100svh", background: "#0F0B1A" }} />;
   }
   if (!session || !profile) {
-    return <SignInScreen onSubmit={signInWithEmail} sent={magicLinkSent} error={authError} />;
+    return <SignInScreen onSubmit={signInWithEmail} onVerifyCode={verifyCode} sent={magicLinkSent} error={authError} />;
   }
   if (!profile.onboarded) {
     return (

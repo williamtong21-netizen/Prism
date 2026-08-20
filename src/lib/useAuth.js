@@ -68,6 +68,16 @@ export function useAuth() {
     return true;
   }
 
+  async function verifyCode(email, token) {
+    setAuthError("");
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    if (error) {
+      setAuthError(error.message);
+      return false;
+    }
+    return true;
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -93,6 +103,7 @@ export function useAuth() {
     magicLinkSent,
     authError,
     signInWithEmail,
+    verifyCode,
     signOut,
     updateProfile,
   };
