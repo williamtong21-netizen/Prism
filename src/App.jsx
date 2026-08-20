@@ -553,6 +553,29 @@ const FESTIVAL_MAP_LABELS = {
   "lost-lands": { stages: "STAGES", camp: "CAMPGROUNDS — LEGEND VALLEY" },
 };
 
+// Each festival's own official published grounds map, saved locally
+// under public/festival-maps. Two are the best currently-available
+// official asset rather than the ideal one — flagged with `note` so the
+// UI can be upfront about it instead of silently passing off a stand-in
+// as current:
+// - ACL: 2026 hasn't published a map yet (festival is Oct 2026); this is
+//   last year's official map, per ACL's own support site.
+// - Lost Lands: the full stages/grounds map is only released via the
+//   festival app about a week out; this is the camping-only map, the one
+//   real official graphic public this far ahead of the Sept 2026 event.
+const FESTIVAL_MAP_IMAGES = {
+  bonnaroo: { src: "/festival-maps/bonnaroo.jpg", year: 2026 },
+  coachella: { src: "/festival-maps/coachella.jpg", year: 2026 },
+  "edc-vegas": { src: "/festival-maps/edc-vegas.jpg", year: 2026 },
+  "electric-forest": { src: "/festival-maps/electric-forest.jpg", year: 2026 },
+  "governors-ball": { src: "/festival-maps/governors-ball.jpg", year: 2026 },
+  lollapalooza: { src: "/festival-maps/lollapalooza.jpg", year: 2026 },
+  "outside-lands": { src: "/festival-maps/outside-lands.jpg", year: 2026 },
+  acl: { src: "/festival-maps/acl.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
+  tomorrowland: { src: "/festival-maps/tomorrowland.jpg", year: 2026 },
+  "lost-lands": { src: "/festival-maps/lost-lands.jpg", year: 2026, note: "Camping map only — the full grounds map drops via the festival app about a week before the event." },
+};
+
 // Static camp pins — where someone dropped a marker for their tent/meetup
 // spot, not a live position. `x`/`y` are percentages of the map viewBox.
 const FESTIVAL_CAMP_PINS = {
@@ -1317,6 +1340,7 @@ export default function FestivalOptimizer() {
   const [currentDay, setCurrentDay] = useState("fri");
   const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || "bonnaroo");
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
+  const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [requestedFestivals, setRequestedFestivals] = useState([]);
 
   useEffect(() => {
@@ -2116,6 +2140,27 @@ export default function FestivalOptimizer() {
 
         {view === "map" && (
           <div style={{ padding: "0 14px" }}>
+            {FESTIVAL_MAP_IMAGES[currentFestival] && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>OFFICIAL FESTIVAL MAP</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{FESTIVAL_MAP_IMAGES[currentFestival].year}</span>
+                </div>
+                <button
+                  onClick={() => setOfficialMapOpen(true)}
+                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                >
+                  <img
+                    src={FESTIVAL_MAP_IMAGES[currentFestival].src}
+                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map`}
+                    style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" }}
+                  />
+                </button>
+                {FESTIVAL_MAP_IMAGES[currentFestival].note && (
+                  <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{FESTIVAL_MAP_IMAGES[currentFestival].note}</p>
+                )}
+              </div>
+            )}
             <CampMap
               key={currentFestival}
               friends={activeCrew ? toDisplayFriends(activeCrew.members) : []}
@@ -2124,6 +2169,25 @@ export default function FestivalOptimizer() {
               onQueue={() => setQueuedActions((n) => n + 1)}
               currentFestival={currentFestival}
             />
+          </div>
+        )}
+
+        {officialMapOpen && FESTIVAL_MAP_IMAGES[currentFestival] && (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
+            onClick={() => setOfficialMapOpen(false)}
+          >
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
+              <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
+            </div>
+            <div style={{ flex: 1, overflow: "auto", touchAction: "pinch-zoom" }}>
+              <img
+                src={FESTIVAL_MAP_IMAGES[currentFestival].src}
+                alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map, full size`}
+                style={{ width: "100%", display: "block" }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
         )}
 

@@ -1,9 +1,25 @@
 import { precacheAndRoute } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import { CacheFirst } from "workbox-strategies";
+import { ExpirationPlugin } from "workbox-expiration";
 
 // vite-plugin-pwa injects the list of build assets to precache here —
 // same offline-caching behavior as before, just written by hand instead
 // of fully generated, so there's room for the push handlers below.
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Festival map images are a few hundred KB each and most people only ever
+// look at one or two festivals — precaching all 10 upfront would bloat
+// every install/update for maps nobody asked for. Cache them lazily
+// instead: first view fetches from network, everything after (including
+// offline) serves from cache.
+registerRoute(
+  ({ url }) => url.pathname.startsWith("/festival-maps/"),
+  new CacheFirst({
+    cacheName: "festival-maps",
+    plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 90 })],
+  })
+);
 
 self.addEventListener("push", (event) => {
   let data = {};
