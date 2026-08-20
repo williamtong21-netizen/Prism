@@ -1315,9 +1315,13 @@ export default function FestivalOptimizer() {
   const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover
   const [addedFromDiscover, setAddedFromDiscover] = useState([]);
   const [currentDay, setCurrentDay] = useState("fri");
-  const [currentFestival, setCurrentFestival] = useState("bonnaroo");
+  const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || "bonnaroo");
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [requestedFestivals, setRequestedFestivals] = useState([]);
+
+  useEffect(() => {
+    localStorage.setItem("prism:lastFestival", currentFestival);
+  }, [currentFestival]);
 
   useEffect(() => {
     const fadeStart = setTimeout(() => setSplashFading(true), 1100);
