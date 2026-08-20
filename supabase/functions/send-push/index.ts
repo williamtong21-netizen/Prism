@@ -23,19 +23,27 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     const record = payload.record;
-    if (!record) return new Response("no record", { status: 200 });
+    if (!record) {
+      console.log("no record in payload", JSON.stringify(payload));
+      return new Response("no record", { status: 200 });
+    }
 
     const { thread_id, sender_id, text } = record;
+    console.log("dm_messages insert", { thread_id, sender_id, text });
 
-    const [{ data: participants }, { data: sender }] = await Promise.all([
+    const [{ data: participants, error: participantsError }, { data: sender }] = await Promise.all([
       supabase.from("dm_participants").select("profile_id").eq("thread_id", thread_id).neq("profile_id", sender_id),
       supabase.from("profiles").select("name").eq("id", sender_id).single(),
     ]);
 
+    if (participantsError) console.log("participants query error", participantsError);
     const recipientIds = (participants ?? []).map((p) => p.profile_id);
+    console.log("recipientIds", recipientIds);
     if (recipientIds.length === 0) return new Response("no recipients", { status: 200 });
 
-    const { data: subs } = await supabase.from("push_subscriptions").select("*").in("profile_id", recipientIds);
+    const { data: subs, error: subsError } = await supabase.from("push_subscriptions").select("*").in("profile_id", recipientIds);
+    if (subsError) console.log("subs query error", subsError);
+    console.log("subscriptions found", subs?.length ?? 0);
 
     const body = JSON.stringify({
       title: sender?.name ? `New message from ${sender.name}` : "New message",
@@ -47,7 +55,9 @@ Deno.serve(async (req) => {
       (subs ?? []).map(async (sub) => {
         try {
           await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, body);
+          console.log("push sent ok to subscription", sub.id);
         } catch (err) {
+          console.log("push send failed for subscription", sub.id, err?.statusCode, err?.body ?? String(err));
           // Dead subscription (uninstalled, permission revoked, etc.) —
           // clean it up so future sends don't keep failing on it.
           if (err?.statusCode === 404 || err?.statusCode === 410) {
@@ -59,6 +69,7 @@ Deno.serve(async (req) => {
 
     return new Response("ok", { status: 200 });
   } catch (err) {
+    console.log("top-level error", String(err));
     return new Response(String(err), { status: 500 });
   }
 });
