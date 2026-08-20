@@ -1191,6 +1191,40 @@ function JoinCrewSheet({ onClose, onSubmit }) {
   );
 }
 
+// Bottom sheet for starting a DM with someone you don't already have a
+// thread with — anyone you share a crew with, across all your crews.
+function NewDmPickerSheet({ members, onClose, onPick }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
+      <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70vh", overflowY: "auto" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>New message</div>
+          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+        </div>
+        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>Anyone you share a crew with.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {members.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => onPick(m.id)}
+              style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "transparent", cursor: "pointer" }}
+            >
+              <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(m.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {m.name[0].toUpperCase()}
+              </span>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>@{m.handle}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
@@ -1203,6 +1237,7 @@ export default function FestivalOptimizer() {
   const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
   const [activeThread, setActiveThread] = useState(null); // friend id, or null for inbox list
   const [sentMessages, setSentMessages] = useState({}); // friendId -> [message, ...]
   const [messageDraft, setMessageDraft] = useState("");
@@ -1295,6 +1330,13 @@ export default function FestivalOptimizer() {
   const activeDays = FESTIVAL_DAYS[currentFestival] || [];
   const festivalCrews = crews.filter((c) => c.festival === currentFestival);
   const activeCrew = crews.find((c) => c.id === activeCrewId) || null;
+  // Everyone you share any crew with, deduped — the pool a new DM can
+  // start with, regardless of which crew's roster you found them in.
+  const allCrewMembers = useMemo(() => {
+    const byId = new Map();
+    for (const c of crews) for (const m of c.members) byId.set(m.id, m);
+    return [...byId.values()];
+  }, [crews]);
 
   // Switching festivals lands you on that festival's first crew (or no
   // crew, if none exist yet there) rather than keeping a crew that belongs
@@ -2587,7 +2629,17 @@ export default function FestivalOptimizer() {
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Messages</div>
-                    <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {allCrewMembers.length > 0 && (
+                        <button
+                          onClick={() => setNewDmPickerOpen(true)}
+                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, background: "none", border: "1px solid #3DF2E0", borderRadius: 20, padding: "5px 11px", color: "#3DF2E0", cursor: "pointer" }}
+                        >
+                          + New
+                        </button>
+                      )}
+                      <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                    </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
                     {realThreads.filter((t) => t.other).map((t) => (
@@ -2765,6 +2817,14 @@ export default function FestivalOptimizer() {
               )}
             </div>
           </div>
+        )}
+
+        {newDmPickerOpen && (
+          <NewDmPickerSheet
+            members={allCrewMembers}
+            onClose={() => setNewDmPickerOpen(false)}
+            onPick={(id) => { setNewDmPickerOpen(false); openRealThread(id); }}
+          />
         )}
 
         {/* Safety sheet — reachable from any tab via the header */}
