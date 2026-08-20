@@ -1341,6 +1341,7 @@ export default function FestivalOptimizer() {
   const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || "bonnaroo");
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
+  const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
   const [requestedFestivals, setRequestedFestivals] = useState([]);
 
   useEffect(() => {
@@ -2140,27 +2141,44 @@ export default function FestivalOptimizer() {
 
         {view === "map" && (
           <div style={{ padding: "0 14px" }}>
-            {FESTIVAL_MAP_IMAGES[currentFestival] && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>OFFICIAL FESTIVAL MAP</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{FESTIVAL_MAP_IMAGES[currentFestival].year}</span>
+            {(() => {
+              const mapInfo = FESTIVAL_MAP_IMAGES[currentFestival];
+              const failed = mapLoadFailed[currentFestival];
+              const festivalName = FESTIVALS.find((f) => f.id === currentFestival)?.name;
+              return (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>OFFICIAL FESTIVAL MAP</span>
+                    {mapInfo && !failed && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{mapInfo.year}</span>}
+                  </div>
+                  {mapInfo && !failed ? (
+                    <>
+                      <button
+                        onClick={() => setOfficialMapOpen(true)}
+                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                      >
+                        <img
+                          src={mapInfo.src}
+                          alt={`${festivalName} official festival map`}
+                          style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" }}
+                          onError={() => setMapLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
+                        />
+                      </button>
+                      {mapInfo.note && (
+                        <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{mapInfo.note}</p>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed #2A2440", borderRadius: 14, background: "#151024" }}>
+                      <Icon name="map" active={false} />
+                      <span style={{ fontSize: 12.5, color: "#5B5470", textAlign: "center", maxWidth: 220 }}>
+                        {festivalName}'s official map isn't available yet — check back closer to the festival.
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() => setOfficialMapOpen(true)}
-                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
-                >
-                  <img
-                    src={FESTIVAL_MAP_IMAGES[currentFestival].src}
-                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map`}
-                    style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" }}
-                  />
-                </button>
-                {FESTIVAL_MAP_IMAGES[currentFestival].note && (
-                  <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{FESTIVAL_MAP_IMAGES[currentFestival].note}</p>
-                )}
-              </div>
-            )}
+              );
+            })()}
             <CampMap
               key={currentFestival}
               friends={activeCrew ? toDisplayFriends(activeCrew.members) : []}
