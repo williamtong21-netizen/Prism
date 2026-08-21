@@ -103,6 +103,15 @@ export function useCrews(profileId) {
     supabase.from("crews").update({ persistent }).eq("id", crewId).then();
   }
 
+  async function renameCrew(crewId, name) {
+    const trimmed = name.trim();
+    if (!trimmed) return { error: { message: "Crew name can't be empty." } };
+    setCrews((prev) => prev.map((c) => (c.id === crewId ? { ...c, name: trimmed } : c)));
+    const { error } = await supabase.from("crews").update({ name: trimmed }).eq("id", crewId);
+    if (error) return { error };
+    return {};
+  }
+
   // Removing someone else is leader-only, enforced server-side by the
   // remove_crew_member RPC — this isn't the path for leaving yourself.
   async function removeMember(crewId, memberProfileId) {
@@ -131,5 +140,5 @@ export function useCrews(profileId) {
     return {};
   }
 
-  return { crews, loading, createCrew, joinCrew, setCrewPersistent, removeMember, leaveCrew, disbandCrew, refresh };
+  return { crews, loading, createCrew, joinCrew, setCrewPersistent, renameCrew, removeMember, leaveCrew, disbandCrew, refresh };
 }

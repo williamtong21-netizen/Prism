@@ -1577,7 +1577,10 @@ export default function FestivalOptimizer() {
   const [claimTarget, setClaimTarget] = useState(null);
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [notifiedCrew, setNotifiedCrew] = useState(false);
-  const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote, removeMember: removeCrewMember, leaveCrew, disbandCrew } = useCrews(profile?.id);
+  const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote, renameCrew, removeMember: removeCrewMember, leaveCrew, disbandCrew } = useCrews(profile?.id);
+  const [myCrewsOpen, setMyCrewsOpen] = useState(false);
+  const [editingCrewId, setEditingCrewId] = useState(null);
+  const [crewNameDraft, setCrewNameDraft] = useState("");
   const [crewActionPending, setCrewActionPending] = useState(false);
   const [activeCrewId, setActiveCrewId] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -1740,6 +1743,11 @@ export default function FestivalOptimizer() {
     setCrewActionPending(false);
     if (result?.error) setCrewActionError(result.error.message || "Couldn't disband the crew — try again.");
     else setInviteOpen(false);
+  }
+
+  async function saveCrewRename(crewId) {
+    const result = await renameCrew(crewId, crewNameDraft);
+    if (!result?.error) setEditingCrewId(null);
   }
 
   async function submitJoinCrew(code) {
@@ -2353,6 +2361,20 @@ export default function FestivalOptimizer() {
 
         {view === "crew" && (
           <div style={{ padding: "0 14px" }}>
+            {crews.length > 0 && (
+              <button
+                onClick={() => setMyCrewsOpen(true)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, marginBottom: 12,
+                  padding: "9px 13px", borderRadius: 10, border: "1px solid #2A2440",
+                  background: "#161225", color: "#8B85A3", cursor: "pointer",
+                }}
+              >
+                <span>My crews ({crews.length})</span>
+                <span style={{ color: "#5B5470" }}>Manage →</span>
+              </button>
+            )}
             {festivalCrews.length > 0 && (
               <div style={{ display: "flex", gap: 6, marginBottom: 14, overflowX: "auto" }}>
                 {festivalCrews.map((c) => (
@@ -2872,6 +2894,66 @@ export default function FestivalOptimizer() {
         {/* Join a crew by code */}
         {joinCrewOpen && (
           <JoinCrewSheet onClose={() => setJoinCrewOpen(false)} onSubmit={submitJoinCrew} />
+        )}
+
+        {/* My Crews — every crew you're in, across every festival, with rename */}
+        {myCrewsOpen && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
+            <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78vh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
+                <button onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
+                {crews.map((c) => (
+                  <div key={c.id} style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "12px 14px" }}>
+                    {editingCrewId === c.id ? (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          autoFocus
+                          value={crewNameDraft}
+                          onChange={(e) => setCrewNameDraft(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveCrewRename(c.id); if (e.key === "Escape") setEditingCrewId(null); }}
+                          style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#F5F0FF", background: "#0F0B1A", border: "1px solid #3DF2E0", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                        />
+                        <button onClick={() => saveCrewRename(c.id)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "0 12px", borderRadius: 8, border: "none", background: "#3DF2E0", color: "#0F0B1A", cursor: "pointer" }}>Save</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                            {c.name}
+                            {c.created_by === profile?.id && (
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px", flexShrink: 0 }}>LEADER</span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>
+                            {c.members.length + 1} members · {c.persistent ? "persists everywhere" : FESTIVALS.find((f) => f.id === c.festival)?.name || c.festival}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          <button
+                            onClick={() => { setEditingCrewId(c.id); setCrewNameDraft(c.name); }}
+                            aria-label={`Rename ${c.name}`}
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "5px 11px", color: "#8B85A3", cursor: "pointer" }}
+                          >
+                            Rename
+                          </button>
+                          <button
+                            onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); if (!c.persistent) setCurrentFestival(c.festival); setActiveCrewId(c.id); setView("crew"); }}
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", borderRadius: 20, padding: "5px 11px", color: "#3DF2E0", cursor: "pointer" }}
+                          >
+                            Go
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Profile sheet */}
