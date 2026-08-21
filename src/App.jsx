@@ -1112,6 +1112,27 @@ function Icon({ name, active }) {
 // Passwordless (magic link) so there's no password to manage.
 // ---------------------------------------------------------------------------
 
+// Shared by every top-level screen (auth screens here, the main app
+// elsewhere) so the mobile-vs-browser sizing rule can't drift between
+// copies. The installed app (display-mode: standalone/fullscreen/
+// minimal-ui) always keeps this exact compact mobile layout — that's its
+// identity, regardless of window size. A plain browser tab (display-mode:
+// browser), which is the only way this renders on desktop today, gets
+// scaled up instead of sitting tiny-and-centered in empty space. zoom is
+// safe here specifically because .frame is never itself position:fixed —
+// it's always a flex child inside a fixed full-width wrapper (bottom nav,
+// modal backdrops) or a centered flex column (these auth screens), so
+// scaling its own box doesn't disturb any fixed-position coordinate math.
+const AUTH_SCREEN_RESPONSIVE_CSS = `
+  .frame { width: 100%; max-width: 430px; }
+  @media (display-mode: browser) and (min-width: 700px) {
+    .frame { max-width: 460px; zoom: 1.35; }
+  }
+  @media (display-mode: browser) and (min-width: 1100px) {
+    .frame { max-width: 480px; zoom: 1.6; }
+  }
+`;
+
 function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -1136,17 +1157,28 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
 
   return (
     <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');`}</style>
-      <PrismLogo size={56} />
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 30, letterSpacing: "3px", marginTop: 12, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-        PRISM
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        ${AUTH_SCREEN_RESPONSIVE_CSS}
+      `}</style>
+      <div className="frame">
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{
+          position: "absolute", top: -40, width: 220, height: 220, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(157,107,255,0.35), rgba(61,242,224,0.18) 45%, transparent 70%)",
+          filter: "blur(8px)", pointerEvents: "none",
+        }} />
+        <div style={{ position: "relative" }}><PrismLogo size={56} /></div>
+        <div style={{ position: "relative", fontFamily: "'Bebas Neue', sans-serif", fontSize: 30, letterSpacing: "3px", marginTop: 12, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          PRISM
+        </div>
       </div>
 
       {sent ? (
         <div style={{ marginTop: 28, width: "100%", maxWidth: 320 }}>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>Check your email</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>You're almost in 📬</div>
           <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 8, lineHeight: 1.5 }}>
-            We sent a code and a link to <span style={{ color: "#F5F0FF" }}>{email}</span>. If this app is on your home screen, type the 6-digit code below instead of tapping the link — the link opens in your regular browser, which won't sign in the home-screen app.
+            We sent a code and a link to <span style={{ color: "#F5F0FF" }}>{email}</span> — go check your inbox! If Prism's on your home screen, type the 6-digit code below instead of tapping the link — the link opens your regular browser, which won't sign in the home-screen app.
           </p>
           <form onSubmit={handleVerify} style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
             <input
@@ -1155,14 +1187,14 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
               placeholder="123456"
               inputMode="numeric"
               autoComplete="one-time-code"
-              style={{ width: "100%", background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
+              style={{ width: "100%", background: "#171229", border: "1px solid #3DF2E0", boxShadow: "0 0 0 3px rgba(61,242,224,0.12)", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
             />
             <button
               type="submit"
               disabled={verifying}
-              style={{ width: "100%", background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: verifying ? "default" : "pointer", opacity: verifying ? 0.7 : 1 }}
+              style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: verifying ? "default" : "pointer", opacity: verifying ? 0.7 : 1 }}
             >
-              {verifying ? "Verifying…" : "Verify code"}
+              {verifying ? "Verifying…" : "Verify & enter →"}
             </button>
             {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
           </form>
@@ -1170,7 +1202,7 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
       ) : (
         <form onSubmit={handleSubmit} style={{ marginTop: 28, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
           <p style={{ fontSize: 13, color: "#8B85A3", marginBottom: 4, lineHeight: 1.5 }}>
-            Enter your email — we'll send a link to sign in or create your account, no password needed.
+            Your crew, your schedule, your sets — one tap away. Drop your email and let's get you in 🎪
           </p>
           <input
             type="email"
@@ -1183,13 +1215,14 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
           <button
             type="submit"
             disabled={submitting}
-            style={{ width: "100%", background: "#3DF2E0", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
           >
-            {submitting ? "Sending…" : "Send magic link"}
+            {submitting ? "Sending…" : "Send my magic link →"}
           </button>
           {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
         </form>
       )}
+      </div>
     </div>
   );
 }
@@ -1219,7 +1252,11 @@ function OnboardingScreen({ email, onSubmit }) {
 
   return (
     <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        ${AUTH_SCREEN_RESPONSIVE_CSS}
+      `}</style>
+      <div className="frame">
       <PrismLogo size={56} />
       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "1px", marginTop: 14 }}>
         Welcome to Prism
@@ -1261,6 +1298,7 @@ function OnboardingScreen({ email, onSubmit }) {
         </button>
         {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
       </form>
+      </div>
     </div>
   );
 }
@@ -1660,7 +1698,7 @@ export default function FestivalOptimizer() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        .frame { width: 100%; max-width: 430px; }
+        ${AUTH_SCREEN_RESPONSIVE_CSS}
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
         .reveal.on { opacity: 1; transform: translateY(0); }
         .set-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
