@@ -73,6 +73,70 @@ const FESTIVAL_STAGES = {
     { id: "crater", name: "Crater", color: "#3DF2E0" },
     { id: "ll-mainstage", name: "Mainstage", color: "#FF3DA6" },
   ],
+  // Real Ultra Miami 2026 stages, per Ultra's official 2026 site map
+  // (ultramusicfestival.com/site-map) — Main Stage, Worldwide Stage, the two
+  // RESISTANCE stages (Megastructure + The Cove), and the Live Stage.
+  "ultra-miami": [
+    { id: "main", name: "Main Stage", color: "#3DF2E0" },
+    { id: "worldwide", name: "Worldwide Stage", color: "#FF3DA6" },
+    { id: "resistance-mega", name: "Resistance (Megastructure)", color: "#9D6BFF" },
+    { id: "resistance-cove", name: "Resistance (The Cove)", color: "#FFB23D" },
+    { id: "live", name: "Live Stage", color: "#5FD97A" },
+  ],
+  // Real Ultra Europe 2026 stages, per Ultra Europe's official 2026 site map
+  // (ultraeurope.com/site-map).
+  "ultra-europe": [
+    { id: "main", name: "Main Stage", color: "#3DF2E0" },
+    { id: "resistance", name: "Resistance", color: "#9D6BFF" },
+    { id: "umf-radio", name: "UMF Radio", color: "#FFB23D" },
+    { id: "oasis", name: "Oasis", color: "#5FD97A" },
+  ],
+  // Real Tomorrowland Winter 2026 stages, per DJ Mag's coverage of the
+  // festival's full lineup/stage announcement (MainStage, Frozen Lotus,
+  // Orbyz, Reflection of Love, CORE).
+  "tomorrowland-winter": [
+    { id: "mainstage", name: "MainStage", color: "#3DF2E0" },
+    { id: "frozenlotus", name: "Frozen Lotus", color: "#FF3DA6" },
+    { id: "orbyz", name: "Orbyz", color: "#9D6BFF" },
+    { id: "reflection", name: "Reflection of Love", color: "#FFB23D" },
+    { id: "core", name: "CORE", color: "#5FD97A" },
+  ],
+  // Real EDC Orlando stages, per Insomniac's own EDC Orlando site
+  // (orlando.edc.com/experience/stages) and 2026 lineup coverage.
+  "edc-orlando": [
+    { id: "kineticfield", name: "kineticFIELD", color: "#3DF2E0" },
+    { id: "circuitgrounds", name: "circuitGROUNDS", color: "#FF3DA6" },
+    { id: "neongarden", name: "neonGARDEN", color: "#9D6BFF" },
+    { id: "wasteland", name: "wasteLAND", color: "#FFB23D" },
+    { id: "bakedkathedral", name: "bakedKATHEDRAL", color: "#5FD97A" },
+  ],
+  // Real EDC Mexico 2026 stages, per the official festival map (released via
+  // Insomniac/OCESA and covered by Infobae) and EDM Identity's set-times
+  // coverage.
+  "edc-mexico": [
+    { id: "kineticfield", name: "kineticFIELD", color: "#3DF2E0" },
+    { id: "circuitgrounds", name: "circuitGROUNDS", color: "#FF3DA6" },
+    { id: "neongarden", name: "neonGARDEN", color: "#9D6BFF" },
+    { id: "wasteland", name: "wasteLAND", color: "#FFB23D" },
+    { id: "stereobloom", name: "stereoBLOOM", color: "#5FD97A" },
+  ],
+  // Real Lollapalooza Argentina 2026 stage names (FLOW, SAMSUNG, Alternative,
+  // Perry's), per Perfil's coverage of the festival's new 2026 map.
+  "lollapalooza-argentina": [
+    { id: "flow", name: "FLOW", color: "#3DF2E0" },
+    { id: "samsung", name: "SAMSUNG", color: "#FF3DA6" },
+    { id: "alternative", name: "Alternative", color: "#9D6BFF" },
+    { id: "perrys", name: "Perry's", color: "#FFB23D" },
+  ],
+  // Real Lollapalooza Berlin 2026 stage names, per the festival's own
+  // official site map (lollapaloozade.com — "Der Lageplan ist da").
+  "lollapalooza-berlin": [
+    { id: "essence", name: "Essence Stage", color: "#3DF2E0" },
+    { id: "tkmaxx", name: "TK Maxx Stage", color: "#FF3DA6" },
+    { id: "perrys", name: "Perry's Stage", color: "#9D6BFF" },
+    { id: "newhorizon", name: "New Horizon Stage", color: "#FFB23D" },
+    { id: "fashionpalooza", name: "Fashionpalooza", color: "#5FD97A" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -94,6 +158,13 @@ const FESTIVALS = [
   { id: "acl", name: "Austin City Limits", location: "Austin, TX", dates: "Oct 2–4 & 9–11, 2026", hasData: true, noCamping: true },
   { id: "tomorrowland", name: "Tomorrowland", location: "Boom, Belgium", dates: "Jul 17–19 & 24–26, 2026", hasData: true },
   { id: "lost-lands", name: "Lost Lands", location: "Thornville, OH", dates: "Sep 18–20, 2026", hasData: true },
+  { id: "ultra-miami", name: "Ultra Miami", location: "Miami, FL", dates: "Mar 27–29, 2026", hasData: true, noCamping: true },
+  { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 10–12, 2026", hasData: true, noCamping: true },
+  { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 21–28, 2026", hasData: true, noCamping: true },
+  { id: "edc-orlando", name: "EDC Orlando", location: "Orlando, FL", dates: "Nov 6–8, 2026", hasData: true, noCamping: true },
+  { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 20–22, 2026", hasData: true, noCamping: true },
+  { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 13–15, 2026", hasData: true, noCamping: true },
+  { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 18–19, 2026", hasData: true, noCamping: true },
 ];
 
 const FESTIVAL_DAYS = {
@@ -134,6 +205,52 @@ const FESTIVAL_DAYS = {
   ],
   "lost-lands": [
     { id: "fri", label: "Fri", date: "Sep 18", startMin: 18 * 60 },
+  ],
+  // Grid starts at 4pm, matching the confirmed 4:00pm start of Frank Walker's
+  // Main Stage set (Miami New Times' published 2026 set times).
+  "ultra-miami": [
+    { id: "fri", label: "Fri", date: "Mar 27", startMin: 16 * 60 },
+  ],
+  // Grid starts at 8pm, matching the confirmed doors/first-set time on
+  // ultraeurope.com's published 2026 set times.
+  "ultra-europe": [
+    { id: "fri", label: "Fri", date: "Jul 10", startMin: 20 * 60 },
+  ],
+  // DJ Mag's Tomorrowland Winter 2026 coverage confirms specific artists on
+  // specific days (see SETS below) but not a published daily set-time grid,
+  // so these are generic evening-start markers.
+  "tomorrowland-winter": [
+    { id: "sat", label: "Sat", date: "Mar 21", startMin: 18 * 60 },
+    { id: "sun", label: "Sun", date: "Mar 22", startMin: 18 * 60 },
+  ],
+  // EDC Orlando 2026's day-by-day headliner assignment is confirmed
+  // (gottagoorlando.com) but exact set times aren't published yet — the
+  // event is still ~2.5 months out as of this writing — so these are
+  // generic evening-start markers.
+  "edc-orlando": [
+    { id: "fri", label: "Fri", date: "Nov 6", startMin: 19 * 60 },
+    { id: "sat", label: "Sat", date: "Nov 7", startMin: 19 * 60 },
+    { id: "sun", label: "Sun", date: "Nov 8", startMin: 19 * 60 },
+  ],
+  // Grid starts at 4pm, matching EDC Mexico's published Friday gate/stage
+  // hours (edmidentity.com). Chris Lake's and Charlotte de Witte's
+  // circuitGROUNDS sets ran back-to-back overnight Fri–Sat, so both are
+  // grouped under "fri" here rather than splitting an overnight set across
+  // two day buckets.
+  "edc-mexico": [
+    { id: "fri", label: "Fri", date: "Feb 20", startMin: 16 * 60 },
+    { id: "sun", label: "Sun", date: "Feb 22", startMin: 16 * 60 },
+  ],
+  // Grid starts at 7pm, matching Katseye's confirmed Friday opening slot
+  // (perfil.com / lanacion.com.ar's published 2026 day-by-day schedules).
+  "lollapalooza-argentina": [
+    { id: "fri", label: "Fri", date: "Mar 13", startMin: 19 * 60 },
+    { id: "sun", label: "Sun", date: "Mar 15", startMin: 18 * 60 + 45 },
+  ],
+  // Grid starts at noon, matching Baran Kok's confirmed Essence Stage
+  // opening set time (timeout.com/festivawl.com's published 2026 set times).
+  "lollapalooza-berlin": [
+    { id: "sat", label: "Sat", date: "Jul 18", startMin: 12 * 60 },
   ],
 };
 
@@ -398,6 +515,68 @@ const SETS = [
   { id: 213, festival: "lost-lands", day: "fri", artist: "Seven Lions", stage: "ll-mainstage", start: 240, end: 300, match: 86, genre: "Melodic Dubstep", sounds_like: "Fits your melodic bass listening well", sources: ["spotify"] },
   { id: 214, festival: "lost-lands", day: "fri", artist: "ALLEYCVT", stage: "crater", start: 240, end: 300, match: 62, genre: "Bass", sounds_like: "You caught them at Electric Forest too", sources: ["soundcloud"] },
   { id: 215, festival: "lost-lands", day: "fri", artist: "Flux Pavilion", stage: "crater", start: 330, end: 390, match: 71, genre: "Dubstep", sounds_like: null, sources: [] },
+
+  // --- Ultra Miami, Friday March 27, 2026 — start times are Ultra's own
+  // published 2026 set times (Miami New Times); end times are derived from
+  // the next confirmed set on the same stage, since Ultra's release only
+  // listed start times. ---
+  { id: 216, festival: "ultra-miami", day: "fri", artist: "Illenium", stage: "main", start: 180, end: 245, match: null, genre: "Melodic Dubstep", sounds_like: null, sources: [] },
+  { id: 217, festival: "ultra-miami", day: "fri", artist: "Bzrp", stage: "main", start: 245, end: 320, match: null, genre: "Latin Electronic", sounds_like: null, sources: [] },
+  { id: 218, festival: "ultra-miami", day: "fri", artist: "Vini Vici", stage: "worldwide", start: 180, end: 240, match: null, genre: "Psytrance", sounds_like: null, sources: [] },
+  { id: 219, festival: "ultra-miami", day: "fri", artist: "Armin van Buuren B2B Marlon Hoffstadt", stage: "worldwide", start: 300, end: 390, match: null, genre: "Trance", sounds_like: null, sources: [] },
+
+  // --- Ultra Europe, Friday July 10, 2026 — real, fully-confirmed start AND
+  // end times from Ultra Europe's own published 2026 set times
+  // (ultraeurope.com, via CULTR's coverage). ---
+  { id: 220, festival: "ultra-europe", day: "fri", artist: "Subtronics", stage: "main", start: 130, end: 195, match: null, genre: "Dubstep", sounds_like: null, sources: [] },
+  { id: 221, festival: "ultra-europe", day: "fri", artist: "Oliver Heldens", stage: "main", start: 195, end: 275, match: null, genre: "Future House", sounds_like: null, sources: [] },
+  { id: 222, festival: "ultra-europe", day: "fri", artist: "Miss Monique", stage: "resistance", start: 180, end: 300, match: null, genre: "Melodic Techno", sounds_like: null, sources: [] },
+  { id: 223, festival: "ultra-europe", day: "fri", artist: "Adam Beyer", stage: "resistance", start: 300, end: 420, match: null, genre: "Techno", sounds_like: null, sources: [] },
+
+  // --- Tomorrowland Winter 2026 — each pairing's day + stage is real and
+  // confirmed (DJ Mag's lineup coverage), but exact set-time clocks weren't
+  // published in the sources found, so these are estimated slots on the
+  // confirmed real Orbyz stage, not exact confirmed times. ---
+  { id: 243, festival: "tomorrowland-winter", day: "sat", artist: "Oliver Heldens' HI-LO b2b Maddix", stage: "orbyz", start: 180, end: 240, match: null, genre: "House", sounds_like: null, sources: [] },
+  { id: 244, festival: "tomorrowland-winter", day: "sun", artist: "Nervo b2b MATTN", stage: "orbyz", start: 180, end: 240, match: null, genre: "Electro House", sounds_like: null, sources: [] },
+  { id: 245, festival: "tomorrowland-winter", day: "sun", artist: "Dimitri Vegas b2b Steve Aoki", stage: "orbyz", start: 240, end: 300, match: null, genre: "Big Room / EDM", sounds_like: null, sources: [] },
+
+  // --- EDC Orlando 2026 — each artist's headlining day is real and
+  // confirmed (gottagoorlando.com's lineup-by-day coverage), but exact
+  // set-time clocks aren't published yet (event is Nov 2026), so these are
+  // estimated closing-set slots on the confirmed real kineticFIELD stage,
+  // not exact confirmed times. ---
+  { id: 246, festival: "edc-orlando", day: "fri", artist: "David Guetta", stage: "kineticfield", start: 240, end: 330, match: null, genre: "House / EDM", sounds_like: null, sources: [] },
+  { id: 247, festival: "edc-orlando", day: "sat", artist: "Kaskade", stage: "kineticfield", start: 240, end: 330, match: null, genre: "Progressive House", sounds_like: null, sources: [] },
+  { id: 248, festival: "edc-orlando", day: "sun", artist: "Martin Garrix", stage: "kineticfield", start: 150, end: 240, match: null, genre: "Progressive House / EDM", sounds_like: null, sources: [] },
+  { id: 249, festival: "edc-orlando", day: "sun", artist: "Hardwell", stage: "kineticfield", start: 240, end: 330, match: null, genre: "Big Room / EDM", sounds_like: null, sources: [] },
+
+  // --- EDC Mexico 2026 — Chris Lake and Charlotte de Witte's circuitGROUNDS
+  // times are real and fully confirmed (pulseoftechno.com / 1001tracklists
+  // coverage); Anyma's kineticFIELD closing set on Sunday is a confirmed
+  // real day+stage pairing but an estimated time, since an exact clock time
+  // wasn't published in the sources found. ---
+  { id: 250, festival: "edc-mexico", day: "fri", artist: "Chris Lake", stage: "circuitgrounds", start: 390, end: 480, match: null, genre: "Tech House", sounds_like: null, sources: [] },
+  { id: 251, festival: "edc-mexico", day: "fri", artist: "Charlotte de Witte", stage: "circuitgrounds", start: 510, end: 600, match: null, genre: "Techno", sounds_like: null, sources: [] },
+  { id: 252, festival: "edc-mexico", day: "sun", artist: "Anyma", stage: "kineticfield", start: 390, end: 450, match: null, genre: "Melodic Techno / Audiovisual", sounds_like: null, sources: [] },
+
+  // --- Lollapalooza Argentina 2026 — start times are real and confirmed
+  // (perfil.com / lanacion.com.ar's published day-by-day schedules); end
+  // times are estimated typical set lengths since exact end times weren't
+  // published in the sources found. ---
+  { id: 253, festival: "lollapalooza-argentina", day: "fri", artist: "Lorde", stage: "samsung", start: 120, end: 165, match: null, genre: "Art Pop", sounds_like: null, sources: [] },
+  { id: 254, festival: "lollapalooza-argentina", day: "fri", artist: "Tyler, The Creator", stage: "flow", start: 195, end: 270, match: null, genre: "Hip-Hop", sounds_like: null, sources: [] },
+  { id: 255, festival: "lollapalooza-argentina", day: "sun", artist: "Interpol", stage: "alternative", start: 0, end: 60, match: null, genre: "Post-Punk", sounds_like: null, sources: [] },
+  { id: 256, festival: "lollapalooza-argentina", day: "sun", artist: "Sabrina Carpenter", stage: "flow", start: 195, end: 270, match: null, genre: "Pop", sounds_like: null, sources: [] },
+
+  // --- Lollapalooza Berlin, Saturday July 18 2026 — real, fully-confirmed
+  // start AND end times (timeout.com / festivawl.com's published 2026 set
+  // times, all on the Essence Stage). ---
+  { id: 257, festival: "lollapalooza-berlin", day: "sat", artist: "Balu Brigada", stage: "essence", start: 90, end: 130, match: null, genre: "Electropop", sounds_like: null, sources: [] },
+  { id: 258, festival: "lollapalooza-berlin", day: "sat", artist: "Young Miko", stage: "essence", start: 180, end: 225, match: null, genre: "Reggaeton / Latin Trap", sounds_like: null, sources: [] },
+  { id: 259, festival: "lollapalooza-berlin", day: "sat", artist: "Tom Odell", stage: "essence", start: 280, end: 335, match: null, genre: "Piano Pop", sounds_like: null, sources: [] },
+  { id: 260, festival: "lollapalooza-berlin", day: "sat", artist: "Zara Larsson", stage: "essence", start: 405, end: 465, match: null, genre: "Pop", sounds_like: null, sources: [] },
+  { id: 261, festival: "lollapalooza-berlin", day: "sat", artist: "Pitbull", stage: "essence", start: 565, end: 655, match: null, genre: "Pop / Latin Hip-Hop", sounds_like: null, sources: [] },
 ];
 
 const FRIENDS = [
@@ -551,6 +730,13 @@ const FESTIVAL_MAP_LABELS = {
   "electric-forest": { stages: "STAGES", camp: "CAMPGROUNDS — DOUBLE JJ RESORT" },
   tomorrowland: { stages: "FESTIVAL GROUNDS", camp: "DREAMVILLE — CAMPGROUNDS" },
   "lost-lands": { stages: "STAGES", camp: "CAMPGROUNDS — LEGEND VALLEY" },
+  "ultra-miami": { stages: "BAYFRONT PARK" },
+  "ultra-europe": { stages: "PARK MLADEŽI" },
+  "tomorrowland-winter": { stages: "ALPE D'HUEZ" },
+  "edc-orlando": { stages: "TINKER FIELD" },
+  "edc-mexico": { stages: "AUTÓDROMO HERMANOS RODRÍGUEZ" },
+  "lollapalooza-argentina": { stages: "HIPÓDROMO DE SAN ISIDRO" },
+  "lollapalooza-berlin": { stages: "OLYMPIAPARK" },
 };
 
 // Each festival's own official published grounds map, saved locally
@@ -574,6 +760,12 @@ const FESTIVAL_MAP_IMAGES = {
   acl: { src: "/festival-maps/acl.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
   tomorrowland: { src: "/festival-maps/tomorrowland.jpg", year: 2026 },
   "lost-lands": { src: "/festival-maps/lost-lands.jpg", year: 2026, note: "Camping map only — the full grounds map drops via the festival app about a week before the event." },
+  "ultra-miami": { src: "/festival-maps/ultra-miami.jpg", year: 2026 },
+  "ultra-europe": { src: "/festival-maps/ultra-europe.jpg", year: 2026 },
+  "edc-orlando": { src: "/festival-maps/edc-orlando.jpg", year: 2025, note: "2026's map isn't published yet (event is Nov 2026) — this is last year's official map." },
+  "edc-mexico": { src: "/festival-maps/edc-mexico.jpg", year: 2026 },
+  "lollapalooza-argentina": { src: "/festival-maps/lollapalooza-argentina.jpg", year: 2026 },
+  "lollapalooza-berlin": { src: "/festival-maps/lollapalooza-berlin.jpg", year: 2026 },
 };
 
 // Static camp pins — where someone dropped a marker for their tent/meetup
