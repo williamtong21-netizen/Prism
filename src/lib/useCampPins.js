@@ -16,7 +16,7 @@ export function useCampPins(profileId) {
       setLoading(true);
       const { data } = await supabase
         .from("camp_pins")
-        .select("id, profile_id, festival_id, x, y, pin_type, note, updated_at, profiles(id, name, handle)")
+        .select("id, profile_id, festival_id, x, y, pin_type, note, updated_at, profiles(id, name, handle, color)")
         .eq("festival_id", festivalId);
       setByFestival((prev) => ({ ...prev, [festivalId]: data || [] }));
       setLoading(false);

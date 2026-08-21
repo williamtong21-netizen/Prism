@@ -38,7 +38,7 @@ export function useCrews(profileId) {
     }
     const [{ data: crewRows }, { data: memberRows }] = await Promise.all([
       supabase.from("crews").select("id, festival_id, name, code, persistent, created_by").in("id", crewIds),
-      supabase.from("crew_members").select("crew_id, profiles(id, name, handle)").in("crew_id", crewIds),
+      supabase.from("crew_members").select("crew_id, profiles(id, name, handle, color)").in("crew_id", crewIds),
     ]);
     const byCrew = {};
     for (const m of memberRows || []) {

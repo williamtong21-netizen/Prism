@@ -1092,7 +1092,10 @@ function matchLabel(match) {
 // (LEADER_GOLD below), and an ordinary member hashing to a gold-adjacent
 // color made them look like a second leader.
 const MEMBER_COLORS = ["#3DF2E0", "#FF3DA6", "#9D6BFF", "#5FD97A", "#4D96FF"];
-function colorForId(id) {
+// customColor is a person's own chosen profiles.color, when they've set
+// one — falls back to the old hash-based assignment for anyone who hasn't.
+function colorForId(id, customColor) {
+  if (customColor) return customColor;
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   return MEMBER_COLORS[hash % MEMBER_COLORS.length];
@@ -1108,8 +1111,8 @@ const LEADER_GOLD = "linear-gradient(135deg, #FFD700, #C9930A)";
 // Gold for the crew's leader, same hash-based color as everyone else
 // otherwise — a plain avatar background, so callers can drop this
 // straight into a `background` style without branching themselves.
-function memberAvatarBg(memberId, crew) {
-  return crew && crew.created_by === memberId ? LEADER_GOLD : colorForId(memberId);
+function memberAvatarBg(memberId, crew, customColor) {
+  return crew && crew.created_by === memberId ? LEADER_GOLD : colorForId(memberId, customColor);
 }
 
 // Adapts real crew members `{id, name, handle}` into the shape the
@@ -1117,7 +1120,7 @@ function memberAvatarBg(memberId, crew) {
 // have FRIEND_MATCHES or camp-pin data yet, so those views degrade to "no
 // data" for them rather than crashing — that's honest, not a bug.
 function toDisplayFriends(members) {
-  return (members || []).map((m) => ({ id: m.id, name: m.name, initial: m.name[0].toUpperCase(), color: colorForId(m.id) }));
+  return (members || []).map((m) => ({ id: m.id, name: m.name, initial: m.name[0].toUpperCase(), color: colorForId(m.id, m.color) }));
 }
 
 function relativeTime(iso) {
@@ -1466,7 +1469,7 @@ function NewDmPickerSheet({ members, onClose, onPick }) {
               onClick={() => onPick(m.id)}
               style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "transparent", cursor: "pointer" }}
             >
-              <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(m.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(m.id, m.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {m.name[0].toUpperCase()}
               </span>
               <div>
@@ -1556,12 +1559,14 @@ export default function FestivalOptimizer() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
   const [editHandle, setEditHandle] = useState("");
+  const [editColor, setEditColor] = useState("");
   const [profileEditError, setProfileEditError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
   function startEditingProfile() {
     setEditName(profile.name);
     setEditHandle(profile.handle);
+    setEditColor(profile.color || "");
     setProfileEditError("");
     setEditingProfile(true);
   }
@@ -1569,7 +1574,7 @@ export default function FestivalOptimizer() {
   async function saveProfileEdits() {
     if (!editName.trim() || !editHandle.trim() || savingProfile) return;
     setSavingProfile(true);
-    const result = await updateProfile({ name: editName.trim(), handle: editHandle.trim().toLowerCase() });
+    const result = await updateProfile({ name: editName.trim(), handle: editHandle.trim().toLowerCase(), color: editColor || null });
     setSavingProfile(false);
     if (result?.error) {
       setProfileEditError(result.error.code === "23505" ? "That handle's taken — try another." : result.error.message);
@@ -2492,7 +2497,7 @@ export default function FestivalOptimizer() {
                           background: "none", border: "none", padding: "6px 2px", cursor: "pointer",
                         }}
                       >
-                        <span style={{ position: "relative", width: 44, height: 44, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ position: "relative", width: 44, height: 44, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew, m.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {m.name[0].toUpperCase()}
                           {m.id === activeCrew.created_by && (
                             <span style={{ position: "absolute", bottom: -3, right: -3, fontSize: 12, background: "#171229", borderRadius: "50%", lineHeight: 1, padding: 1 }}>👑</span>
@@ -2509,7 +2514,7 @@ export default function FestivalOptimizer() {
                     <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
                       <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <span style={{ width: 48, height: 48, borderRadius: "50%", background: memberAvatarBg(openMemberCard.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ width: 48, height: 48, borderRadius: "50%", background: memberAvatarBg(openMemberCard.id, activeCrew, openMemberCard.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {openMemberCard.name[0].toUpperCase()}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -2994,7 +2999,7 @@ export default function FestivalOptimizer() {
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: profile.color || "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
                   {profile.name[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -3014,6 +3019,25 @@ export default function FestivalOptimizer() {
                           placeholder="handle"
                           style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "#F5F0FF", fontSize: 14 }}
                         />
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+                        {MEMBER_COLORS.map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => setEditColor(c)}
+                            aria-label={`Use avatar color ${c}`}
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: "50%",
+                              background: c,
+                              border: editColor === c ? "2px solid #F5F0FF" : "2px solid transparent",
+                              boxShadow: editColor === c ? "0 0 0 2px #171229" : "none",
+                              cursor: "pointer",
+                              padding: 0,
+                            }}
+                          />
+                        ))}
                       </div>
                     </div>
                   ) : (
@@ -3363,7 +3387,7 @@ export default function FestivalOptimizer() {
                           background: "transparent", cursor: "pointer",
                         }}
                       >
-                        <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(t.other.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(t.other.id, t.other.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {t.other.name[0].toUpperCase()}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -3419,7 +3443,7 @@ export default function FestivalOptimizer() {
                         <button onClick={() => setActiveRealThreadId(null)} aria-label="Back to inbox" style={{ background: "none", border: "none", color: "#8B85A3", cursor: "pointer", padding: 0, display: "flex" }}>
                           <svg viewBox="0 0 24 24" width="20" height="20" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
                         </button>
-                        <span style={{ width: 28, height: 28, borderRadius: "50%", background: colorForId(t.other.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ width: 28, height: 28, borderRadius: "50%", background: colorForId(t.other.id, t.other.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {t.other.name[0].toUpperCase()}
                         </span>
                         <span style={{ fontSize: 15, fontWeight: 700, flex: 1 }}>{t.other.name}</span>

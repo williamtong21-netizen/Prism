@@ -32,7 +32,7 @@ export function useDMs(profileId) {
       return;
     }
     const [{ data: participants }, { data: messages }] = await Promise.all([
-      supabase.from("dm_participants").select("thread_id, profiles(id, name, handle)").in("thread_id", threadIds),
+      supabase.from("dm_participants").select("thread_id, profiles(id, name, handle, color)").in("thread_id", threadIds),
       supabase
         .from("dm_messages")
         .select("id, thread_id, sender_id, text, created_at, attachment_path, attachment_type, attachment_name, attachment_size")
