@@ -681,65 +681,6 @@ const PENDING_INVITES = [
   { id: "i2", label: "link shared in group chat", status: "1 joined" },
 ];
 
-// Bonnaroo's real campground naming: the stages sit in "Centeroo," the
-// surrounding campgrounds are "Outeroo," organized into numbered "Plazas"
-// (community hubs with restrooms/showers/medical) plus Moon Colony for car
-// camping. Coachella's grounds don't use those terms — it's the Empire Polo
-// Club, with camping split into General/Preferred car camping, Tent
-// Camping, the 18+ Lake Eldorado area, and the Safari Campground. Exact
-// plot layouts aren't public for either, so these are simplified schematics
-// using each festival's real zone names rather than actual-scale maps.
-const FESTIVAL_CAMP_ZONES = {
-  bonnaroo: [
-    { id: "p2", name: "Plaza 2", x: 30, y: 255, w: 110, h: 90 },
-    { id: "p3", name: "Plaza 3", x: 155, y: 255, w: 110, h: 90 },
-    { id: "p9", name: "Plaza 9", x: 280, y: 255, w: 110, h: 90 },
-    { id: "moon", name: "Moon Colony (car camping)", x: 30, y: 360, w: 360, h: 55 },
-    { id: "p6", name: "Plaza 6", x: 30, y: 430, w: 360, h: 22 },
-  ],
-  coachella: [
-    { id: "general", name: "General Car Camping", x: 30, y: 255, w: 170, h: 70 },
-    { id: "preferred", name: "Preferred Camping", x: 220, y: 255, w: 170, h: 70 },
-    { id: "tent", name: "Tent Camping", x: 30, y: 335, w: 110, h: 55 },
-    { id: "safari", name: "Safari Campground", x: 155, y: 335, w: 115, h: 55 },
-    { id: "eldorado", name: "Lake Eldorado (18+)", x: 280, y: 335, w: 110, h: 55 },
-  ],
-  "electric-forest": [
-    { id: "mainstreet", name: "Main Street (GA)", x: 30, y: 255, w: 170, h: 70 },
-    { id: "maplewoods", name: "Maplewoods", x: 220, y: 255, w: 170, h: 70 },
-    { id: "camphush", name: "Camp Hush (quiet)", x: 30, y: 335, w: 115, h: 55 },
-    { id: "goodlife", name: "Good Life Village (VIP)", x: 155, y: 335, w: 115, h: 55 },
-    { id: "back40", name: "Back 40 (RV)", x: 280, y: 335, w: 110, h: 55 },
-  ],
-  tomorrowland: [
-    { id: "maggreens", name: "Magnificent Greens (GA)", x: 30, y: 255, w: 170, h: 70 },
-    { id: "easytent", name: "Easy Tent (pre-pitched)", x: 220, y: 255, w: 170, h: 70 },
-    { id: "friendship", name: "Friendship Garden (groups of 10)", x: 30, y: 335, w: 170, h: 55 },
-    { id: "dreamlodges", name: "Dreamlodges (luxury)", x: 220, y: 335, w: 170, h: 55 },
-  ],
-  "lost-lands": [
-    { id: "ga-tent", name: "GA Tent Camping", x: 30, y: 255, w: 170, h: 70 },
-    { id: "rv", name: "RV Camping", x: 220, y: 255, w: 170, h: 70 },
-    { id: "forest", name: "Forest Camping", x: 30, y: 335, w: 170, h: 55 },
-    { id: "glamping", name: "Jurrasic Glamping", x: 220, y: 335, w: 170, h: 55 },
-  ],
-};
-
-const FESTIVAL_MAP_LABELS = {
-  bonnaroo: { stages: "CENTEROO", camp: "OUTEROO — CAMPGROUNDS" },
-  coachella: { stages: "FESTIVAL GROUNDS", camp: "CAMPING — EMPIRE POLO CLUB" },
-  "electric-forest": { stages: "STAGES", camp: "CAMPGROUNDS — DOUBLE JJ RESORT" },
-  tomorrowland: { stages: "FESTIVAL GROUNDS", camp: "DREAMVILLE — CAMPGROUNDS" },
-  "lost-lands": { stages: "STAGES", camp: "CAMPGROUNDS — LEGEND VALLEY" },
-  "ultra-miami": { stages: "BAYFRONT PARK" },
-  "ultra-europe": { stages: "PARK MLADEŽI" },
-  "tomorrowland-winter": { stages: "ALPE D'HUEZ" },
-  "edc-orlando": { stages: "TINKER FIELD" },
-  "edc-mexico": { stages: "AUTÓDROMO HERMANOS RODRÍGUEZ" },
-  "lollapalooza-argentina": { stages: "HIPÓDROMO DE SAN ISIDRO" },
-  "lollapalooza-berlin": { stages: "OLYMPIAPARK" },
-};
-
 // Each festival's own official published grounds map, saved locally
 // under public/festival-maps. Two are the best currently-available
 // official asset rather than the ideal one — flagged with `note` so the
@@ -2354,7 +2295,7 @@ export default function FestivalOptimizer() {
                           src={mapInfo.src}
                           alt={`${festivalName} official festival map`}
                           draggable={false}
-                          style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover", WebkitUserDrag: "none", userSelect: "none" }}
+                          style={{ width: "100%", display: "block", maxHeight: 340, objectFit: "cover", WebkitUserDrag: "none", userSelect: "none" }}
                           onError={() => setMapLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
                           onDragStart={(e) => e.preventDefault()}
                         />
@@ -2379,17 +2320,6 @@ export default function FestivalOptimizer() {
                 </div>
               );
             })()}
-            <CampMap
-              key={currentFestival}
-              friends={activeCrew ? toDisplayFriends(activeCrew.members) : []}
-              sharing={activeCrew ? { ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing } : sharing}
-              pins={campPinsByFestival[currentFestival] || []}
-              myProfileId={profile?.id}
-              onSetMyPin={(x, y, note) => setMyCampPin(currentFestival, x, y, note)}
-              isOnline={isOnline}
-              onQueue={() => setQueuedActions((n) => n + 1)}
-              currentFestival={currentFestival}
-            />
           </div>
         )}
 
@@ -2452,9 +2382,10 @@ export default function FestivalOptimizer() {
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
                         position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
-                        width: 26, height: 26, borderRadius: "50%", background: colorForId(p.profile_id),
-                        border: "2px solid #0F0B1A", display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                        width: 36, height: 36, borderRadius: "50%", background: colorForId(p.profile_id),
+                        border: "3px solid #0F0B1A", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
                       }}
                     >
                       {(p.profiles?.name || "?")[0].toUpperCase()}
@@ -2465,9 +2396,10 @@ export default function FestivalOptimizer() {
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(myPin); }}
                       style={{
                         position: "absolute", left: `${myPin.x}%`, top: `${myPin.y}%`, transform: "translate(-50%, -50%)",
-                        width: 28, height: 28, borderRadius: "50%", background: "#F5F0FF", border: "2.5px solid #3DF2E0",
+                        width: 40, height: 40, borderRadius: "50%", background: "#F5F0FF", border: "3.5px solid #3DF2E0",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
                       }}
                     >
                       YOU
@@ -3401,163 +3333,6 @@ export default function FestivalOptimizer() {
 // ---------------------------------------------------------------------------
 // Camp map
 // ---------------------------------------------------------------------------
-
-function CampMap({ friends, sharing, pins, myProfileId, onSetMyPin, isOnline, onQueue, currentFestival }) {
-  const zones = FESTIVAL_CAMP_ZONES[currentFestival];
-  const stages = FESTIVAL_STAGES[currentFestival] || [];
-  const festival = FESTIVALS.find((f) => f.id === currentFestival);
-  const hasCamping = !!zones;
-  const stagesLabel = FESTIVAL_MAP_LABELS[currentFestival]?.stages || "STAGES";
-  const campLabel = FESTIVAL_MAP_LABELS[currentFestival]?.camp;
-
-  const [placing, setPlacing] = useState(false);
-  const [openPin, setOpenPin] = useState(null);
-
-  const myPin = (pins || []).find((p) => p.profile_id === myProfileId) || null;
-  const viewH = hasCamping ? 470 : 240;
-
-  function handleMapClick(e) {
-    if (!placing || !hasCamping) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const xPct = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
-    const yPct = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
-    setPlacing(false);
-    onSetMyPin(xPct, yPct, myPin?.note || "");
-    if (!isOnline) onQueue && onQueue();
-  }
-
-  const crewPins = hasCamping
-    ? friends
-        .filter((f) => sharing[f.id])
-        .map((f) => ({ ...f, pin: (pins || []).find((p) => p.profile_id === f.id) }))
-        .filter((f) => f.pin)
-    : [];
-  const hiddenFriends = hasCamping ? friends.filter((f) => !sharing[f.id]) : [];
-  const noPinFriends = hasCamping ? friends.filter((f) => sharing[f.id] && !(pins || []).some((p) => p.profile_id === f.id)) : [];
-
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <p style={{ margin: 0, fontSize: 12.5, color: "#8B85A3", maxWidth: 260 }}>
-          {hasCamping
-            ? <>{stagesLabel} (stages) and {campLabel?.split(" — ")[0]} (camping) — simplified layout using real zone names. Tap the map to drop your pin.{!isOnline && " Pin still saves offline and syncs to your crew later."}</>
-            : "Real stage layout. This festival has no on-site camping, so there's no camp section here to map."}
-        </p>
-        {hasCamping && (
-          <button
-            onClick={() => setPlacing((p) => !p)}
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11,
-              whiteSpace: "nowrap",
-              padding: "7px 12px",
-              borderRadius: 8,
-              border: `1px solid ${placing ? "#3DF2E0" : "#2A2440"}`,
-              background: placing ? "rgba(61,242,224,0.12)" : "transparent",
-              color: placing ? "#3DF2E0" : "#8B85A3",
-              cursor: "pointer",
-            }}
-          >
-            {placing ? "Tap map…" : "Set my pin"}
-          </button>
-        )}
-      </div>
-
-      <div
-        onClick={handleMapClick}
-        style={{
-          position: "relative",
-          border: "1px solid #2A2440",
-          borderRadius: 14,
-          overflow: "hidden",
-          background: "#151024",
-          cursor: placing && hasCamping ? "crosshair" : "default",
-        }}
-      >
-        <svg viewBox={`0 0 400 ${viewH}`} width="100%" style={{ display: "block" }}>
-          <rect x="0" y="0" width="400" height={viewH} fill="#151024" />
-          <text x="14" y="16" fontFamily="'IBM Plex Mono', monospace" fontSize="9.5" fill="#3DF2E0" letterSpacing="1">{stagesLabel}</text>
-          {hasCamping && (
-            <>
-              <rect x="0" y="240" width="400" height="12" fill="#1E1832" />
-              <text x="14" y="230" fontFamily="'IBM Plex Mono', monospace" fontSize="9.5" fill="#5B5470" letterSpacing="1">{campLabel}</text>
-            </>
-          )}
-          {/* Stages */}
-          {stages.map((s, i) => {
-            const cols = 3;
-            const w = 115, h = 70;
-            const x = 14 + (i % cols) * 125;
-            const y = 24 + Math.floor(i / cols) * 84;
-            return (
-              <g key={s.id}>
-                <rect x={x} y={y} width={w} height={h} rx={9} fill="#1A1428" stroke={s.color} strokeWidth="1" strokeOpacity="0.5" />
-                <text x={x + 8} y={y + 20} fontFamily="'IBM Plex Mono', monospace" fontSize="9" fill={s.color}>{s.name}</text>
-              </g>
-            );
-          })}
-          {/* Camp zones */}
-          {hasCamping && zones.map((z) => (
-            <g key={z.id}>
-              <rect x={z.x} y={z.y} width={z.w} height={z.h} rx={8} fill="#1A1428" stroke="#3A3552" strokeWidth="1" />
-              <text x={z.x + 10} y={z.y + 18} fontFamily="'IBM Plex Mono', monospace" fontSize="9.5" fill="#5B5470">{z.name}</text>
-            </g>
-          ))}
-          {/* Crew pins */}
-          {crewPins.map((f) => {
-            const px = (f.pin.x / 100) * 400;
-            const py = (f.pin.y / 100) * viewH;
-            return (
-              <g key={f.id} onClick={(e) => { e.stopPropagation(); setOpenPin(f); }} style={{ cursor: "pointer" }}>
-                <circle cx={px} cy={py} r="10" fill={f.color} stroke="#0F0B1A" strokeWidth="2" />
-                <text x={px} y={py + 3.5} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">{f.initial}</text>
-              </g>
-            );
-          })}
-          {/* My pin */}
-          {hasCamping && myPin && (() => {
-            const px = (myPin.x / 100) * 400;
-            const py = (myPin.y / 100) * viewH;
-            return (
-              <g>
-                <circle cx={px} cy={py} r="11" fill="#F5F0FF" stroke="#3DF2E0" strokeWidth="2.5" />
-                <text x={px} y={py + 4} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">YOU</text>
-              </g>
-            );
-          })()}
-        </svg>
-      </div>
-
-      {!hasCamping && (
-        <div style={{ marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470" }}>
-          {festival?.noCamping
-            ? `No on-site camping at ${festival.name} — it's a day festival.`
-            : "Camping grounds for this festival haven't been mapped yet."}
-        </div>
-      )}
-
-      {openPin && (
-        <div style={{ marginTop: 12, border: `1px solid ${openPin.color}`, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 22, height: 22, borderRadius: "50%", background: openPin.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{openPin.initial}</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700 }}>{openPin.name}</div>
-            <div style={{ fontSize: 12, color: "#8B85A3" }}>{openPin.pin.note}</div>
-          </div>
-          <button onClick={() => setOpenPin(null)} style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 16, cursor: "pointer" }}>×</button>
-        </div>
-      )}
-
-      {hasCamping && (hiddenFriends.length > 0 || noPinFriends.length > 0) && (
-        <div style={{ marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470", lineHeight: 1.6 }}>
-          {hiddenFriends.map((f) => f.name).join(", ")}
-          {hiddenFriends.length > 0 ? " sharing off — pin hidden. " : ""}
-          {noPinFriends.map((f) => f.name).join(", ")}
-          {noPinFriends.length > 0 ? " hasn't dropped a pin yet." : ""}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Discover — swipe through mid-match artists you don't know yet
