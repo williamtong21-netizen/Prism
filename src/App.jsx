@@ -138,6 +138,13 @@ const FESTIVAL_STAGES = {
     { id: "newhorizon", name: "New Horizon Stage", color: "#FFB23D" },
     { id: "fashionpalooza", name: "Fashionpalooza", color: "#5FD97A" },
   ],
+  // Real Secret Dreams 2026 stage names (PG Stage, Woods Stage), read
+  // directly off the festival's own official camping + grounds map
+  // (secretdreamsfest.com/about-1-1) for its new Cardinal Center venue.
+  "secret-dreams": [
+    { id: "pg", name: "PG Stage", color: "#3DF2E0" },
+    { id: "woods", name: "Woods Stage", color: "#9D6BFF" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -166,6 +173,7 @@ const FESTIVALS = [
   { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 20–22, 2026", hasData: true, noCamping: true },
   { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 13–15, 2026", hasData: true, noCamping: true },
   { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 18–19, 2026", hasData: true, noCamping: true },
+  { id: "secret-dreams", name: "Secret Dreams", location: "Marengo, OH", dates: "Sep 3–6, 2026", hasData: true },
 ];
 
 const FESTIVAL_DAYS = {
@@ -252,6 +260,16 @@ const FESTIVAL_DAYS = {
   // opening set time (timeout.com/festivawl.com's published 2026 set times).
   "lollapalooza-berlin": [
     { id: "sat", label: "Sat", date: "Jul 18", startMin: 12 * 60 },
+  ],
+  // Secret Dreams 2026's new venue (The Cardinal Center, Marengo OH).
+  // Official dates are Fri–Sun Sep 4–6; Thursday Sep 3 is a separate
+  // pre-party rather than part of the paid festival days proper. No
+  // published set-time grid yet, so these are generic start markers.
+  "secret-dreams": [
+    { id: "thu", label: "Thu", date: "Sep 3", startMin: 19 * 60 },
+    { id: "fri", label: "Fri", date: "Sep 4", startMin: 14 * 60 },
+    { id: "sat", label: "Sat", date: "Sep 5", startMin: 13 * 60 },
+    { id: "sun", label: "Sun", date: "Sep 6", startMin: 13 * 60 },
   ],
 };
 
@@ -578,6 +596,37 @@ const SETS = [
   { id: 259, festival: "lollapalooza-berlin", day: "sat", artist: "Tom Odell", stage: "essence", start: 280, end: 335, match: null, genre: "Piano Pop", sounds_like: null, sources: [] },
   { id: 260, festival: "lollapalooza-berlin", day: "sat", artist: "Zara Larsson", stage: "essence", start: 405, end: 465, match: null, genre: "Pop", sounds_like: null, sources: [] },
   { id: 261, festival: "lollapalooza-berlin", day: "sat", artist: "Pitbull", stage: "essence", start: 565, end: 655, match: null, genre: "Pop / Latin Hip-Hop", sounds_like: null, sources: [] },
+
+  // --- Secret Dreams 2026 — real, confirmed lineup (secretdreamsfest.com /
+  // riverbeats.life's published daily breakdown) for the festival's new
+  // Cardinal Center venue. No official set-time grid published yet, so
+  // start/end here are plausible placeholders on the two confirmed stages
+  // (PG Stage, Woods Stage), not confirmed set times. ---
+  { id: 262, festival: "secret-dreams", day: "thu", artist: "Yoko", stage: "woods", start: 0, end: 40, match: null, genre: "Bass", sounds_like: null, sources: [] },
+  { id: 263, festival: "secret-dreams", day: "thu", artist: "Skysia", stage: "pg", start: 40, end: 85, match: null, genre: "Global Bass", sounds_like: null, sources: [] },
+  { id: 264, festival: "secret-dreams", day: "thu", artist: "Saturna", stage: "woods", start: 85, end: 130, match: null, genre: "Bass", sounds_like: null, sources: [] },
+  { id: 265, festival: "secret-dreams", day: "thu", artist: "Mickman", stage: "pg", start: 130, end: 190, match: null, genre: "Electronic", sounds_like: null, sources: [] },
+  { id: 266, festival: "secret-dreams", day: "thu", artist: "The Werks", stage: "woods", start: 190, end: 260, match: null, genre: "Jam / Livetronica", sounds_like: null, sources: [] },
+  { id: 267, festival: "secret-dreams", day: "thu", artist: "CloZee", stage: "pg", start: 260, end: 330, match: null, genre: "Global Bass", sounds_like: null, sources: [] },
+  { id: 268, festival: "secret-dreams", day: "fri", artist: "Detox Unit", stage: "woods", start: 0, end: 45, match: null, genre: "Dubstep", sounds_like: null, sources: [] },
+  { id: 269, festival: "secret-dreams", day: "fri", artist: "Mr. Bill", stage: "pg", start: 45, end: 100, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
+  { id: 270, festival: "secret-dreams", day: "fri", artist: "Opiuo", stage: "woods", start: 100, end: 160, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
+  { id: 271, festival: "secret-dreams", day: "fri", artist: "Pigeons Playing Ping Pong", stage: "pg", start: 160, end: 230, match: null, genre: "Jam / Funk", sounds_like: null, sources: [] },
+  { id: 272, festival: "secret-dreams", day: "fri", artist: "Emancipator", stage: "woods", start: 230, end: 290, match: null, genre: "Downtempo", sounds_like: null, sources: [] },
+  { id: 273, festival: "secret-dreams", day: "fri", artist: "Of The Trees", stage: "pg", start: 290, end: 360, match: null, genre: "Bass / Glitch Hop", sounds_like: null, sources: [] },
+  { id: 274, festival: "secret-dreams", day: "sat", artist: "Wonky Llama", stage: "woods", start: 0, end: 50, match: null, genre: "Bass", sounds_like: null, sources: [] },
+  { id: 275, festival: "secret-dreams", day: "sat", artist: "Come Back to Earth", stage: "pg", start: 50, end: 110, match: null, genre: "Hip-Hop Tribute (Mac Miller)", sounds_like: null, sources: [] },
+  { id: 276, festival: "secret-dreams", day: "sat", artist: "EarthGang", stage: "woods", start: 110, end: 170, match: null, genre: "Hip-Hop", sounds_like: null, sources: [] },
+  { id: 277, festival: "secret-dreams", day: "sat", artist: "Daily Bread", stage: "pg", start: 170, end: 230, match: null, genre: "Bass / Soul", sounds_like: null, sources: [] },
+  { id: 278, festival: "secret-dreams", day: "sat", artist: "Pretty Lights", stage: "woods", start: 230, end: 320, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
+  { id: 279, festival: "secret-dreams", day: "sat", artist: "Pretty Lights", stage: "pg", start: 320, end: 410, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
+  { id: 280, festival: "secret-dreams", day: "sun", artist: "Flamingosis", stage: "woods", start: 0, end: 50, match: null, genre: "Funk / Chillhop", sounds_like: null, sources: [] },
+  { id: 281, festival: "secret-dreams", day: "sun", artist: "Late Night Radio", stage: "pg", start: 50, end: 110, match: null, genre: "Bass / Livetronica", sounds_like: null, sources: [] },
+  { id: 282, festival: "secret-dreams", day: "sun", artist: "Daily Bread", stage: "woods", start: 110, end: 160, match: null, genre: "Bass / Soul", sounds_like: null, sources: [] },
+  { id: 283, festival: "secret-dreams", day: "sun", artist: "Gramatik", stage: "pg", start: 160, end: 230, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
+  { id: 284, festival: "secret-dreams", day: "sun", artist: "Tape B", stage: "woods", start: 230, end: 300, match: null, genre: "Bass House", sounds_like: null, sources: [] },
+  { id: 285, festival: "secret-dreams", day: "sun", artist: "Pretty Lights", stage: "pg", start: 300, end: 390, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
+  { id: 286, festival: "secret-dreams", day: "sun", artist: "Pretty Lights", stage: "woods", start: 390, end: 480, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
 ];
 
 const FRIENDS = [
@@ -708,6 +757,7 @@ const FESTIVAL_MAP_IMAGES = {
   "edc-mexico": { src: "/festival-maps/edc-mexico.jpg", year: 2026 },
   "lollapalooza-argentina": { src: "/festival-maps/lollapalooza-argentina.jpg", year: 2026 },
   "lollapalooza-berlin": { src: "/festival-maps/lollapalooza-berlin.jpg", year: 2026 },
+  "secret-dreams": { src: "/festival-maps/secret-dreams.jpg", year: 2026, note: "Map subject to change, per the festival's own note." },
 };
 
 // Verified artist posts — visually distinct from crowd posts, always pinned
@@ -2468,7 +2518,7 @@ export default function FestivalOptimizer() {
                 <div onClick={(e) => e.stopPropagation()} style={{ margin: "0 14px", fontSize: 12, color: "#FF3DA6" }}>{pinActionError}</div>
               )}
 
-              <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain", touchAction: pinPlacing ? "none" : "pinch-zoom" }}>
+              <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain", touchAction: pinPlacing ? "none" : "pan-x pan-y pinch-zoom" }}>
                 <div style={{ position: "relative" }} onClick={(e) => { e.stopPropagation(); handleLightboxClick(e); }}>
                   <img
                     src={FESTIVAL_MAP_IMAGES[currentFestival].src}
