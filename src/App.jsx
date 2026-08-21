@@ -1125,11 +1125,17 @@ function Icon({ name, active }) {
 // scaling its own box doesn't disturb any fixed-position coordinate math.
 const AUTH_SCREEN_SHARED_CSS = `
   .frame { width: 100%; max-width: 430px; }
+  /* transform:scale, not zoom — zoom's centering math with a flex-column
+     parent is unreliable in Safari (confirmed: content rendered off-center
+     on iPadOS). transform doesn't touch the layout box, only the paint, so
+     with the default center-center transform-origin the scaled box stays
+     centered on the exact same point the unscaled box would have been —
+     correct on every engine, not just Chromium. */
   @media (display-mode: browser) and (min-width: 700px) {
-    .frame { max-width: 460px; zoom: 1.35; }
+    .frame { max-width: 460px; transform: scale(1.35); }
   }
   @media (display-mode: browser) and (min-width: 1100px) {
-    .frame { max-width: 480px; zoom: 1.6; }
+    .frame { max-width: 480px; transform: scale(1.6); }
   }
   .prism-glow { animation: prismGlowPulse 3.2s ease-in-out infinite; }
   @keyframes prismGlowPulse {
@@ -1164,7 +1170,7 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   }
 
   return (
-    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
+    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         ${AUTH_SCREEN_SHARED_CSS}
@@ -1259,7 +1265,7 @@ function OnboardingScreen({ email, onSubmit }) {
   }
 
   return (
-    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
+    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         ${AUTH_SCREEN_SHARED_CSS}
