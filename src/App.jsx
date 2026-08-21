@@ -760,6 +760,22 @@ const FESTIVAL_MAP_IMAGES = {
   "secret-dreams": { src: "/festival-maps/secret-dreams.jpg", year: 2026, note: "Map subject to change, per the festival's own note." },
 };
 
+// Dedicated campground/camping maps — only for festivals that actually have
+// on-site camping (see FESTIVALS' `noCamping` flag) AND publish a genuinely
+// separate camping document distinct from their main stages/grounds map.
+// Researched against the 5 camping festivals (bonnaroo, coachella,
+// electric-forest, tomorrowland, lost-lands): Electric Forest's main map
+// already fully depicts all general camping areas (its only separate doc is
+// a niche "Group Camping Map" for one paid add-on, not general camping), Lost
+// Lands' only published map IS its camping map already (see the note above),
+// and Tomorrowland's DreamVille has no genuinely official static map
+// available outside its in-app interactive map — so those three are
+// intentionally left out rather than duplicated or faked.
+const FESTIVAL_CAMPGROUND_MAP_IMAGES = {
+  bonnaroo: { src: "/festival-maps/bonnaroo-camping.jpg", year: 2026 },
+  coachella: { src: "/festival-maps/coachella-camping.jpg", year: 2026 },
+};
+
 // Verified artist posts — visually distinct from crowd posts, always pinned
 // to the top of Community regardless of sort. `artistOf` links back to a
 // SETS id so the schedule can show a small "artist posted" indicator.
