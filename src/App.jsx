@@ -6,6 +6,7 @@ import { useCrews } from "./lib/useCrews";
 import { useDMs } from "./lib/useDMs";
 import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
+import { useSpotify } from "./lib/useSpotify";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -682,10 +683,6 @@ const FRIEND_MATCHES = {
 const ME = {
   name: "Will",
   handle: "@willrides",
-  connections: {
-    spotify: { connected: true, label: "Top genre: Indie Rock" },
-    soundcloud: { connected: true, label: "38 tracks liked this year" },
-  },
   discoveredCount: 0, // updated live from addedFromDiscover.length
 };
 
@@ -1510,6 +1507,16 @@ export default function FestivalOptimizer() {
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
   const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
+  const spotify = useSpotify(profile?.id);
+  useEffect(() => {
+    if (window.location.pathname !== "/auth/spotify/callback") return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    window.history.replaceState(null, "", "/");
+    if (code) spotify.handleCallback(code, state).then(() => setProfileOpen(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
@@ -3109,17 +3116,37 @@ export default function FestivalOptimizer() {
 
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>CONNECTED ACCOUNTS</div>
-                {Object.entries(ME.connections).map(([key, c]) => (
-                  <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
-                    <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 700, textTransform: "capitalize" }}>{key}</div>
-                      <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>{c.label}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
+                  <div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700 }}>Spotify</div>
+                    <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>
+                      {spotify.connection
+                        ? spotify.connection.top_genre
+                          ? `Top genre: ${spotify.connection.top_genre.replace(/\b\w/g, (ch) => ch.toUpperCase())}`
+                          : "Connected"
+                        : spotify.loading
+                        ? "Connecting…"
+                        : "Not connected"}
                     </div>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: c.connected ? "#3DF2E0" : "#5B5470", border: `1px solid ${c.connected ? "#3DF2E0" : "#2A2440"}`, borderRadius: 20, padding: "3px 9px" }}>
-                      {c.connected ? "Connected" : "Connect"}
-                    </span>
                   </div>
-                ))}
+                  <button
+                    onClick={spotify.connection ? spotify.disconnect : spotify.connect}
+                    disabled={spotify.loading}
+                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: `1px solid ${spotify.connection ? "#2A2440" : "#3DF2E0"}`, borderRadius: 20, padding: "3px 9px", color: spotify.connection ? "#8B85A3" : "#3DF2E0", cursor: spotify.loading ? "default" : "pointer" }}
+                  >
+                    {spotify.connection ? "Disconnect" : "Connect"}
+                  </button>
+                </div>
+                {spotify.error && <div style={{ fontSize: 11.5, color: "#FF3DA6", marginTop: 6 }}>{spotify.error}</div>}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
+                  <div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700 }}>Soundcloud</div>
+                    <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>Not available yet</div>
+                  </div>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470", border: "1px solid #2A2440", borderRadius: 20, padding: "3px 9px" }}>
+                    Coming soon
+                  </span>
+                </div>
               </div>
 
               <div style={{ marginTop: 18 }}>

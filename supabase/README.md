@@ -26,3 +26,21 @@ Supabase dashboard:
 3. **Wire the trigger.** Database -> Webhooks -> create one on
    `dm_messages`, event `INSERT`, target the `send-push` function. That's
    what actually fires a push every time a DM is sent.
+
+## Spotify connect
+
+Two manual steps beyond running `015_spotify_connections.sql`, both in the
+Supabase dashboard:
+
+1. **Deploy the Edge Function.** Edge Functions -> deploy a new function
+   named `spotify-callback`, paste in `functions/spotify-callback/index.ts`.
+2. **Set its secrets.** Edge Functions -> `spotify-callback` -> Secrets:
+   - `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` — from the app registered
+     at developer.spotify.com/dashboard. The redirect URI there must be
+     exactly `https://prismfest.io/auth/spotify/callback`.
+
+   (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` don't need setting --
+   every edge function gets those automatically.)
+
+Spotify's Development Mode caps new apps at 5 authorized users total until
+Extended Quota Mode is granted -- see the Feb 2026 developer policy update.
