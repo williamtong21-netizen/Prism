@@ -1579,6 +1579,7 @@ export default function FestivalOptimizer() {
   const [notifiedCrew, setNotifiedCrew] = useState(false);
   const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote, renameCrew, removeMember: removeCrewMember, leaveCrew, disbandCrew } = useCrews(profile?.id);
   const [myCrewsOpen, setMyCrewsOpen] = useState(false);
+  const [openMemberCard, setOpenMemberCard] = useState(null);
   const [editingCrewId, setEditingCrewId] = useState(null);
   const [crewNameDraft, setCrewNameDraft] = useState("");
   const [crewActionPending, setCrewActionPending] = useState(false);
@@ -2477,39 +2478,66 @@ export default function FestivalOptimizer() {
                 </div>
 
                 {activeCrew.members.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))", gap: 10, marginBottom: 14 }}>
                     {activeCrew.members.map((m) => (
-                      <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #2A2440", borderRadius: 12, padding: "9px 12px" }}>
-                        <span style={{ width: 30, height: 30, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <button
+                        key={m.id}
+                        onClick={() => setOpenMemberCard(m)}
+                        className="tab-btn"
+                        style={{
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+                          background: "none", border: "none", padding: "6px 2px", cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ position: "relative", width: 44, height: 44, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {m.name[0].toUpperCase()}
+                          {m.id === activeCrew.created_by && (
+                            <span style={{ position: "absolute", bottom: -3, right: -3, fontSize: 12, background: "#171229", borderRadius: "50%", lineHeight: 1, padding: 1 }}>👑</span>
+                          )}
+                        </span>
+                        <span style={{ fontSize: 11, color: "#F5F0FF", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {openMemberCard && (
+                  <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setOpenMemberCard(null)}>
+                    <div className="frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+                      <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ width: 48, height: 48, borderRadius: "50%", background: memberAvatarBg(openMemberCard.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {openMemberCard.name[0].toUpperCase()}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                            {m.name}
-                            {m.id === activeCrew.created_by && (
+                          <div style={{ fontSize: 16, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                            {openMemberCard.name}
+                            {openMemberCard.id === activeCrew.created_by && (
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px" }}>LEADER</span>
                             )}
                           </div>
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>@{m.handle}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{openMemberCard.handle}</div>
                         </div>
+                        <button onClick={() => setOpenMemberCard(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                         <button
-                          onClick={() => openRealThread(m.id)}
-                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "5px 11px", color: "#8B85A3", cursor: "pointer", flexShrink: 0 }}
+                          onClick={() => { setOpenMemberCard(null); openRealThread(openMemberCard.id); }}
+                          style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, background: "none", border: "1px solid #2A2440", borderRadius: 10, padding: "11px", color: "#8B85A3", cursor: "pointer" }}
                         >
                           Message
                         </button>
                         {activeCrew.created_by === profile?.id && (
                           <button
                             disabled={crewActionPending}
-                            onClick={() => handleRemoveMember(activeCrew.id, m.id, m.name)}
-                            aria-label={`Remove ${m.name}`}
-                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #FF3DA6", borderRadius: 20, padding: "5px 11px", color: "#FF3DA6", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1, flexShrink: 0 }}
+                            onClick={() => { const m = openMemberCard; setOpenMemberCard(null); handleRemoveMember(activeCrew.id, m.id, m.name); }}
+                            style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, background: "rgba(255,61,166,0.08)", border: "1px solid #FF3DA6", borderRadius: 10, padding: "11px", color: "#FF3DA6", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1 }}
                           >
                             Remove
                           </button>
                         )}
                       </div>
-                    ))}
+                    </div>
                   </div>
                 )}
 
