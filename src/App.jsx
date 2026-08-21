@@ -1094,6 +1094,13 @@ function colorForId(id) {
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   return MEMBER_COLORS[hash % MEMBER_COLORS.length];
 }
+const LEADER_GOLD = "linear-gradient(135deg, #FFD700, #C9930A)";
+// Gold for the crew's leader, same hash-based color as everyone else
+// otherwise — a plain avatar background, so callers can drop this
+// straight into a `background` style without branching themselves.
+function memberAvatarBg(memberId, crew) {
+  return crew && crew.created_by === memberId ? LEADER_GOLD : colorForId(memberId);
+}
 
 // Adapts real crew members `{id, name, handle}` into the shape the
 // (mock-data-era) CrewCompare/CampMap components expect. Real members won't
@@ -1563,7 +1570,8 @@ export default function FestivalOptimizer() {
   const [claimTarget, setClaimTarget] = useState(null);
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [notifiedCrew, setNotifiedCrew] = useState(false);
-  const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote } = useCrews(profile?.id);
+  const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote, removeMember: removeCrewMember, leaveCrew, disbandCrew } = useCrews(profile?.id);
+  const [crewActionPending, setCrewActionPending] = useState(false);
   const [activeCrewId, setActiveCrewId] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [queuedActions, setQueuedActions] = useState(0);
@@ -1597,7 +1605,9 @@ export default function FestivalOptimizer() {
 
   const activeStages = FESTIVAL_STAGES[currentFestival] || [];
   const activeDays = FESTIVAL_DAYS[currentFestival] || [];
-  const festivalCrews = crews.filter((c) => c.festival === currentFestival);
+  // A persistent crew shows up under every festival, not just the one it
+  // was created at — that's the whole point of marking it persistent.
+  const festivalCrews = crews.filter((c) => c.persistent || c.festival === currentFestival);
   const activeCrew = crews.find((c) => c.id === activeCrewId) || null;
   // Everyone you share any crew with, deduped — the pool a new DM can
   // start with, regardless of which crew's roster you found them in.
@@ -1609,9 +1619,11 @@ export default function FestivalOptimizer() {
 
   // Switching festivals lands you on that festival's first crew (or no
   // crew, if none exist yet there) rather than keeping a crew that belongs
-  // to a different festival entirely.
+  // to a different festival entirely — unless it's persistent, in which
+  // case it's valid everywhere and switching festivals shouldn't bump you
+  // off it.
   useEffect(() => {
-    if (!activeCrew || activeCrew.festival !== currentFestival) {
+    if (!activeCrew || (!activeCrew.persistent && activeCrew.festival !== currentFestival)) {
       setActiveCrewId(festivalCrews[0]?.id || null);
     }
   }, [currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1692,6 +1704,35 @@ export default function FestivalOptimizer() {
     } else {
       setCrewActionError(result?.error?.message || "Couldn't create the crew — try again.");
     }
+  }
+
+  async function handleRemoveMember(crewId, memberProfileId, memberName) {
+    if (!window.confirm(`Remove ${memberName} from the crew?`)) return;
+    setCrewActionError("");
+    setCrewActionPending(true);
+    const result = await removeCrewMember(crewId, memberProfileId);
+    setCrewActionPending(false);
+    if (result?.error) setCrewActionError(result.error.message || "Couldn't remove them — try again.");
+  }
+
+  async function handleLeaveCrew(crewId) {
+    if (!window.confirm("Leave this crew? You'll need a new invite to get back in.")) return;
+    setCrewActionError("");
+    setCrewActionPending(true);
+    const result = await leaveCrew(crewId);
+    setCrewActionPending(false);
+    if (result?.error) setCrewActionError(result.error.message || "Couldn't leave the crew — try again.");
+    else setInviteOpen(false);
+  }
+
+  async function handleDisbandCrew(crewId) {
+    if (!window.confirm("Disband this crew for everyone? This can't be undone.")) return;
+    setCrewActionError("");
+    setCrewActionPending(true);
+    const result = await disbandCrew(crewId);
+    setCrewActionPending(false);
+    if (result?.error) setCrewActionError(result.error.message || "Couldn't disband the crew — try again.");
+    else setInviteOpen(false);
   }
 
   async function submitJoinCrew(code) {
@@ -2384,7 +2425,12 @@ export default function FestivalOptimizer() {
               <>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700 }}>{activeCrew.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                      {activeCrew.name}
+                      {activeCrew.created_by === profile?.id && (
+                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px" }}>YOU'RE THE LEADER</span>
+                      )}
+                    </div>
                     <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>
                       {activeCrew.members.length + 1} members · {crewPersistent ? "persists after this festival" : "this festival only"}
                     </div>
@@ -2405,11 +2451,16 @@ export default function FestivalOptimizer() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
                     {activeCrew.members.map((m) => (
                       <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid #2A2440", borderRadius: 12, padding: "9px 12px" }}>
-                        <span style={{ width: 30, height: 30, borderRadius: "50%", background: colorForId(m.id), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ width: 30, height: 30, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {m.name[0].toUpperCase()}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                            {m.name}
+                            {m.id === activeCrew.created_by && (
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px" }}>LEADER</span>
+                            )}
+                          </div>
                           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>@{m.handle}</div>
                         </div>
                         <button
@@ -2418,6 +2469,16 @@ export default function FestivalOptimizer() {
                         >
                           Message
                         </button>
+                        {activeCrew.created_by === profile?.id && (
+                          <button
+                            disabled={crewActionPending}
+                            onClick={() => handleRemoveMember(activeCrew.id, m.id, m.name)}
+                            aria-label={`Remove ${m.name}`}
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #FF3DA6", borderRadius: 20, padding: "5px 11px", color: "#FF3DA6", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1, flexShrink: 0 }}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -2545,7 +2606,7 @@ export default function FestivalOptimizer() {
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
                         position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
-                        width: 36, height: 36, borderRadius: "50%", background: colorForId(p.profile_id),
+                        width: 36, height: 36, borderRadius: "50%", background: memberAvatarBg(p.profile_id, activeCrew),
                         border: "3px solid #0F0B1A", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
@@ -2582,7 +2643,7 @@ export default function FestivalOptimizer() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{
                       width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                      background: openMapPin.profile_id === profile?.id ? "#F5F0FF" : colorForId(openMapPin.profile_id),
+                      background: openMapPin.profile_id === profile?.id ? "#F5F0FF" : memberAvatarBg(openMapPin.profile_id, activeCrew),
                       border: openMapPin.profile_id === profile?.id ? "2px solid #3DF2E0" : "none",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10.5, color: "#0F0B1A",
@@ -2767,6 +2828,30 @@ export default function FestivalOptimizer() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {crewActionError && (
+                <div style={{ marginTop: 14, fontSize: 12, color: "#FF3DA6" }}>{crewActionError}</div>
+              )}
+
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
+                {activeCrew?.created_by === profile?.id ? (
+                  <button
+                    disabled={crewActionPending}
+                    onClick={() => handleDisbandCrew(activeCrew.id)}
+                    style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1 }}
+                  >
+                    Disband crew
+                  </button>
+                ) : (
+                  <button
+                    disabled={crewActionPending}
+                    onClick={() => handleLeaveCrew(activeCrew.id)}
+                    style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1 }}
+                  >
+                    Leave crew
+                  </button>
+                )}
               </div>
             </div>
           </div>

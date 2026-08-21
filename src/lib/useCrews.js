@@ -58,6 +58,20 @@ export function useCrews(profileId) {
     refresh();
   }, [refresh]);
 
+  // crew_members was already added to the realtime publication (schema.sql)
+  // but nothing ever subscribed to it — membership changes (someone joins,
+  // leaves, gets removed, or the crew gets disbanded) only showed up on
+  // your next reload. RLS scopes what postgres_changes actually delivers,
+  // so this only ever fires for crews you're already in.
+  useEffect(() => {
+    if (!profileId) return;
+    const channel = supabase
+      .channel(`crew_members:${profileId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "crew_members" }, () => refresh())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [profileId, refresh]);
+
   async function createCrew(name, festivalId) {
     const { data: crew, error } = await supabase
       .from("crews")
@@ -89,5 +103,33 @@ export function useCrews(profileId) {
     supabase.from("crews").update({ persistent }).eq("id", crewId).then();
   }
 
-  return { crews, loading, createCrew, joinCrew, setCrewPersistent, refresh };
+  // Removing someone else is leader-only, enforced server-side by the
+  // remove_crew_member RPC — this isn't the path for leaving yourself.
+  async function removeMember(crewId, memberProfileId) {
+    const { error } = await supabase.rpc("remove_crew_member", {
+      target_crew_id: crewId,
+      target_profile_id: memberProfileId,
+    });
+    if (error) return { error };
+    await refresh();
+    return {};
+  }
+
+  async function leaveCrew(crewId) {
+    const { error } = await supabase.from("crew_members").delete().eq("crew_id", crewId).eq("profile_id", profileId);
+    if (error) return { error };
+    setCrews((prev) => prev.filter((c) => c.id !== crewId));
+    return {};
+  }
+
+  // Deletes the crews row outright; crew_members rows cascade via FK.
+  // RLS restricts this to the crew's creator.
+  async function disbandCrew(crewId) {
+    const { error } = await supabase.from("crews").delete().eq("id", crewId);
+    if (error) return { error };
+    setCrews((prev) => prev.filter((c) => c.id !== crewId));
+    return {};
+  }
+
+  return { crews, loading, createCrew, joinCrew, setCrewPersistent, removeMember, leaveCrew, disbandCrew, refresh };
 }
