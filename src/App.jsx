@@ -2999,7 +2999,7 @@ export default function FestivalOptimizer() {
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: profile.color || "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: (editingProfile ? editColor : profile.color) || "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
                   {profile.name[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
