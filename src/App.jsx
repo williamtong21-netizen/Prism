@@ -1713,6 +1713,16 @@ export default function FestivalOptimizer() {
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         ${AUTH_SCREEN_SHARED_CSS}
+        /* Browser-tab desktop gets a real left nav rail instead of a
+           scaled-up bottom tab bar; the installed app never sees this —
+           same display-mode gate as the rest of the responsive rules. */
+        .desktop-sidebar { display: none; }
+        .mobile-bottom-nav-wrap { display: flex; }
+        @media (display-mode: browser) and (min-width: 900px) {
+          .desktop-sidebar { display: flex; }
+          .mobile-bottom-nav-wrap { display: none; }
+        }
+        .sidebar-tab:hover { background: rgba(61,242,224,0.06); }
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
         .reveal.on { opacity: 1; transform: translateY(0); }
         .set-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
@@ -1782,6 +1792,36 @@ export default function FestivalOptimizer() {
           </div>
         </div>
       )}
+
+      <nav className="desktop-sidebar" style={{
+        flexDirection: "column", width: 220, flexShrink: 0, gap: 2, padding: "28px 12px",
+        borderRight: "1px solid #2A2440", position: "sticky", top: 0, height: "100svh", alignSelf: "flex-start",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 10px", marginBottom: 24 }}>
+          <PrismLogo size={26} />
+          <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20, letterSpacing: "2px", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            PRISM
+          </span>
+        </div>
+        {TABS.map((t) => {
+          const active = view === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setView(t.id)}
+              className="sidebar-tab"
+              style={{
+                display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
+                background: active ? "rgba(61,242,224,0.1)" : "none", border: "none", borderRadius: 10,
+                padding: "11px 12px", cursor: "pointer", color: active ? "#3DF2E0" : "#8B85A3",
+              }}
+            >
+              <Icon name={t.icon} active={active} />
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       <div className="frame" style={{ paddingBottom: 84 }}>
         {/* Header */}
@@ -3359,8 +3399,8 @@ export default function FestivalOptimizer() {
           </div>
         )}
 
-        {/* Bottom tab bar */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 10 }}>
+        {/* Bottom tab bar — mobile/installed app only; browser-desktop uses the sidebar instead */}
+        <div className="mobile-bottom-nav-wrap" style={{ position: "fixed", bottom: 0, left: 0, right: 0, justifyContent: "center", zIndex: 10 }}>
           <div className="frame" style={{ display: "flex", background: "#151024", borderTop: "1px solid #2A2440", padding: "10px 6px calc(10px + env(safe-area-inset-bottom))" }}>
             {TABS.map((t) => {
               const active = view === t.id;
