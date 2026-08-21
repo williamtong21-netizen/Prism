@@ -1088,7 +1088,10 @@ function matchLabel(match) {
   return match == null ? "No data" : `${match}%`;
 }
 
-const MEMBER_COLORS = ["#3DF2E0", "#FF3DA6", "#9D6BFF", "#FFB23D", "#5FD97A"];
+// No orange/gold hue here on purpose — the crew leader indicator is gold
+// (LEADER_GOLD below), and an ordinary member hashing to a gold-adjacent
+// color made them look like a second leader.
+const MEMBER_COLORS = ["#3DF2E0", "#FF3DA6", "#9D6BFF", "#5FD97A", "#4D96FF"];
 function colorForId(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
