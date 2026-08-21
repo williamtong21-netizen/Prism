@@ -1094,6 +1094,13 @@ function colorForId(id) {
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   return MEMBER_COLORS[hash % MEMBER_COLORS.length];
 }
+// Camp pin types — color-coded by *type*, not by who dropped it (person
+// identity is shown when you tap a pin instead).
+const PIN_TYPES = {
+  camp: { emoji: "🏕️", label: "Camp", color: "#3DF2E0" },
+  meetup: { emoji: "📍", label: "Meetup", color: "#FFB23D" },
+  other: { emoji: "⭐", label: "Other", color: "#9D6BFF" },
+};
 const LEADER_GOLD = "linear-gradient(135deg, #FFD700, #C9930A)";
 // Gold for the crew's leader, same hash-based color as everyone else
 // otherwise — a plain avatar background, so callers can drop this
@@ -1583,8 +1590,8 @@ export default function FestivalOptimizer() {
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
   const [requestedFestivals, setRequestedFestivals] = useState([]);
-  const { byFestival: campPinsByFestival, refresh: refreshCampPins, setMyPin: setMyCampPin, clearMyPin: clearMyCampPin } = useCampPins(profile?.id);
-  const [pinPlacing, setPinPlacing] = useState(false);
+  const { byFestival: campPinsByFestival, refresh: refreshCampPins, addPin: addCampPin, updatePin: updateCampPin, deletePin: deleteCampPin } = useCampPins(profile?.id);
+  const [pinPlacing, setPinPlacing] = useState(null); // null | 'camp' | 'meetup' | 'other'
   const [openMapPin, setOpenMapPin] = useState(null);
   const [pinActionError, setPinActionError] = useState("");
 
@@ -2549,7 +2556,7 @@ export default function FestivalOptimizer() {
 
         {officialMapOpen && FESTIVAL_MAP_IMAGES[currentFestival] && (() => {
           const pins = campPinsByFestival[currentFestival] || [];
-          const myPin = pins.find((p) => p.profile_id === profile?.id);
+          const myPins = pins.filter((p) => p.profile_id === profile?.id);
           const otherPins = pins.filter((p) => p.profile_id !== profile?.id);
 
           function handleLightboxClick(e) {
@@ -2557,33 +2564,40 @@ export default function FestivalOptimizer() {
             const rect = e.currentTarget.getBoundingClientRect();
             const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
             const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
-            setPinPlacing(false);
-            setMyCampPin(currentFestival, x, y, myPin?.note || "").then((r) => {
+            const type = pinPlacing;
+            setPinPlacing(null);
+            addCampPin(currentFestival, x, y, type, "").then((r) => {
               if (r?.error) setPinActionError(r.error.message || "Couldn't save your pin — try again.");
+              else setOpenMapPin(r.data ? { ...r.data, profiles: profile } : null);
             });
           }
 
           return (
             <div
               style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
-              onClick={() => { setOfficialMapOpen(false); setPinPlacing(false); setOpenMapPin(null); }}
+              onClick={() => { setOfficialMapOpen(false); setPinPlacing(null); setOpenMapPin(null); }}
             >
               <div
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
-                  onClick={() => setPinPlacing((p) => !p)}
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
-                    padding: "8px 14px", borderRadius: 20,
-                    border: `1px solid ${pinPlacing ? "#3DF2E0" : "rgba(255,255,255,0.2)"}`,
-                    background: pinPlacing ? "rgba(61,242,224,0.15)" : "rgba(255,255,255,0.08)",
-                    color: pinPlacing ? "#3DF2E0" : "#F5F0FF", cursor: "pointer",
-                  }}
-                >
-                  {pinPlacing ? "Tap the map to drop it…" : myPin ? "Move my pin" : "Drop my pin"}
-                </button>
+                <div style={{ display: "flex", gap: 6, flex: 1, overflowX: "auto" }}>
+                  {Object.entries(PIN_TYPES).map(([type, info]) => (
+                    <button
+                      key={type}
+                      onClick={() => setPinPlacing((p) => (p === type ? null : type))}
+                      style={{
+                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, whiteSpace: "nowrap",
+                        padding: "8px 12px", borderRadius: 20, flexShrink: 0,
+                        border: `1px solid ${pinPlacing === type ? info.color : "rgba(255,255,255,0.2)"}`,
+                        background: pinPlacing === type ? `${info.color}26` : "rgba(255,255,255,0.08)",
+                        color: pinPlacing === type ? info.color : "#F5F0FF", cursor: "pointer",
+                      }}
+                    >
+                      {info.emoji} {pinPlacing === type ? "Tap the map…" : info.label}
+                    </button>
+                  ))}
+                </div>
                 <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
               </div>
 
@@ -2602,33 +2616,32 @@ export default function FestivalOptimizer() {
                   />
                   {otherPins.map((p) => (
                     <div
-                      key={p.profile_id}
+                      key={p.id}
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
                         position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
-                        width: 36, height: 36, borderRadius: "50%", background: memberAvatarBg(p.profile_id, activeCrew),
+                        width: 36, height: 36, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "#5B5470",
                         border: "3px solid #0F0B1A", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, cursor: "pointer",
                       }}
                     >
-                      {(p.profiles?.name || "?")[0].toUpperCase()}
+                      {PIN_TYPES[p.pin_type]?.emoji || "📍"}
                     </div>
                   ))}
-                  {myPin && (
+                  {myPins.map((p) => (
                     <div
-                      onClick={(e) => { e.stopPropagation(); setOpenMapPin(myPin); }}
+                      key={p.id}
+                      onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
-                        position: "absolute", left: `${myPin.x}%`, top: `${myPin.y}%`, transform: "translate(-50%, -50%)",
-                        width: 40, height: 40, borderRadius: "50%", background: "#F5F0FF", border: "3.5px solid #3DF2E0",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                        position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
+                        width: 38, height: 38, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "#5B5470",
+                        border: "3px solid #F5F0FF", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, cursor: "pointer",
                       }}
                     >
-                      YOU
+                      {PIN_TYPES[p.pin_type]?.emoji || "📍"}
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -2643,16 +2656,15 @@ export default function FestivalOptimizer() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{
                       width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                      background: openMapPin.profile_id === profile?.id ? "#F5F0FF" : memberAvatarBg(openMapPin.profile_id, activeCrew),
-                      border: openMapPin.profile_id === profile?.id ? "2px solid #3DF2E0" : "none",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10.5, color: "#0F0B1A",
+                      background: PIN_TYPES[openMapPin.pin_type]?.color || "#5B5470",
+                      border: openMapPin.profile_id === profile?.id ? "2px solid #F5F0FF" : "2px solid #0F0B1A",
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13,
                     }}>
-                      {openMapPin.profile_id === profile?.id ? "Y" : (openMapPin.profiles?.name || "?")[0].toUpperCase()}
+                      {PIN_TYPES[openMapPin.pin_type]?.emoji || "📍"}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-                        {openMapPin.profile_id === profile?.id ? "Your pin" : openMapPin.profiles?.name || "Crew member"}
+                        {PIN_TYPES[openMapPin.pin_type]?.label || "Pin"} · {openMapPin.profile_id === profile?.id ? "You" : openMapPin.profiles?.name || "Crew member"}
                       </div>
                       {openMapPin.note && <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 1 }}>{openMapPin.note}</div>}
                     </div>
@@ -2665,14 +2677,14 @@ export default function FestivalOptimizer() {
                         placeholder="Add a note (e.g. blue tent near the tree line)"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            setMyCampPin(currentFestival, myPin.x, myPin.y, e.currentTarget.value.trim());
+                            updateCampPin(openMapPin.id, currentFestival, { note: e.currentTarget.value.trim() });
                             setOpenMapPin(null);
                           }
                         }}
                         style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: "#F5F0FF", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "8px 10px", outline: "none" }}
                       />
                       <button
-                        onClick={() => { clearMyCampPin(currentFestival); setOpenMapPin(null); }}
+                        onClick={() => { deleteCampPin(openMapPin.id, currentFestival); setOpenMapPin(null); }}
                         style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "8px 12px", borderRadius: 8, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: "pointer", whiteSpace: "nowrap" }}
                       >
                         Remove
