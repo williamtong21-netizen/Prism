@@ -2379,8 +2379,10 @@ export default function FestivalOptimizer() {
                         <img
                           src={mapInfo.src}
                           alt={`${festivalName} official festival map`}
-                          style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover" }}
+                          draggable={false}
+                          style={{ width: "100%", display: "block", maxHeight: 220, objectFit: "cover", WebkitUserDrag: "none", userSelect: "none" }}
                           onError={() => setMapLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
+                          onDragStart={(e) => e.preventDefault()}
                         />
                       </button>
                       {mapInfo.note && (
@@ -2417,12 +2419,14 @@ export default function FestivalOptimizer() {
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
               <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
             </div>
-            <div style={{ flex: 1, overflow: "auto", touchAction: "pinch-zoom" }}>
+            <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain", touchAction: "pinch-zoom" }}>
               <img
                 src={FESTIVAL_MAP_IMAGES[currentFestival].src}
                 alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map, full size`}
-                style={{ width: "100%", display: "block" }}
+                draggable={false}
+                style={{ width: "100%", display: "block", WebkitUserDrag: "none", userSelect: "none", pointerEvents: "auto" }}
                 onClick={(e) => e.stopPropagation()}
+                onDragStart={(e) => e.preventDefault()}
               />
             </div>
           </div>
