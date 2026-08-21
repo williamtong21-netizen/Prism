@@ -1123,13 +1123,21 @@ function Icon({ name, active }) {
 // it's always a flex child inside a fixed full-width wrapper (bottom nav,
 // modal backdrops) or a centered flex column (these auth screens), so
 // scaling its own box doesn't disturb any fixed-position coordinate math.
-const AUTH_SCREEN_RESPONSIVE_CSS = `
+const AUTH_SCREEN_SHARED_CSS = `
   .frame { width: 100%; max-width: 430px; }
   @media (display-mode: browser) and (min-width: 700px) {
     .frame { max-width: 460px; zoom: 1.35; }
   }
   @media (display-mode: browser) and (min-width: 1100px) {
     .frame { max-width: 480px; zoom: 1.6; }
+  }
+  .prism-glow { animation: prismGlowPulse 3.2s ease-in-out infinite; }
+  @keyframes prismGlowPulse {
+    0%, 100% { opacity: 0.65; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .prism-glow { animation: none; }
   }
 `;
 
@@ -1159,11 +1167,11 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
     <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-        ${AUTH_SCREEN_RESPONSIVE_CSS}
+        ${AUTH_SCREEN_SHARED_CSS}
       `}</style>
       <div className="frame">
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{
+        <div className="prism-glow" style={{
           position: "absolute", top: -40, width: 220, height: 220, borderRadius: "50%",
           background: "radial-gradient(circle, rgba(157,107,255,0.35), rgba(61,242,224,0.18) 45%, transparent 70%)",
           filter: "blur(8px)", pointerEvents: "none",
@@ -1254,7 +1262,7 @@ function OnboardingScreen({ email, onSubmit }) {
     <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 28px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-        ${AUTH_SCREEN_RESPONSIVE_CSS}
+        ${AUTH_SCREEN_SHARED_CSS}
       `}</style>
       <div className="frame">
       <PrismLogo size={56} />
@@ -1698,7 +1706,7 @@ export default function FestivalOptimizer() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        ${AUTH_SCREEN_RESPONSIVE_CSS}
+        ${AUTH_SCREEN_SHARED_CSS}
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
         .reveal.on { opacity: 1; transform: translateY(0); }
         .set-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
