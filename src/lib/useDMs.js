@@ -64,6 +64,24 @@ export function useDMs(profileId) {
     return () => supabase.removeChannel(channel);
   }, [profileId]);
 
+  // The subscription above only knows about threads already in `threads`,
+  // so a brand-new incoming thread (someone DMing you for the first time)
+  // never showed up until the app was reloaded and refresh() ran again on
+  // mount. This listens for your own participant row showing up in a new
+  // thread and re-fetches so it appears without a manual reload.
+  useEffect(() => {
+    if (!profileId) return;
+    const channel = supabase
+      .channel(`dm_participants:${profileId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "dm_participants", filter: `profile_id=eq.${profileId}` },
+        () => refresh()
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [profileId, refresh]);
+
   async function openThreadWith(otherProfileId) {
     const existing = threads.find((t) => t.other?.id === otherProfileId);
     if (existing) return { data: existing.id };
