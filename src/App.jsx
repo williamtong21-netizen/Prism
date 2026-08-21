@@ -4,6 +4,7 @@ import { usePackingState } from "./lib/usePackingState";
 import { useNotifications } from "./lib/useNotifications";
 import { useCrews } from "./lib/useCrews";
 import { useDMs } from "./lib/useDMs";
+import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
 
 // ---------------------------------------------------------------------------
@@ -768,41 +769,6 @@ const FESTIVAL_MAP_IMAGES = {
   "lollapalooza-berlin": { src: "/festival-maps/lollapalooza-berlin.jpg", year: 2026 },
 };
 
-// Static camp pins — where someone dropped a marker for their tent/meetup
-// spot, not a live position. `x`/`y` are percentages of the map viewBox.
-const FESTIVAL_CAMP_PINS = {
-  bonnaroo: {
-    you: { x: 75, y: 290, note: "Plaza 2, blue tent near the tree line" },
-    mia: { x: 100, y: 290, note: "Same row as you, Plaza 2" },
-    jax: { x: 340, y: 285, note: "Plaza 9, back corner" },
-    theo: null, // hasn't dropped a pin / sharing off
-  },
-  coachella: {
-    you: { x: 100, y: 285, note: "General camping, near the shuttle stop" },
-    mia: { x: 260, y: 285, note: "Preferred camping, row C" },
-    jax: null,
-    theo: null,
-  },
-  "electric-forest": {
-    you: { x: 100, y: 285, note: "Main Street, close to the Sherwood entrance" },
-    mia: { x: 260, y: 285, note: "Maplewoods, under the trees" },
-    jax: null,
-    theo: null,
-  },
-  tomorrowland: {
-    you: { x: 100, y: 285, note: "Magnificent Greens, near the marketplace" },
-    mia: { x: 260, y: 285, note: "Easy Tent zone, pre-pitched row 4" },
-    jax: null,
-    theo: null,
-  },
-  "lost-lands": {
-    you: { x: 100, y: 285, note: "GA Tent Camping, close to the shuttle lot" },
-    mia: { x: 260, y: 285, note: "RV Camping, spot 14" },
-    jax: null,
-    theo: null,
-  },
-};
-
 // Verified artist posts — visually distinct from crowd posts, always pinned
 // to the top of Community regardless of sort. `artistOf` links back to a
 // SETS id so the schedule can show a small "artist posted" indicator.
@@ -1557,10 +1523,18 @@ export default function FestivalOptimizer() {
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
   const [requestedFestivals, setRequestedFestivals] = useState([]);
+  const { byFestival: campPinsByFestival, refresh: refreshCampPins, setMyPin: setMyCampPin, clearMyPin: clearMyCampPin } = useCampPins(profile?.id);
+  const [pinPlacing, setPinPlacing] = useState(false);
+  const [openMapPin, setOpenMapPin] = useState(null);
+  const [pinActionError, setPinActionError] = useState("");
 
   useEffect(() => {
     localStorage.setItem("prism:lastFestival", currentFestival);
   }, [currentFestival]);
+
+  useEffect(() => {
+    if (profile?.id && currentFestival) refreshCampPins(currentFestival);
+  }, [profile?.id, currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const fadeStart = setTimeout(() => setSplashFading(true), 1100);
@@ -2388,6 +2362,11 @@ export default function FestivalOptimizer() {
                       {mapInfo.note && (
                         <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{mapInfo.note}</p>
                       )}
+                      {(campPinsByFestival[currentFestival]?.length || 0) > 0 && (
+                        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#3DF2E0", margin: "6px 0 0" }}>
+                          📍 {campPinsByFestival[currentFestival].length} crew pin{campPinsByFestival[currentFestival].length === 1 ? "" : "s"} dropped — tap to view
+                        </p>
+                      )}
                     </>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed #2A2440", borderRadius: 14, background: "#151024" }}>
@@ -2404,6 +2383,9 @@ export default function FestivalOptimizer() {
               key={currentFestival}
               friends={activeCrew ? toDisplayFriends(activeCrew.members) : []}
               sharing={activeCrew ? { ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing } : sharing}
+              pins={campPinsByFestival[currentFestival] || []}
+              myProfileId={profile?.id}
+              onSetMyPin={(x, y, note) => setMyCampPin(currentFestival, x, y, note)}
               isOnline={isOnline}
               onQueue={() => setQueuedActions((n) => n + 1)}
               currentFestival={currentFestival}
@@ -2411,26 +2393,141 @@ export default function FestivalOptimizer() {
           </div>
         )}
 
-        {officialMapOpen && FESTIVAL_MAP_IMAGES[currentFestival] && (
-          <div
-            style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
-            onClick={() => setOfficialMapOpen(false)}
-          >
-            <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
-              <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
-            </div>
-            <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain", touchAction: "pinch-zoom" }}>
-              <img
-                src={FESTIVAL_MAP_IMAGES[currentFestival].src}
-                alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map, full size`}
-                draggable={false}
-                style={{ width: "100%", display: "block", WebkitUserDrag: "none", userSelect: "none", pointerEvents: "auto" }}
+        {officialMapOpen && FESTIVAL_MAP_IMAGES[currentFestival] && (() => {
+          const pins = campPinsByFestival[currentFestival] || [];
+          const myPin = pins.find((p) => p.profile_id === profile?.id);
+          const otherPins = pins.filter((p) => p.profile_id !== profile?.id);
+
+          function handleLightboxClick(e) {
+            if (!pinPlacing) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+            const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
+            setPinPlacing(false);
+            setMyCampPin(currentFestival, x, y, myPin?.note || "").then((r) => {
+              if (r?.error) setPinActionError(r.error.message || "Couldn't save your pin — try again.");
+            });
+          }
+
+          return (
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
+              onClick={() => { setOfficialMapOpen(false); setPinPlacing(false); setOpenMapPin(null); }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}
                 onClick={(e) => e.stopPropagation()}
-                onDragStart={(e) => e.preventDefault()}
-              />
+              >
+                <button
+                  onClick={() => setPinPlacing((p) => !p)}
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
+                    padding: "8px 14px", borderRadius: 20,
+                    border: `1px solid ${pinPlacing ? "#3DF2E0" : "rgba(255,255,255,0.2)"}`,
+                    background: pinPlacing ? "rgba(61,242,224,0.15)" : "rgba(255,255,255,0.08)",
+                    color: pinPlacing ? "#3DF2E0" : "#F5F0FF", cursor: "pointer",
+                  }}
+                >
+                  {pinPlacing ? "Tap the map to drop it…" : myPin ? "Move my pin" : "Drop my pin"}
+                </button>
+                <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
+              </div>
+
+              {pinActionError && (
+                <div onClick={(e) => e.stopPropagation()} style={{ margin: "0 14px", fontSize: 12, color: "#FF3DA6" }}>{pinActionError}</div>
+              )}
+
+              <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain", touchAction: pinPlacing ? "none" : "pinch-zoom" }}>
+                <div style={{ position: "relative" }} onClick={(e) => { e.stopPropagation(); handleLightboxClick(e); }}>
+                  <img
+                    src={FESTIVAL_MAP_IMAGES[currentFestival].src}
+                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official festival map, full size`}
+                    draggable={false}
+                    style={{ width: "100%", display: "block", WebkitUserDrag: "none", userSelect: "none", cursor: pinPlacing ? "crosshair" : "default" }}
+                    onDragStart={(e) => e.preventDefault()}
+                  />
+                  {otherPins.map((p) => (
+                    <div
+                      key={p.profile_id}
+                      onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
+                      style={{
+                        position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
+                        width: 26, height: 26, borderRadius: "50%", background: colorForId(p.profile_id),
+                        border: "2px solid #0F0B1A", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                      }}
+                    >
+                      {(p.profiles?.name || "?")[0].toUpperCase()}
+                    </div>
+                  ))}
+                  {myPin && (
+                    <div
+                      onClick={(e) => { e.stopPropagation(); setOpenMapPin(myPin); }}
+                      style={{
+                        position: "absolute", left: `${myPin.x}%`, top: `${myPin.y}%`, transform: "translate(-50%, -50%)",
+                        width: 28, height: 28, borderRadius: "50%", background: "#F5F0FF", border: "2.5px solid #3DF2E0",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, fontWeight: 700, color: "#0F0B1A", cursor: "pointer",
+                      }}
+                    >
+                      YOU
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {openMapPin && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "absolute", left: 14, right: 14, bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+                    background: "#171229", border: "1px solid #2A2440", borderRadius: 14, padding: "14px 16px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+                      background: openMapPin.profile_id === profile?.id ? "#F5F0FF" : colorForId(openMapPin.profile_id),
+                      border: openMapPin.profile_id === profile?.id ? "2px solid #3DF2E0" : "none",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10.5, color: "#0F0B1A",
+                    }}>
+                      {openMapPin.profile_id === profile?.id ? "Y" : (openMapPin.profiles?.name || "?")[0].toUpperCase()}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+                        {openMapPin.profile_id === profile?.id ? "Your pin" : openMapPin.profiles?.name || "Crew member"}
+                      </div>
+                      {openMapPin.note && <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 1 }}>{openMapPin.note}</div>}
+                    </div>
+                    <button onClick={() => setOpenMapPin(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>×</button>
+                  </div>
+                  {openMapPin.profile_id === profile?.id && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <input
+                        defaultValue={openMapPin.note || ""}
+                        placeholder="Add a note (e.g. blue tent near the tree line)"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setMyCampPin(currentFestival, myPin.x, myPin.y, e.currentTarget.value.trim());
+                            setOpenMapPin(null);
+                          }
+                        }}
+                        style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: "#F5F0FF", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                      />
+                      <button
+                        onClick={() => { clearMyCampPin(currentFestival); setOpenMapPin(null); }}
+                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "8px 12px", borderRadius: 8, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: "pointer", whiteSpace: "nowrap" }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {view === "community" && (
           <div style={{ padding: "0 14px" }}>
@@ -3305,35 +3402,38 @@ export default function FestivalOptimizer() {
 // Camp map
 // ---------------------------------------------------------------------------
 
-function CampMap({ friends, sharing, isOnline, onQueue, currentFestival }) {
+function CampMap({ friends, sharing, pins, myProfileId, onSetMyPin, isOnline, onQueue, currentFestival }) {
   const zones = FESTIVAL_CAMP_ZONES[currentFestival];
-  const pins = FESTIVAL_CAMP_PINS[currentFestival];
   const stages = FESTIVAL_STAGES[currentFestival] || [];
   const festival = FESTIVALS.find((f) => f.id === currentFestival);
-  const hasCamping = !!(zones && pins);
+  const hasCamping = !!zones;
   const stagesLabel = FESTIVAL_MAP_LABELS[currentFestival]?.stages || "STAGES";
   const campLabel = FESTIVAL_MAP_LABELS[currentFestival]?.camp;
 
-  const [myPin, setMyPin] = useState(pins?.you || null);
   const [placing, setPlacing] = useState(false);
   const [openPin, setOpenPin] = useState(null);
+
+  const myPin = (pins || []).find((p) => p.profile_id === myProfileId) || null;
+  const viewH = hasCamping ? 470 : 240;
 
   function handleMapClick(e) {
     if (!placing || !hasCamping) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 400;
-    const y = ((e.clientY - rect.top) / rect.height) * 470;
-    setMyPin({ x, y, note: myPin?.note || "My camp" });
+    const xPct = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+    const yPct = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
     setPlacing(false);
+    onSetMyPin(xPct, yPct, myPin?.note || "");
     if (!isOnline) onQueue && onQueue();
   }
 
   const crewPins = hasCamping
-    ? friends.filter((f) => sharing[f.id] && pins[f.id]).map((f) => ({ ...f, pin: pins[f.id] }))
+    ? friends
+        .filter((f) => sharing[f.id])
+        .map((f) => ({ ...f, pin: (pins || []).find((p) => p.profile_id === f.id) }))
+        .filter((f) => f.pin)
     : [];
   const hiddenFriends = hasCamping ? friends.filter((f) => !sharing[f.id]) : [];
-  const noPinFriends = hasCamping ? friends.filter((f) => sharing[f.id] && !pins[f.id]) : [];
-  const viewH = hasCamping ? 470 : 240;
+  const noPinFriends = hasCamping ? friends.filter((f) => sharing[f.id] && !(pins || []).some((p) => p.profile_id === f.id)) : [];
 
   return (
     <div>
@@ -3404,19 +3504,27 @@ function CampMap({ friends, sharing, isOnline, onQueue, currentFestival }) {
             </g>
           ))}
           {/* Crew pins */}
-          {crewPins.map((f) => (
-            <g key={f.id} onClick={(e) => { e.stopPropagation(); setOpenPin(f); }} style={{ cursor: "pointer" }}>
-              <circle cx={f.pin.x} cy={f.pin.y} r="10" fill={f.color} stroke="#0F0B1A" strokeWidth="2" />
-              <text x={f.pin.x} y={f.pin.y + 3.5} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">{f.initial}</text>
-            </g>
-          ))}
+          {crewPins.map((f) => {
+            const px = (f.pin.x / 100) * 400;
+            const py = (f.pin.y / 100) * viewH;
+            return (
+              <g key={f.id} onClick={(e) => { e.stopPropagation(); setOpenPin(f); }} style={{ cursor: "pointer" }}>
+                <circle cx={px} cy={py} r="10" fill={f.color} stroke="#0F0B1A" strokeWidth="2" />
+                <text x={px} y={py + 3.5} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">{f.initial}</text>
+              </g>
+            );
+          })}
           {/* My pin */}
-          {hasCamping && myPin && (
-            <g>
-              <circle cx={myPin.x} cy={myPin.y} r="11" fill="#F5F0FF" stroke="#3DF2E0" strokeWidth="2.5" />
-              <text x={myPin.x} y={myPin.y + 4} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">YOU</text>
-            </g>
-          )}
+          {hasCamping && myPin && (() => {
+            const px = (myPin.x / 100) * 400;
+            const py = (myPin.y / 100) * viewH;
+            return (
+              <g>
+                <circle cx={px} cy={py} r="11" fill="#F5F0FF" stroke="#3DF2E0" strokeWidth="2.5" />
+                <text x={px} y={py + 4} textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="9" fontWeight="700" fill="#0F0B1A">YOU</text>
+              </g>
+            );
+          })()}
         </svg>
       </div>
 
