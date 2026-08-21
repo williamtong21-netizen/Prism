@@ -1721,6 +1721,15 @@ export default function FestivalOptimizer() {
         @media (display-mode: browser) and (min-width: 900px) {
           .desktop-sidebar { display: flex; }
           .mobile-bottom-nav-wrap { display: none; }
+          /* transform:scale (from AUTH_SCREEN_SHARED_CSS's 1100px rule)
+             paints .frame bigger without reserving that extra space in
+             the flex layout — fine when .frame is alone, but here it's
+             sitting next to the sidebar and the paint-only overflow
+             bled sideways into it. Swap to a real, layout-affecting
+             width instead once the sidebar is in play. Declared after
+             the shared block in source order, so it wins at equal
+             specificity without needing !important. */
+          .main-frame { max-width: 640px; transform: none; }
         }
         .sidebar-tab:hover { background: rgba(61,242,224,0.06); }
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
@@ -1823,7 +1832,7 @@ export default function FestivalOptimizer() {
         })}
       </nav>
 
-      <div className="frame" style={{ paddingBottom: 84 }}>
+      <div className="frame main-frame" style={{ paddingBottom: 84 }}>
         {/* Header */}
         <div className={`reveal ${revealed ? "on" : ""}`} style={{ padding: "calc(env(safe-area-inset-top, 0px) + 24px) 18px 16px" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
