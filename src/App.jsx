@@ -1002,7 +1002,10 @@ const FESTIVAL_POSTS = {
   ],
 };
 
-const PX_PER_MIN = 4;
+// Was 4 (240px/hour) — way more scrolling than the schedule needs to be
+// readable, especially on a phone where every extra inch of header above
+// it (day tabs, filters, friend/stage legends) eats into what's visible.
+const PX_PER_MIN = 2.5;
 
 // Community tiers — earned from cumulative karma (upvotes received across
 // festivals), separate from artist verification. Ordered low to high;
@@ -1077,6 +1080,12 @@ function matchColor(match) {
   if (match >= 85) return "#3DF2E0";
   if (match >= 60) return "#FFB23D";
   return "#5B5470";
+}
+// Real-lineup festivals without personalized listening data use match:
+// null rather than a fabricated number — {match}% alone renders as a bare
+// "%" for null, so every display spot needs this instead.
+function matchLabel(match) {
+  return match == null ? "No data" : `${match}%`;
 }
 
 const MEMBER_COLORS = ["#3DF2E0", "#FF3DA6", "#9D6BFF", "#FFB23D", "#5FD97A"];
@@ -1731,7 +1740,10 @@ export default function FestivalOptimizer() {
     const fm = FRIEND_MATCHES[s.id] || {};
     return activeFriends.some((f) => (fm[f] || 0) >= 50);
   };
-  const visibleSets = daySets.filter((s) => (lineupSubview === "matches" ? s.match >= threshold || addedFromDiscover.includes(s.id) : true)).filter(passesFriendFilter);
+  // s.match is null for real-lineup festivals with no personalized listening
+  // data yet — treat that as "always show" rather than letting it coerce to
+  // 0 and get filtered out of My Matches like a genuine low match would.
+  const visibleSets = daySets.filter((s) => (lineupSubview === "matches" ? s.match == null || s.match >= threshold || addedFromDiscover.includes(s.id) : true)).filter(passesFriendFilter);
 
   const TABS = [
     { id: "home", label: "Home", icon: "home" },
@@ -2260,7 +2272,7 @@ export default function FestivalOptimizer() {
                     <div key={stage.id} style={{ flex: "1 0 110px", borderRight: "1px solid #2A2440" }}>
                       <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                         {visibleSets.filter((s) => s.stage === stage.id).map((s) => {
-                          const dimmed = lineupSubview === "full" && s.match < threshold;
+                          const dimmed = lineupSubview === "full" && s.match != null && s.match < threshold;
                           const isConflict = conflicts.has(s.id);
                           const wasDiscovered = addedFromDiscover.includes(s.id);
                           return (
@@ -2276,7 +2288,7 @@ export default function FestivalOptimizer() {
                                   <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
                                 )}
                               </div>
-                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: matchColor(s.match), marginTop: 2 }}>{s.match}%</div>
+                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: matchColor(s.match), marginTop: 2 }}>{matchLabel(s.match)}</div>
                             </div>
                           );
                         })}
@@ -2636,7 +2648,7 @@ export default function FestivalOptimizer() {
                 <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(selected.match), border: `1px solid ${matchColor(selected.match)}`, borderRadius: 6, padding: "3px 9px" }}>{selected.match}% match</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(selected.match), border: `1px solid ${matchColor(selected.match)}`, borderRadius: 6, padding: "3px 9px" }}>{selected.match == null ? "No match data" : `${selected.match}% match`}</span>
                 {conflicts.has(selected.id) && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#FF3DA6" }}>⚠ overlaps another set</span>}
               </div>
               {selected.sounds_like ? (
@@ -3589,7 +3601,7 @@ function CrewCompare({ friends, sharing, onToggleSharing, onSelect, currentDay, 
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 2 }}>{fmtTime(s.start, s.day, s.festival)}</div>
                 </td>
                 <td style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid #201A33" }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(s.match) }}>{s.match}%</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(s.match) }}>{matchLabel(s.match)}</span>
                 </td>
                 {friends.map((f) => {
                   const val = (FRIEND_MATCHES[s.id] || {})[f.id];
