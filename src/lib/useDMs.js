@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
+const ATTACHMENT_BUCKET = "dm-attachments";
+const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 days — re-signed on every refresh/receive anyway
+
+// The bucket is private, so a stored path is useless to <img>/<a> on its
+// own — sign it into a temporary URL each time a message is loaded rather
+// than persisting a URL that would eventually expire.
+async function signAttachment(path) {
+  if (!path) return null;
+  const { data } = await supabase.storage.from(ATTACHMENT_BUCKET).createSignedUrl(path, SIGNED_URL_TTL);
+  return data?.signedUrl || null;
+}
+
 // Real 1:1 DM threads. Each thread is loaded with its other participant's
 // profile and full message history; `sender_id === profileId` gets mapped
 // to the same "you" | "them" shape the old mock DM_THREADS used, so the
@@ -21,7 +33,11 @@ export function useDMs(profileId) {
     }
     const [{ data: participants }, { data: messages }] = await Promise.all([
       supabase.from("dm_participants").select("thread_id, profiles(id, name, handle)").in("thread_id", threadIds),
-      supabase.from("dm_messages").select("id, thread_id, sender_id, text, created_at").in("thread_id", threadIds).order("created_at", { ascending: true }),
+      supabase
+        .from("dm_messages")
+        .select("id, thread_id, sender_id, text, created_at, attachment_path, attachment_type, attachment_name, attachment_size")
+        .in("thread_id", threadIds)
+        .order("created_at", { ascending: true }),
     ]);
     const byThreadOther = {};
     for (const p of participants || []) {
@@ -31,6 +47,12 @@ export function useDMs(profileId) {
     for (const m of messages || []) {
       (byThreadMessages[m.thread_id] ||= []).push({ ...m, from: m.sender_id === profileId ? "you" : "them" });
     }
+    await Promise.all(
+      Object.values(byThreadMessages)
+        .flat()
+        .filter((m) => m.attachment_path)
+        .map(async (m) => { m.attachmentUrl = await signAttachment(m.attachment_path); })
+    );
     setThreads(
       threadIds.map((id) => {
         const msgs = byThreadMessages[id] || [];
@@ -48,13 +70,14 @@ export function useDMs(profileId) {
     if (!profileId) return;
     const channel = supabase
       .channel(`dm_messages:${profileId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_messages" }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_messages" }, async (payload) => {
+        const attachmentUrl = payload.new.attachment_path ? await signAttachment(payload.new.attachment_path) : null;
         setThreads((prev) => {
           const idx = prev.findIndex((t) => t.id === payload.new.thread_id);
           if (idx === -1) return prev; // message in a thread we don't know about yet — next refresh() picks it up
           const existing = prev[idx];
           if (existing.messages.some((m) => m.id === payload.new.id)) return prev;
-          const msg = { ...payload.new, from: payload.new.sender_id === profileId ? "you" : "them" };
+          const msg = { ...payload.new, from: payload.new.sender_id === profileId ? "you" : "them", attachmentUrl };
           const next = [...prev];
           next[idx] = { ...existing, messages: [...existing.messages, msg], lastMessage: msg };
           return next;
@@ -91,14 +114,27 @@ export function useDMs(profileId) {
     return { data };
   }
 
-  async function sendMessage(threadId, text) {
+  async function sendMessage(threadId, text, file) {
+    let attachmentFields = {};
+    if (file) {
+      const path = `${threadId}/${crypto.randomUUID()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from(ATTACHMENT_BUCKET).upload(path, file, { contentType: file.type });
+      if (uploadError) return { error: uploadError };
+      attachmentFields = {
+        attachment_path: path,
+        attachment_type: file.type,
+        attachment_name: file.name,
+        attachment_size: file.size,
+      };
+    }
     const { data, error } = await supabase
       .from("dm_messages")
-      .insert({ thread_id: threadId, sender_id: profileId, text })
+      .insert({ thread_id: threadId, sender_id: profileId, text: text || "", ...attachmentFields })
       .select()
       .single();
     if (error) return { error };
-    const msg = { ...data, from: "you" };
+    const attachmentUrl = data.attachment_path ? await signAttachment(data.attachment_path) : null;
+    const msg = { ...data, from: "you", attachmentUrl };
     setThreads((prev) => prev.map((t) => (t.id === threadId ? { ...t, messages: [...t.messages, msg], lastMessage: msg } : t)));
     return { data: msg };
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "./lib/useAuth";
 import { usePackingState } from "./lib/usePackingState";
 import { useNotifications } from "./lib/useNotifications";
@@ -1147,6 +1147,12 @@ function relativeTime(iso) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
 const voteBtnStyle = { background: "none", border: "none", color: "#5B5470", fontSize: 13, cursor: "pointer", padding: 4, lineHeight: 1 };
 
 // ---------------------------------------------------------------------------
@@ -1460,6 +1466,22 @@ export default function FestivalOptimizer() {
   const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
   const [activeRealThreadId, setActiveRealThreadId] = useState(null);
   const [realMessageDraft, setRealMessageDraft] = useState("");
+  const [pendingAttachment, setPendingAttachment] = useState(null); // File, staged before Send
+  const [attachmentError, setAttachmentError] = useState("");
+  const [sendingDM, setSendingDM] = useState(false);
+  const dmFileInputRef = useRef(null);
+  const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+  function handleDmFileSelected(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setAttachmentError("That file's over 10MB — try a smaller one.");
+      return;
+    }
+    setAttachmentError("");
+    setPendingAttachment(file);
+  }
   const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -1624,10 +1646,15 @@ export default function FestivalOptimizer() {
     }
   }
   async function sendDM() {
-    if (!realMessageDraft.trim() || !activeRealThreadId) return;
+    if (!activeRealThreadId || (!realMessageDraft.trim() && !pendingAttachment)) return;
     const text = realMessageDraft.trim();
+    const file = pendingAttachment;
     setRealMessageDraft("");
-    await sendRealMessage(activeRealThreadId, text);
+    setPendingAttachment(null);
+    setSendingDM(true);
+    const result = await sendRealMessage(activeRealThreadId, text, file);
+    setSendingDM(false);
+    if (result?.error) setAttachmentError(result.error.message || "Couldn't send that — try again.");
   }
   async function createCrew() {
     setCrewActionError("");
@@ -3002,14 +3029,84 @@ export default function FestivalOptimizer() {
                               background: m.from === "you" ? "rgba(61,242,224,0.14)" : "#1E1832",
                               border: `1px solid ${m.from === "you" ? "#3DF2E0" : "#2A2440"}`,
                             }}>
-                              <div style={{ fontSize: 13.5, color: "#F5F0FF", lineHeight: 1.4 }}>{m.text}</div>
+                              {m.attachment_path && (
+                                m.attachment_type?.startsWith("image/") ? (
+                                  <a href={m.attachmentUrl || undefined} target="_blank" rel="noreferrer">
+                                    <img
+                                      src={m.attachmentUrl}
+                                      alt={m.attachment_name || "attachment"}
+                                      style={{ display: "block", maxWidth: "100%", maxHeight: 220, borderRadius: 10, marginBottom: m.text ? 6 : 0 }}
+                                    />
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={m.attachmentUrl || undefined}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{
+                                      display: "flex", alignItems: "center", gap: 8, textDecoration: "none",
+                                      background: "rgba(0,0,0,0.18)", border: "1px solid #2A2440", borderRadius: 10,
+                                      padding: "8px 10px", marginBottom: m.text ? 6 : 0,
+                                    }}
+                                  >
+                                    <span style={{ fontSize: 16 }}>📄</span>
+                                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
+                                      {m.attachment_name || "File"}
+                                    </span>
+                                    {m.attachment_size != null && (
+                                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>
+                                        {formatFileSize(m.attachment_size)}
+                                      </span>
+                                    )}
+                                  </a>
+                                )
+                              )}
+                              {m.text && <div style={{ fontSize: 13.5, color: "#F5F0FF", lineHeight: 1.4 }}>{m.text}</div>}
                               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 3, textAlign: m.from === "you" ? "right" : "left" }}>{relativeTime(m.created_at)}</div>
                             </div>
                           </div>
                         ))}
                       </div>
 
+                      {attachmentError && (
+                        <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 10 }}>{attachmentError}</div>
+                      )}
+
+                      {pendingAttachment && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "8px 10px" }}>
+                          <span style={{ fontSize: 16 }}>{pendingAttachment.type.startsWith("image/") ? "🖼️" : "📄"}</span>
+                          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
+                            {pendingAttachment.name}
+                          </span>
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{formatFileSize(pendingAttachment.size)}</span>
+                          <button
+                            onClick={() => setPendingAttachment(null)}
+                            aria-label="Remove attachment"
+                            style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+
                       <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                        <input
+                          ref={dmFileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp,image/heic,application/pdf"
+                          onChange={handleDmFileSelected}
+                          style={{ display: "none" }}
+                        />
+                        <button
+                          onClick={() => dmFileInputRef.current?.click()}
+                          aria-label="Attach a file"
+                          style={{
+                            flexShrink: 0, width: 38, height: 38, borderRadius: "50%", fontSize: 16,
+                            border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer",
+                          }}
+                        >
+                          📎
+                        </button>
                         <input
                           value={realMessageDraft}
                           onChange={(e) => setRealMessageDraft(e.target.value)}
@@ -3023,12 +3120,14 @@ export default function FestivalOptimizer() {
                         />
                         <button
                           onClick={sendDM}
+                          disabled={sendingDM}
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 16px", borderRadius: 20,
-                            border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer", whiteSpace: "nowrap",
+                            border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0",
+                            cursor: sendingDM ? "default" : "pointer", opacity: sendingDM ? 0.6 : 1, whiteSpace: "nowrap",
                           }}
                         >
-                          Send
+                          {sendingDM ? "Sending…" : "Send"}
                         </button>
                       </div>
                     </>
