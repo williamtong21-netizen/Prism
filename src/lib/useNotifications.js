@@ -74,9 +74,13 @@ export function useNotifications(profileId) {
     return data;
   }
 
-  function markRead(id) {
+  async function markRead(id) {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    supabase.from("notifications").update({ read: true }).eq("id", id).then();
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+    // Revert rather than leave it showing read when it never actually
+    // saved -- it would silently flip back to unread on the next refresh
+    // anyway, so better to reflect that immediately.
+    if (error) setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: false } : n)));
   }
 
   return { notifications, pushNotification, markRead };

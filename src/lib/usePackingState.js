@@ -23,15 +23,16 @@ export function usePackingState(profileId) {
     return () => { cancelled = true; };
   }, [profileId]);
 
-  function toggleItem(itemId) {
+  async function toggleItem(itemId) {
     const checked = packedItems.includes(itemId);
     setPackedItems((prev) => (checked ? prev.filter((id) => id !== itemId) : [...prev, itemId]));
 
-    if (checked) {
-      supabase.from("packing_state").delete().eq("profile_id", profileId).eq("item_id", itemId).then();
-    } else {
-      supabase.from("packing_state").upsert({ profile_id: profileId, item_id: itemId, checked: true }).then();
-    }
+    const { error } = checked
+      ? await supabase.from("packing_state").delete().eq("profile_id", profileId).eq("item_id", itemId)
+      : await supabase.from("packing_state").upsert({ profile_id: profileId, item_id: itemId, checked: true });
+    // Revert the optimistic toggle rather than leave a checkbox showing a
+    // state that was never actually saved.
+    if (error) setPackedItems((prev) => (checked ? [...prev, itemId] : prev.filter((id) => id !== itemId)));
   }
 
   return { packedItems, toggleItem, loaded };

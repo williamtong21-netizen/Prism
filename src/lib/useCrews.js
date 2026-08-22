@@ -118,8 +118,16 @@ export function useCrews(profileId) {
   }
 
   async function setCrewPersistent(crewId, persistent) {
+    const previous = crews.find((c) => c.id === crewId)?.persistent;
     setCrews((prev) => prev.map((c) => (c.id === crewId ? { ...c, persistent } : c)));
-    supabase.from("crews").update({ persistent }).eq("id", crewId).then();
+    const { error } = await supabase.from("crews").update({ persistent }).eq("id", crewId);
+    if (error) {
+      // Revert the optimistic flip rather than leaving the toggle showing
+      // a state the database never actually saved.
+      setCrews((prev) => prev.map((c) => (c.id === crewId ? { ...c, persistent: previous } : c)));
+      return { error };
+    }
+    return {};
   }
 
   async function renameCrew(crewId, name) {

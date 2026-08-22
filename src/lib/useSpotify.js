@@ -74,11 +74,20 @@ export function useSpotify(profileId) {
 
   async function disconnect() {
     if (!profileId) return;
-    await Promise.all([
+    const [{ error: connectionsError }, { error: tasteError }] = await Promise.all([
       supabase.from("spotify_connections").delete().eq("profile_id", profileId),
       supabase.from("spotify_taste").delete().eq("profile_id", profileId),
     ]);
+    const deleteError = connectionsError || tasteError;
+    // A failed delete previously still reported success and cleared the
+    // connection client-side, leaving stale tokens/taste rows in the
+    // database while the UI claimed you'd disconnected.
+    if (deleteError) {
+      setError(deleteError.message || "Couldn't disconnect — try again.");
+      return { error: deleteError };
+    }
     setConnection(null);
+    return {};
   }
 
   return { connection, loading, error, connect, handleCallback, disconnect };

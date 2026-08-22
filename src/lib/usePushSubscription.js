@@ -28,25 +28,34 @@ export function usePushSubscription(profileId) {
     if (Notification.permission === "denied") {
       return { error: { message: "Notifications are blocked for this app in your browser/phone settings." } };
     }
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return { error: { message: "Permission not granted." } };
+    // Wrapped in try/catch because requestPermission()/subscribe() are
+    // browser APIs that can throw (denied mid-prompt, unreachable push
+    // service, bad VAPID key) -- letting that escape as a thrown rejection
+    // instead of a returned {error} meant the caller's own error handling
+    // never ran and the user saw nothing at all.
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return { error: { message: "Permission not granted." } };
 
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+      const json = subscription.toJSON();
+      const { error } = await supabase.from("push_subscriptions").upsert(
+        { profile_id: profileId, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
+        { onConflict: "endpoint" }
+      );
+      if (error) return { error };
+      setSubscribed(true);
+      return { data: true };
+    } catch (err) {
+      return { error: { message: err?.message || "Couldn't turn on push notifications — try again." } };
     }
-    const json = subscription.toJSON();
-    const { error } = await supabase.from("push_subscriptions").upsert(
-      { profile_id: profileId, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
-      { onConflict: "endpoint" }
-    );
-    if (error) return { error };
-    setSubscribed(true);
-    return { data: true };
   }, [supported, profileId]);
 
   const unsubscribe = useCallback(async () => {
