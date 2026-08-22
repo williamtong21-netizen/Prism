@@ -183,6 +183,33 @@ const FESTIVALS = [
   { id: "secret-dreams", name: "Secret Dreams", location: "Marengo, OH", dates: "Sep 3–6, 2026", hasData: true },
 ];
 
+const MONTH_ABBR = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+
+// Every FESTIVALS.dates string starts with "Mon D" (the first day of the
+// event, even for multi-weekend ones like "Oct 2–4 & 9–11, 2026") and ends
+// with a bare ", YYYY" -- enough to get a real start date without needing
+// a full date-range parser.
+function festivalStartDate(f) {
+  const day = f.dates.match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2})/);
+  const year = f.dates.match(/(\d{4})\s*$/);
+  if (!day || !year || !(day[1] in MONTH_ABBR)) return null;
+  return new Date(Number(year[1]), MONTH_ABBR[day[1]], Number(day[2]));
+}
+
+// A single hardcoded "home" festival made every first-time visitor land on
+// the same one regardless of the actual calendar -- picks whichever real
+// festival is coming up soonest instead, falling back to the earliest-dated
+// one if every date in FESTIVALS has already passed (e.g. testing in
+// December against a data set that ends in November).
+function getDefaultFestival() {
+  const now = new Date();
+  const dated = FESTIVALS.map((f) => ({ f, d: festivalStartDate(f) })).filter((x) => x.d);
+  const upcoming = dated.filter((x) => x.d >= now).sort((a, b) => a.d - b.d);
+  if (upcoming.length) return upcoming[0].f.id;
+  const earliest = dated.sort((a, b) => a.d - b.d);
+  return earliest[0]?.f.id || FESTIVALS[0].id;
+}
+
 const FESTIVAL_DAYS = {
   bonnaroo: [
     { id: "thu", label: "Thu", date: "Jun 11", startMin: 17 * 60 + 30 },
@@ -1731,7 +1758,7 @@ export default function FestivalOptimizer() {
   const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover
   const [addedFromDiscover, setAddedFromDiscover] = useState([]);
   const [currentDay, setCurrentDay] = useState("fri");
-  const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || "bonnaroo");
+  const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || getDefaultFestival());
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
