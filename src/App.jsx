@@ -1443,7 +1443,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+    <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
       <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -1482,7 +1482,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 // thread with — anyone you share a crew with, across all your crews.
 function NewDmPickerSheet({ members, onClose, onPick }) {
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
+    <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
       <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -1991,6 +1991,12 @@ export default function FestivalOptimizer() {
         .set-card:active { transform: scale(0.97); }
         .tab-btn { transition: transform .12s ease; }
         .tab-btn:active { transform: scale(0.9); }
+        /* Every plain <button> in the app -- not just the hand-picked ones
+           above -- gets the same tap-squish so pressing anything feels
+           acknowledged instead of just instantly snapping to its result. */
+        button:not(.tab-btn):not(.sidebar-tab) { transition: transform .1s ease, opacity .1s ease, box-shadow .15s ease; }
+        button:not(.tab-btn):not(.sidebar-tab):active:not(:disabled) { transform: scale(0.96); }
+        @media (prefers-reduced-motion: reduce) { button { transition: none; } button:active { transform: none; } }
         input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: #2A2440; }
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%;
@@ -2001,7 +2007,16 @@ export default function FestivalOptimizer() {
         @keyframes splashBeam { from { stroke-dashoffset: 40; } to { stroke-dashoffset: 0; } }
         .splash-mark { animation: splashPulse .6s cubic-bezier(.2,.9,.3,1.2) both; }
         .splash-fade { transition: opacity .35s ease; }
-        @media (prefers-reduced-motion: reduce) { .reveal, .set-card, .tab-btn, .splash-mark { transition: none; animation: none; } }
+        /* Every sheet/modal used to just snap into existence — a slide-up
+           on the sheet plus a fade on its backdrop reads as considerably
+           less "computerized" for basically free, since every sheet
+           already shares these two classes. */
+        @keyframes sheetSlideUp { from { transform: translateY(28px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes backdropFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sheet-frame { animation: sheetSlideUp .32s cubic-bezier(.2,.9,.3,1.1) both; }
+        .sheet-backdrop { animation: backdropFadeIn .22s ease both; }
+        .sheet-backdrop > .sheet-frame { animation-delay: .02s; }
+        @media (prefers-reduced-motion: reduce) { .reveal, .set-card, .tab-btn, .splash-mark, .sheet-frame, .sheet-backdrop { transition: none; animation: none; } }
       `}</style>
 
       {splashVisible && (
@@ -2636,7 +2651,7 @@ export default function FestivalOptimizer() {
                 )}
 
                 {openMemberCard && (
-                  <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setOpenMemberCard(null)}>
+                  <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setOpenMemberCard(null)}>
                     <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
                       <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -2895,7 +2910,7 @@ export default function FestivalOptimizer() {
 
         {/* Detail sheet */}
         {selected && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -2977,7 +2992,7 @@ export default function FestivalOptimizer() {
 
         {/* Invite sheet */}
         {inviteOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setInviteOpen(false)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setInviteOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -3069,7 +3084,7 @@ export default function FestivalOptimizer() {
 
         {/* My Crews — every crew you're in, across every festival, with rename */}
         {myCrewsOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -3129,7 +3144,7 @@ export default function FestivalOptimizer() {
 
         {/* Profile sheet */}
         {profileOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
@@ -3195,7 +3210,7 @@ export default function FestivalOptimizer() {
                   <button
                     onClick={saveProfileEdits}
                     disabled={savingProfile}
-                    style={{ flex: 1, background: "#3DF2E0", border: "none", borderRadius: 8, padding: "8px", color: "#0F0B1A", fontWeight: 700, fontSize: 12.5, cursor: savingProfile ? "default" : "pointer", opacity: savingProfile ? 0.7 : 1 }}
+                    style={{ flex: 1, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 8, padding: "8px", color: "#0F0B1A", fontWeight: 700, fontSize: 12.5, cursor: savingProfile ? "default" : "pointer", opacity: savingProfile ? 0.7 : 1, boxShadow: savingProfile ? "none" : "0 2px 14px rgba(157,107,255,0.35)" }}
                   >
                     {savingProfile ? "Saving…" : "Save"}
                   </button>
@@ -3310,7 +3325,7 @@ export default function FestivalOptimizer() {
 
         {/* Artist claim sheet */}
         {claimTarget && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setClaimTarget(null)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setClaimTarget(null)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -3342,7 +3357,7 @@ export default function FestivalOptimizer() {
 
         {/* Festival picker */}
         {festivalPickerOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -3442,7 +3457,7 @@ export default function FestivalOptimizer() {
 
         {/* Notifications inbox */}
         {notificationsOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -3513,7 +3528,7 @@ export default function FestivalOptimizer() {
 
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
@@ -3717,8 +3732,9 @@ export default function FestivalOptimizer() {
                           disabled={sendingDM}
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 16px", borderRadius: 20,
-                            border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0",
+                            border: "none", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", color: "#0F0B1A", fontWeight: 700,
                             cursor: sendingDM ? "default" : "pointer", opacity: sendingDM ? 0.6 : 1, whiteSpace: "nowrap",
+                            boxShadow: sendingDM ? "none" : "0 2px 14px rgba(157,107,255,0.35)",
                           }}
                         >
                           {sendingDM ? "Sending…" : "Send"}
@@ -3775,7 +3791,8 @@ export default function FestivalOptimizer() {
                           onClick={() => sendMessage(activeThread)}
                           style={{
                             fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 16px", borderRadius: 20,
-                            border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer", whiteSpace: "nowrap",
+                            border: "none", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", color: "#0F0B1A", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                            boxShadow: "0 2px 14px rgba(157,107,255,0.35)",
                           }}
                         >
                           Send
@@ -3802,7 +3819,7 @@ export default function FestivalOptimizer() {
 
         {/* Safety sheet — reachable from any tab via the header */}
         {safetyOpen && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
