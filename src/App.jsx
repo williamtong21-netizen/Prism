@@ -3158,7 +3158,16 @@ export default function FestivalOptimizer() {
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
-                <button onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <button
+                    onClick={async () => { setMyCrewsOpen(false); setEditingCrewId(null); await createCrew(); }}
+                    aria-label="Start a new crew"
+                    style={{ background: "none", border: "none", color: "#3DF2E0", fontSize: 22, lineHeight: 1, cursor: "pointer", padding: "0 6px" }}
+                  >
+                    +
+                  </button>
+                  <button onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
                 {crews.map((c) => (
