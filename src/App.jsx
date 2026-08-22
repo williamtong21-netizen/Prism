@@ -1543,17 +1543,32 @@ export default function FestivalOptimizer() {
   const [sendingDM, setSendingDM] = useState(false);
   const dmFileInputRef = useRef(null);
   const messagesSheetRef = useRef(null);
-  const activeRealThread = realThreads.find((th) => th.id === activeRealThreadId) || null;
+  const messagesListRef = useRef(null);
   // The Messages sheet is one scrolling column (header + thread + composer,
   // no separate scroll region for just the message list), so opening a
-  // thread or sending/receiving a message needs an explicit scroll to
-  // bottom -- nothing does this automatically, and without it the newest
-  // message (and the composer right below it) can end up scrolled out of
-  // view, effectively hidden under the on-screen keyboard.
+  // thread needs an explicit scroll to bottom -- nothing does this
+  // automatically, and without it the newest message (and the composer
+  // right below it) can end up scrolled out of view, effectively hidden
+  // under the on-screen keyboard.
+  //
+  // A one-shot scroll on message-count change isn't enough: the message
+  // list's actual height can keep changing after that (an attached image
+  // finishing its async load, a reveal animation, font swap, ...), and
+  // each of those re-opens the same gap between the true bottom and
+  // wherever the one-shot scroll landed -- which is what made the
+  // composer appear to overlap the last message. A ResizeObserver on the
+  // (non-scrolling) message list re-syncs scrollTop to the container's
+  // bottom every time that list's real height changes, for any reason.
   useEffect(() => {
-    if (!activeRealThreadId || !messagesSheetRef.current) return;
-    messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
-  }, [activeRealThreadId, activeRealThread?.messages.length]);
+    if (!activeRealThreadId || !messagesListRef.current || !messagesSheetRef.current) return;
+    const scrollToBottom = () => {
+      if (messagesSheetRef.current) messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
+    };
+    const ro = new ResizeObserver(scrollToBottom);
+    ro.observe(messagesListRef.current);
+    scrollToBottom();
+    return () => ro.disconnect();
+  }, [activeRealThreadId]);
   const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
   function handleDmFileSelected(e) {
     const file = e.target.files?.[0];
@@ -3545,7 +3560,7 @@ export default function FestivalOptimizer() {
                         <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, minHeight: 160 }}>
+                      <div ref={messagesListRef} style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, minHeight: 160 }}>
                         {t.messages.length === 0 && <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center" }}>Say hi.</p>}
                         {t.messages.map((m) => (
                           <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
@@ -3560,9 +3575,6 @@ export default function FestivalOptimizer() {
                                     <img
                                       src={m.attachmentUrl}
                                       alt={m.attachment_name || "attachment"}
-                                      onLoad={() => {
-                                        if (messagesSheetRef.current) messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
-                                      }}
                                       style={{ display: "block", maxWidth: "100%", maxHeight: 220, borderRadius: 10, marginBottom: m.text ? 6 : 0 }}
                                     />
                                   </a>
