@@ -58,6 +58,25 @@ export function useCrews(profileId) {
     refresh();
   }, [refresh]);
 
+  // Realtime's websocket gets suspended when a backgrounded tab/PWA is
+  // frozen by the OS, and on reconnect it only streams changes going
+  // forward -- a membership change that happened while backgrounded was
+  // silently missed and only showed up after a full app restart re-ran
+  // the mount-time refresh() above. Re-running it whenever the app comes
+  // back to the foreground closes that gap without waiting for a restart.
+  useEffect(() => {
+    if (!profileId) return;
+    function handleVisible() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
+  }, [profileId, refresh]);
+
   // crew_members was already added to the realtime publication (schema.sql)
   // but nothing ever subscribed to it — membership changes (someone joins,
   // leaves, gets removed, or the crew gets disbanded) only showed up on

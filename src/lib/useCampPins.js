@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "./supabaseClient";
 
 // Real crew camp pins — any number per (profile, festival), each tagged
@@ -34,6 +34,32 @@ export function useCampPins(profileId) {
       })
       .subscribe();
     return () => supabase.removeChannel(channel);
+  }, [profileId, refresh]);
+
+  // Realtime's websocket gets suspended when a backgrounded tab/PWA is
+  // frozen by the OS, and on reconnect it only streams changes going
+  // forward -- a pin added/moved while backgrounded was silently missed
+  // and only showed up after a full app restart. Re-fetching every
+  // festival already loaded (via a ref, so this effect doesn't need to
+  // resubscribe every time byFestival changes) whenever the app comes
+  // back to the foreground closes that gap without waiting for a restart.
+  const byFestivalRef = useRef(byFestival);
+  useEffect(() => {
+    byFestivalRef.current = byFestival;
+  }, [byFestival]);
+  useEffect(() => {
+    if (!profileId) return;
+    function handleVisible() {
+      if (document.visibilityState === "visible") {
+        Object.keys(byFestivalRef.current).forEach((festivalId) => refresh(festivalId));
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
   }, [profileId, refresh]);
 
   async function addPin(festivalId, x, y, pinType, note) {
