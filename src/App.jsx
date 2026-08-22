@@ -1479,7 +1479,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 function NewDmPickerSheet({ members, onClose, onPick }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
-      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70vh", overflowY: "auto" }}>
+      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>New message</div>
@@ -1542,6 +1542,18 @@ export default function FestivalOptimizer() {
   const [attachmentError, setAttachmentError] = useState("");
   const [sendingDM, setSendingDM] = useState(false);
   const dmFileInputRef = useRef(null);
+  const messagesSheetRef = useRef(null);
+  const activeRealThread = realThreads.find((th) => th.id === activeRealThreadId) || null;
+  // The Messages sheet is one scrolling column (header + thread + composer,
+  // no separate scroll region for just the message list), so opening a
+  // thread or sending/receiving a message needs an explicit scroll to
+  // bottom -- nothing does this automatically, and without it the newest
+  // message (and the composer right below it) can end up scrolled out of
+  // view, effectively hidden under the on-screen keyboard.
+  useEffect(() => {
+    if (!activeRealThreadId || !messagesSheetRef.current) return;
+    messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
+  }, [activeRealThreadId, activeRealThread?.messages.length]);
   const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
   function handleDmFileSelected(e) {
     const file = e.target.files?.[0];
@@ -2975,7 +2987,7 @@ export default function FestivalOptimizer() {
         {/* My Crews — every crew you're in, across every festival, with rename */}
         {myCrewsOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78vh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
@@ -3035,7 +3047,7 @@ export default function FestivalOptimizer() {
         {/* Profile sheet */}
         {profileOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -3248,7 +3260,7 @@ export default function FestivalOptimizer() {
         {/* Festival picker */}
         {festivalPickerOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Your festivals</div>
@@ -3348,7 +3360,7 @@ export default function FestivalOptimizer() {
         {/* Notifications inbox */}
         {notificationsOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82vh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Notifications</div>
@@ -3419,7 +3431,7 @@ export default function FestivalOptimizer() {
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div ref={messagesSheetRef} className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               {!activeThread && !activeRealThreadId ? (
@@ -3699,7 +3711,7 @@ export default function FestivalOptimizer() {
         {/* Safety sheet — reachable from any tab via the header */}
         {safetyOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85vh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
