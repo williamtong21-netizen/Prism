@@ -24,7 +24,7 @@ export function useSpotify(profileId) {
     }
     const { data } = await supabase
       .from("spotify_connections")
-      .select("top_genre, connected_at")
+      .select("top_genre, top_artist, connected_at")
       .eq("profile_id", profileId)
       .maybeSingle();
     setConnection(data || null);

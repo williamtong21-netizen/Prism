@@ -3123,6 +3123,8 @@ export default function FestivalOptimizer() {
                       {spotify.connection
                         ? spotify.connection.top_genre
                           ? `Top genre: ${spotify.connection.top_genre.replace(/\b\w/g, (ch) => ch.toUpperCase())}`
+                          : spotify.connection.top_artist
+                          ? `Top artist: ${spotify.connection.top_artist}`
                           : "Connected"
                         : spotify.loading
                         ? "Connecting…"

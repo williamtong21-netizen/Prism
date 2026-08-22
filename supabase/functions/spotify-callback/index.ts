@@ -76,8 +76,12 @@ Deno.serve(async (req) => {
     const { access_token, refresh_token, expires_in } = tokenData;
 
     // Best-effort -- if this fails, still save the connection with no
-    // top_genre rather than losing the whole connect attempt.
+    // top_genre/top_artist rather than losing the whole connect attempt.
+    // Genre tags on artist objects have been coming back empty under
+    // Spotify's tightened Development Mode access, so top_artist is a
+    // fallback the UI shows whenever no genre could be computed.
     let topGenre = null;
+    let topArtist = null;
     const topRes = await fetch("https://api.spotify.com/v1/me/top/artists?limit=20&time_range=medium_term", {
       headers: { Authorization: `Bearer ${access_token}` },
     });
@@ -91,6 +95,7 @@ Deno.serve(async (req) => {
       }
       const sorted = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
       topGenre = sorted[0]?.[0] || null;
+      topArtist = topData.items?.[0]?.name || null;
     } else {
       console.log("spotify top artists fetch failed", await topRes.text());
     }
@@ -101,6 +106,7 @@ Deno.serve(async (req) => {
       refresh_token,
       expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
       top_genre: topGenre,
+      top_artist: topArtist,
       connected_at: new Date().toISOString(),
     });
     if (upsertError) {
@@ -111,7 +117,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ topGenre }), {
+    return new Response(JSON.stringify({ topGenre, topArtist }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
