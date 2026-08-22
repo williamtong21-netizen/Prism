@@ -1538,7 +1538,7 @@ export default function FestivalOptimizer() {
   const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
   const [activeRealThreadId, setActiveRealThreadId] = useState(null);
   const [realMessageDraft, setRealMessageDraft] = useState("");
-  const [pendingAttachment, setPendingAttachment] = useState(null); // File, staged before Send
+  const [pendingAttachments, setPendingAttachments] = useState([]); // File[], staged before Send
   const [attachmentError, setAttachmentError] = useState("");
   const [sendingDM, setSendingDM] = useState(false);
   const dmFileInputRef = useRef(null);
@@ -1570,16 +1570,19 @@ export default function FestivalOptimizer() {
     return () => ro.disconnect();
   }, [activeRealThreadId]);
   const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+  const MAX_ATTACHMENTS_PER_MESSAGE = 10;
   function handleDmFileSelected(e) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!file) return;
-    if (file.size > MAX_ATTACHMENT_BYTES) {
-      setAttachmentError("That file's over 10MB — try a smaller one.");
-      return;
-    }
-    setAttachmentError("");
-    setPendingAttachment(file);
+    if (files.length === 0) return;
+    const tooBig = files.filter((f) => f.size > MAX_ATTACHMENT_BYTES);
+    const ok = files.filter((f) => f.size <= MAX_ATTACHMENT_BYTES);
+    setPendingAttachments((prev) => [...prev, ...ok].slice(0, MAX_ATTACHMENTS_PER_MESSAGE));
+    setAttachmentError(
+      tooBig.length > 0
+        ? `${tooBig.length === 1 ? "That file's" : `${tooBig.length} files were`} over 10MB and weren't added.`
+        : ""
+    );
   }
   const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -1764,16 +1767,34 @@ export default function FestivalOptimizer() {
       setMessagesOpen(true);
     }
   }
+  // Each attachment still goes out as its own dm_messages row (schema is
+  // one-attachment-per-message) -- sent sequentially, not in parallel, so
+  // they land and render in the order they were staged. The typed caption
+  // rides along with the *last* file rather than being duplicated onto
+  // every one of them.
   async function sendDM() {
-    if (!activeRealThreadId || (!realMessageDraft.trim() && !pendingAttachment)) return;
+    if (!activeRealThreadId || (!realMessageDraft.trim() && pendingAttachments.length === 0)) return;
     const text = realMessageDraft.trim();
-    const file = pendingAttachment;
+    const files = pendingAttachments;
     setRealMessageDraft("");
-    setPendingAttachment(null);
+    setPendingAttachments([]);
     setSendingDM(true);
-    const result = await sendRealMessage(activeRealThreadId, text, file);
+    let error = null;
+    if (files.length === 0) {
+      const result = await sendRealMessage(activeRealThreadId, text, null);
+      error = result?.error;
+    } else {
+      for (let i = 0; i < files.length; i++) {
+        const isLast = i === files.length - 1;
+        const result = await sendRealMessage(activeRealThreadId, isLast ? text : "", files[i]);
+        if (result?.error) {
+          error = result.error;
+          break;
+        }
+      }
+    }
     setSendingDM(false);
-    if (result?.error) setAttachmentError(result.error.message || "Couldn't send that — try again.");
+    if (error) setAttachmentError(error.message || "Couldn't send that — try again.");
   }
   async function createCrew() {
     setCrewActionError("");
@@ -3614,20 +3635,24 @@ export default function FestivalOptimizer() {
                         <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 10 }}>{attachmentError}</div>
                       )}
 
-                      {pendingAttachment && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "8px 10px" }}>
-                          <span style={{ fontSize: 16 }}>{pendingAttachment.type.startsWith("image/") ? "🖼️" : "📄"}</span>
-                          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
-                            {pendingAttachment.name}
-                          </span>
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{formatFileSize(pendingAttachment.size)}</span>
-                          <button
-                            onClick={() => setPendingAttachment(null)}
-                            aria-label="Remove attachment"
-                            style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
-                          >
-                            ×
-                          </button>
+                      {pendingAttachments.length > 0 && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                          {pendingAttachments.map((file, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "8px 10px" }}>
+                              <span style={{ fontSize: 16 }}>{file.type.startsWith("image/") ? "🖼️" : "📄"}</span>
+                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
+                                {file.name}
+                              </span>
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{formatFileSize(file.size)}</span>
+                              <button
+                                onClick={() => setPendingAttachments((prev) => prev.filter((_, j) => j !== i))}
+                                aria-label="Remove attachment"
+                                style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
 
@@ -3635,6 +3660,7 @@ export default function FestivalOptimizer() {
                         <input
                           ref={dmFileInputRef}
                           type="file"
+                          multiple
                           accept="image/jpeg,image/png,image/gif,image/webp,image/heic,application/pdf"
                           onChange={handleDmFileSelected}
                           style={{ display: "none" }}
