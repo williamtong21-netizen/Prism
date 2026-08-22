@@ -66,6 +66,26 @@ export function useDMs(profileId) {
     refresh();
   }, [refresh]);
 
+  // Realtime's websocket gets suspended when a backgrounded tab/PWA is
+  // frozen by the OS, and on reconnect it only streams changes going
+  // forward -- anything sent while backgrounded (like a DM that arrived
+  // as a push notification) is silently missed, and previously only
+  // showed up after a full app restart re-ran the mount-time refresh()
+  // above. Re-running it whenever the app comes back to the foreground
+  // closes that gap without waiting for a restart.
+  useEffect(() => {
+    if (!profileId) return;
+    function handleVisible() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
+  }, [profileId, refresh]);
+
   useEffect(() => {
     if (!profileId) return;
     const channel = supabase
