@@ -3560,6 +3560,9 @@ export default function FestivalOptimizer() {
                                     <img
                                       src={m.attachmentUrl}
                                       alt={m.attachment_name || "attachment"}
+                                      onLoad={() => {
+                                        if (messagesSheetRef.current) messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
+                                      }}
                                       style={{ display: "block", maxWidth: "100%", maxHeight: 220, borderRadius: 10, marginBottom: m.text ? 6 : 0 }}
                                     />
                                   </a>
