@@ -1307,7 +1307,7 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
       </div>
 
       {sent ? (
-        <div style={{ marginTop: 28, width: "100%", maxWidth: 320 }}>
+        <div style={{ marginTop: 28, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320 }}>
           <div style={{ fontSize: 17, fontWeight: 700 }}>You're almost in 📬</div>
           <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 8, lineHeight: 1.5 }}>
             We sent a code and a link to <span style={{ color: "#F5F0FF" }}>{email}</span> — go check your inbox! If Prism's on your home screen, type the 6-digit code below instead of tapping the link — the link opens your regular browser, which won't sign in the home-screen app.
@@ -1333,7 +1333,7 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
           </form>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} style={{ marginTop: 28, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
+        <form onSubmit={handleSubmit} style={{ marginTop: 28, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
           <p style={{ fontSize: 13, color: "#8B85A3", marginBottom: 4, lineHeight: 1.5 }}>
             Your crew, your schedule, your sets — one tap away. Drop your email and let's get you in 🎪
           </p>
@@ -1395,11 +1395,11 @@ function OnboardingScreen({ email, onSubmit }) {
       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "1px", marginTop: 14 }}>
         Welcome to Prism
       </div>
-      <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 6, maxWidth: 300, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 6, marginLeft: "auto", marginRight: "auto", maxWidth: 300, lineHeight: 1.5 }}>
         One last thing before you're in — how should your crew see you?
       </p>
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 24, width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
+      <form onSubmit={handleSubmit} style={{ marginTop: 24, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
         <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
           Display name
           <input
