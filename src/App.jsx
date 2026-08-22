@@ -1683,6 +1683,9 @@ export default function FestivalOptimizer() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [createCrewOpen, setCreateCrewOpen] = useState(false);
+  const [newCrewName, setNewCrewName] = useState("");
+  const [creatingCrew, setCreatingCrew] = useState(false);
   const [joinCrewOpen, setJoinCrewOpen] = useState(false);
   const [crewActionError, setCrewActionError] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
@@ -1882,12 +1885,22 @@ export default function FestivalOptimizer() {
     setSendingDM(false);
     if (error) setAttachmentError(error.message || "Couldn't send that — try again.");
   }
-  async function createCrew() {
-    setCrewActionError("");
+  function openCreateCrew() {
     const festivalName = FESTIVALS.find((f) => f.id === currentFestival)?.name || "New";
-    const result = await createCrewRemote(`${festivalName} Crew`, currentFestival);
+    setNewCrewName(`${festivalName} Crew`);
+    setCrewActionError("");
+    setCreateCrewOpen(true);
+  }
+  async function submitNewCrew() {
+    const name = newCrewName.trim();
+    if (!name || creatingCrew) return;
+    setCreatingCrew(true);
+    setCrewActionError("");
+    const result = await createCrewRemote(name, currentFestival);
+    setCreatingCrew(false);
     if (result?.data) {
       setActiveCrewId(result.data.id);
+      setCreateCrewOpen(false);
       setInviteOpen(true);
     } else {
       setCrewActionError(result?.error?.message || "Couldn't create the crew — try again.");
@@ -2609,7 +2622,7 @@ export default function FestivalOptimizer() {
                   </button>
                 ))}
                 <button
-                  onClick={createCrew}
+                  onClick={openCreateCrew}
                   className="tab-btn"
                   style={{
                     flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
@@ -2646,7 +2659,7 @@ export default function FestivalOptimizer() {
                 </div>
                 <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                   <button
-                    onClick={createCrew}
+                    onClick={openCreateCrew}
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 18px", borderRadius: 10,
                       border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: "pointer",
@@ -3160,7 +3173,7 @@ export default function FestivalOptimizer() {
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <button
-                    onClick={async () => { setMyCrewsOpen(false); setEditingCrewId(null); await createCrew(); }}
+                    onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); openCreateCrew(); }}
                     aria-label="Start a new crew"
                     style={{ background: "none", border: "none", color: "#3DF2E0", fontSize: 22, lineHeight: 1, cursor: "pointer", padding: "0 6px" }}
                   >
@@ -3217,6 +3230,46 @@ export default function FestivalOptimizer() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {createCrewOpen && (
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setCreateCrewOpen(false)}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Create a crew</div>
+                <button onClick={() => setCreateCrewOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+              </div>
+
+              <label style={{ display: "block", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+                Crew name
+                <input
+                  autoFocus
+                  value={newCrewName}
+                  onChange={(e) => setNewCrewName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitNewCrew(); }}
+                  placeholder="Crew name"
+                  aria-label="New crew name"
+                  style={{ width: "100%", marginTop: 6, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 15 }}
+                />
+              </label>
+
+              {crewActionError && <div style={{ fontSize: 12.5, color: "#FF3DA6", marginTop: 10 }}>{crewActionError}</div>}
+
+              <button
+                onClick={submitNewCrew}
+                disabled={!newCrewName.trim() || creatingCrew}
+                style={{
+                  width: "100%", marginTop: 18, borderRadius: 12, padding: "13px", border: "none", fontSize: 14, fontWeight: 700, cursor: !newCrewName.trim() || creatingCrew ? "default" : "pointer",
+                  background: !newCrewName.trim() ? "#2A2440" : "linear-gradient(90deg, #3DF2E0, #9D6BFF)",
+                  color: !newCrewName.trim() ? "#5B5470" : "#0F0B1A",
+                  opacity: creatingCrew ? 0.7 : 1,
+                }}
+              >
+                {creatingCrew ? "Creating…" : "Create crew"}
+              </button>
             </div>
           </div>
         )}
