@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
     let topGenre = null;
     let topArtist = null;
     let topArtistIds: string[] = [];
+    let topArtistNames: string[] = [];
     const topRes = await fetch("https://api.spotify.com/v1/me/top/artists?limit=20&time_range=medium_term", {
       headers: { Authorization: `Bearer ${access_token}` },
     });
@@ -103,6 +104,7 @@ Deno.serve(async (req) => {
       topGenre = sorted[0]?.[0] || null;
       topArtist = topData.items?.[0]?.name || null;
       topArtistIds = (topData.items || []).map((a: { id: string }) => a.id);
+      topArtistNames = (topData.items || []).map((a: { name: string }) => a.name);
     } else {
       console.log("spotify top artists fetch failed", await topRes.text());
     }
@@ -130,6 +132,7 @@ Deno.serve(async (req) => {
       top_genre: topGenre,
       top_artist: topArtist,
       top_artist_ids: topArtistIds,
+      top_artist_names: topArtistNames,
       updated_at: nowIso,
     });
     if (tasteError) {

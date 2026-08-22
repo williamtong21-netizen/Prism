@@ -14,9 +14,13 @@ import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 // ---------------------------------------------------------------------------
 
 // Real Bonnaroo 2026 stage names and Friday, June 12 set times (from public
-// schedule listings). Match %, "sounds like", and source tags are still
-// simulated — there's no real Spotify/SoundCloud connection here, so those
-// stay placeholders layered on top of the real lineup data.
+// schedule listings). match/sounds_like/sources below are still simulated
+// placeholders layered on top of the real lineup data -- but if a connected
+// profile's own top-20 Spotify artists includes one of these acts, that one
+// gets overridden to a real 100% (see effectiveSets in FestivalOptimizer).
+// Nothing else here is derived from a real listening history: genre-based
+// partial matching isn't possible under Spotify's current Development Mode
+// restrictions (top artists come back with no genre tags at all).
 //
 // Stages and days are scoped per festival so the picker can actually switch
 // between festivals rather than just relabeling Bonnaroo's data.
@@ -1727,9 +1731,27 @@ export default function FestivalOptimizer() {
     }
   }, [currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Real match data, as far as it goes: SETS.match is otherwise entirely
+  // simulated (see the comment at the top of this file), but if a lineup
+  // artist is literally one of your own top-20 Spotify artists, that's a
+  // real signal worth surfacing -- overridden to 100% and flagged via
+  // realMatch so the UI can show it's not just another simulated number.
+  // Genre-based partial matching isn't possible: Spotify's tightened
+  // Development Mode access returns empty genre tags on /me/top/artists,
+  // so a name match against top_artist_names is the only real signal
+  // available (see useSpotify.js).
+  const effectiveSets = useMemo(() => {
+    const topNames = spotify.connection?.top_artist_names;
+    if (!topNames?.length) return SETS;
+    const topNameSet = new Set(topNames.map((n) => n.toLowerCase().trim()));
+    return SETS.map((s) =>
+      topNameSet.has(s.artist.toLowerCase().trim()) ? { ...s, match: 100, realMatch: true } : s
+    );
+  }, [spotify.connection]);
+
   const daySets = useMemo(
-    () => SETS.filter((s) => s.festival === currentFestival && s.day === currentDay),
-    [currentFestival, currentDay]
+    () => effectiveSets.filter((s) => s.festival === currentFestival && s.day === currentDay),
+    [effectiveSets, currentFestival, currentDay]
   );
   const timelineEnd = useMemo(() => (daySets.length ? Math.max(...daySets.map((s) => s.end)) : 0), [daySets]);
 
@@ -2398,7 +2420,7 @@ export default function FestivalOptimizer() {
             )}
 
             {lineupSubview === "discover" ? (
-              <DiscoverDeck addedIds={addedFromDiscover} onAdd={(id) => setAddedFromDiscover((prev) => [...prev, id])} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
+              <DiscoverDeck sets={effectiveSets} addedIds={addedFromDiscover} onAdd={(id) => setAddedFromDiscover((prev) => [...prev, id])} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
             ) : (
               <>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
@@ -2659,6 +2681,7 @@ export default function FestivalOptimizer() {
                 )}
 
                 <CrewCompare
+                  sets={effectiveSets}
                   friends={toDisplayFriends(activeCrew.members)}
                   sharing={{ ...Object.fromEntries(activeCrew.members.map((m) => [m.id, true])), ...sharing }}
                   onToggleSharing={toggleSharing}
@@ -2889,6 +2912,9 @@ export default function FestivalOptimizer() {
               </div>
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(selected.match), border: `1px solid ${matchColor(selected.match)}`, borderRadius: 6, padding: "3px 9px" }}>{selected.match == null ? "No match data" : `${selected.match}% match`}</span>
+                {selected.realMatch && (
+                  <span title="One of your actual top-20 Spotify artists" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#3DF2E0" }}>🎧 real match</span>
+                )}
                 {conflicts.has(selected.id) && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#FF3DA6" }}>⚠ overlaps another set</span>}
               </div>
               {selected.sounds_like ? (
@@ -3187,7 +3213,7 @@ export default function FestivalOptimizer() {
 
               <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
                 <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{SETS.filter((s) => s.festival === currentFestival && s.match >= threshold).length}</div>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{effectiveSets.filter((s) => s.festival === currentFestival && s.match >= threshold).length}</div>
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>MATCHED SETS</div>
                 </div>
                 <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
@@ -3875,10 +3901,10 @@ export default function FestivalOptimizer() {
 // Discover — swipe through mid-match artists you don't know yet
 // ---------------------------------------------------------------------------
 
-function DiscoverDeck({ addedIds, onAdd, currentDay, currentFestival, stages }) {
+function DiscoverDeck({ sets, addedIds, onAdd, currentDay, currentFestival, stages }) {
   // The discover range is deliberately mid-tier: high enough to be a
   // plausible fit, low enough that it's not already on your schedule.
-  const deck = SETS.filter((s) => s.festival === currentFestival && s.day === currentDay && s.match >= 40 && s.match < 80 && !addedIds.includes(s.id)).sort((a, b) => b.match - a.match);
+  const deck = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && s.match >= 40 && s.match < 80 && !addedIds.includes(s.id)).sort((a, b) => b.match - a.match);
   const [index, setIndex] = useState(0);
   const [skipped, setSkipped] = useState([]);
 
@@ -3945,8 +3971,8 @@ function DiscoverDeck({ addedIds, onAdd, currentDay, currentFestival, stages }) 
   );
 }
 
-function CrewCompare({ friends, sharing, onToggleSharing, onSelect, currentDay, currentFestival }) {
-  const rows = SETS.filter((s) => s.festival === currentFestival && s.day === currentDay && (s.match >= 50 || Object.values(FRIEND_MATCHES[s.id] || {}).some((v) => v >= 50))).sort((a, b) => a.start - b.start);
+function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect, currentDay, currentFestival }) {
+  const rows = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && (s.match >= 50 || Object.values(FRIEND_MATCHES[s.id] || {}).some((v) => v >= 50))).sort((a, b) => a.start - b.start);
   return (
     <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
       <div style={{ overflowX: "auto" }}>

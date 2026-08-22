@@ -22,12 +22,15 @@ export function useSpotify(profileId) {
       setConnection(null);
       return;
     }
-    const { data } = await supabase
-      .from("spotify_connections")
-      .select("top_genre, top_artist, connected_at")
-      .eq("profile_id", profileId)
-      .maybeSingle();
-    setConnection(data || null);
+    // top_artist_names comes from spotify_taste (not spotify_connections)
+    // specifically so the lineup-match feature can reuse the same
+    // own-row-readable data that's already shared with crew-mates, rather
+    // than duplicating it into the private connections table too.
+    const [{ data }, { data: taste }] = await Promise.all([
+      supabase.from("spotify_connections").select("top_genre, top_artist, connected_at").eq("profile_id", profileId).maybeSingle(),
+      supabase.from("spotify_taste").select("top_artist_names").eq("profile_id", profileId).maybeSingle(),
+    ]);
+    setConnection(data ? { ...data, top_artist_names: taste?.top_artist_names || [] } : null);
   }, [profileId]);
 
   useEffect(() => {
