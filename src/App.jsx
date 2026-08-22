@@ -1882,7 +1882,7 @@ export default function FestivalOptimizer() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: "#0F0B1A", color: "#F5F0FF", minHeight: "100%", display: "flex", justifyContent: "center" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: "radial-gradient(circle at 12% 18%, rgba(157,107,255,0.09), transparent 42%), radial-gradient(circle at 88% 82%, rgba(61,242,224,0.07), transparent 42%), #0F0B1A", color: "#F5F0FF", minHeight: "100%", display: "flex", justifyContent: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -1916,6 +1916,15 @@ export default function FestivalOptimizer() {
         }
         @media (display-mode: browser) and (min-width: 1650px) {
           .main-frame { max-width: 900px; }
+        }
+        /* Ultrawide monitors (e.g. Odyssey G9, 5120px) still only get
+           this much wider — a single column stretched past ~1100px reads
+           badly regardless of how much horizontal real estate is
+           available. The ambient radial-gradient glows on the page
+           background (rather than more column width) are what's meant to
+           fill the rest of the space on these screens. */
+        @media (display-mode: browser) and (min-width: 2400px) {
+          .main-frame { max-width: 1100px; }
         }
         .sidebar-tab:hover { background: rgba(61,242,224,0.06); }
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
