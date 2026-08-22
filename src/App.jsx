@@ -1905,6 +1905,18 @@ export default function FestivalOptimizer() {
              specificity without needing !important. */
           .main-frame { max-width: 640px; transform: none; }
         }
+        /* Sidebar (220px) + .main-frame's 640px cap leaves most of a wide
+           monitor as unused dark background — widen the content column
+           further on bigger screens instead of just centering a narrow
+           column in a lot of empty space. Still well short of full-width:
+           wide unbroken lines of festival-card text would be harder to
+           scan, not easier. */
+        @media (display-mode: browser) and (min-width: 1300px) {
+          .main-frame { max-width: 780px; }
+        }
+        @media (display-mode: browser) and (min-width: 1650px) {
+          .main-frame { max-width: 900px; }
+        }
         .sidebar-tab:hover { background: rgba(61,242,224,0.06); }
         .reveal { opacity: 0; transform: translateY(10px); transition: opacity .55s ease, transform .55s ease; }
         .reveal.on { opacity: 1; transform: translateY(0); }
