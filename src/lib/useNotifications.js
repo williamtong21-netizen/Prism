@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
 // Real per-user notification inbox: loads existing rows, then stays live
@@ -7,19 +7,41 @@ import { supabase } from "./supabaseClient";
 export function useNotifications(profileId) {
   const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     if (!profileId) return;
-    let cancelled = false;
-
-    supabase
+    const { data } = await supabase
       .from("notifications")
       .select("*")
       .eq("profile_id", profileId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (!cancelled) setNotifications(data || []);
-      });
+      .order("created_at", { ascending: false });
+    setNotifications(data || []);
+  }, [profileId]);
 
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  // Realtime's websocket gets suspended when a backgrounded tab/PWA is
+  // frozen by the OS, and on reconnect it only streams changes going
+  // forward -- a notification inserted while backgrounded was silently
+  // missed and only showed up after a full app restart re-ran the
+  // mount-time refresh() above. Re-running it whenever the app comes back
+  // to the foreground closes that gap without waiting for a restart.
+  useEffect(() => {
+    if (!profileId) return;
+    function handleVisible() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
+  }, [profileId, refresh]);
+
+  useEffect(() => {
+    if (!profileId) return;
     const channel = supabase
       .channel(`notifications:${profileId}`)
       .on(
@@ -32,7 +54,6 @@ export function useNotifications(profileId) {
       .subscribe();
 
     return () => {
-      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [profileId]);
