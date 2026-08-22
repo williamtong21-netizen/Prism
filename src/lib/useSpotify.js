@@ -71,7 +71,10 @@ export function useSpotify(profileId) {
 
   async function disconnect() {
     if (!profileId) return;
-    await supabase.from("spotify_connections").delete().eq("profile_id", profileId);
+    await Promise.all([
+      supabase.from("spotify_connections").delete().eq("profile_id", profileId),
+      supabase.from("spotify_taste").delete().eq("profile_id", profileId),
+    ]);
     setConnection(null);
   }
 

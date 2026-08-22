@@ -7,6 +7,7 @@ import { useDMs } from "./lib/useDMs";
 import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
 import { useSpotify } from "./lib/useSpotify";
+import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -1651,6 +1652,7 @@ export default function FestivalOptimizer() {
   // was created at — that's the whole point of marking it persistent.
   const festivalCrews = crews.filter((c) => c.persistent || c.festival === currentFestival);
   const activeCrew = crews.find((c) => c.id === activeCrewId) || null;
+  const { matchWith: spotifyMatchWith } = useSpotifyMatch(profile?.id, activeCrew?.members?.map((m) => m.id));
   // Everyone you share any crew with, deduped — the pool a new DM can
   // start with, regardless of which crew's roster you found them in.
   const allCrewMembers = useMemo(() => {
@@ -2548,6 +2550,11 @@ export default function FestivalOptimizer() {
                             )}
                           </div>
                           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{openMemberCard.handle}</div>
+                          {spotifyMatchWith(openMemberCard.id) !== null && (
+                            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#3DF2E0", marginTop: 3 }}>
+                              🎧 {spotifyMatchWith(openMemberCard.id)}% music match
+                            </div>
+                          )}
                         </div>
                         <button onClick={() => setOpenMemberCard(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>

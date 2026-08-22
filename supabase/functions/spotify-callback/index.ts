@@ -6,8 +6,13 @@
 // that ever sees the Spotify client secret or writes to
 // spotify_connections: it exchanges the code for tokens, pulls the user's
 // top artists to compute a top genre, and stores it all via the service
-// role key (which bypasses spotify_connections' RLS -- the client can only
-// read/delete its own row, never write tokens directly).
+// role key (which bypasses RLS -- the client can only read/delete its own
+// rows, never write tokens directly).
+//
+// Writes to two tables: spotify_connections (private -- tokens, never
+// readable by anyone but the owner) and spotify_taste (shareable -- top
+// genre/artist plus the top-20 artist id list crew-mates are allowed to
+// read, used to compute a music match % between two people).
 //
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are auto-injected. Set
 // SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET as function secrets.
@@ -82,6 +87,7 @@ Deno.serve(async (req) => {
     // fallback the UI shows whenever no genre could be computed.
     let topGenre = null;
     let topArtist = null;
+    let topArtistIds: string[] = [];
     const topRes = await fetch("https://api.spotify.com/v1/me/top/artists?limit=20&time_range=medium_term", {
       headers: { Authorization: `Bearer ${access_token}` },
     });
@@ -96,10 +102,12 @@ Deno.serve(async (req) => {
       const sorted = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]);
       topGenre = sorted[0]?.[0] || null;
       topArtist = topData.items?.[0]?.name || null;
+      topArtistIds = (topData.items || []).map((a: { id: string }) => a.id);
     } else {
       console.log("spotify top artists fetch failed", await topRes.text());
     }
 
+    const nowIso = new Date().toISOString();
     const { error: upsertError } = await supabase.from("spotify_connections").upsert({
       profile_id: profileId,
       access_token,
@@ -107,11 +115,26 @@ Deno.serve(async (req) => {
       expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
       top_genre: topGenre,
       top_artist: topArtist,
-      connected_at: new Date().toISOString(),
+      connected_at: nowIso,
     });
     if (upsertError) {
       console.log("spotify_connections upsert failed", upsertError);
       return new Response(JSON.stringify({ error: upsertError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { error: tasteError } = await supabase.from("spotify_taste").upsert({
+      profile_id: profileId,
+      top_genre: topGenre,
+      top_artist: topArtist,
+      top_artist_ids: topArtistIds,
+      updated_at: nowIso,
+    });
+    if (tasteError) {
+      console.log("spotify_taste upsert failed", tasteError);
+      return new Response(JSON.stringify({ error: tasteError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
