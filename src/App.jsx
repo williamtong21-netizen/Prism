@@ -1542,27 +1542,27 @@ export default function FestivalOptimizer() {
   const [attachmentError, setAttachmentError] = useState("");
   const [sendingDM, setSendingDM] = useState(false);
   const dmFileInputRef = useRef(null);
-  const messagesSheetRef = useRef(null);
+  const messagesScrollRef = useRef(null);
   const messagesListRef = useRef(null);
-  // The Messages sheet is one scrolling column (header + thread + composer,
-  // no separate scroll region for just the message list), so opening a
-  // thread needs an explicit scroll to bottom -- nothing does this
-  // automatically, and without it the newest message (and the composer
-  // right below it) can end up scrolled out of view, effectively hidden
-  // under the on-screen keyboard.
+  // The message list is its own scrolling region now (composer lives
+  // outside it, always pinned below -- see the Messages sheet's layout),
+  // so opening a thread needs an explicit scroll to bottom to bring the
+  // newest message into view.
   //
-  // A one-shot scroll on message-count change isn't enough: the message
-  // list's actual height can keep changing after that (an attached image
+  // A one-shot scroll on message-count change isn't enough: the list's
+  // actual height can keep changing after that (an attached image
   // finishing its async load, a reveal animation, font swap, ...), and
-  // each of those re-opens the same gap between the true bottom and
-  // wherever the one-shot scroll landed -- which is what made the
-  // composer appear to overlap the last message. A ResizeObserver on the
-  // (non-scrolling) message list re-syncs scrollTop to the container's
-  // bottom every time that list's real height changes, for any reason.
+  // each of those reopens the gap between the true bottom and wherever
+  // that one scroll landed -- which is what made the newest message (and,
+  // before the composer was pulled out of the scrolling region, the
+  // composer itself) render as if it were overlapping other content. A
+  // ResizeObserver on the message list's inner content re-syncs scrollTop
+  // to its scroll container's bottom every time that content's real
+  // height changes, for any reason.
   useEffect(() => {
-    if (!activeRealThreadId || !messagesListRef.current || !messagesSheetRef.current) return;
+    if (!activeRealThreadId || !messagesListRef.current || !messagesScrollRef.current) return;
     const scrollToBottom = () => {
-      if (messagesSheetRef.current) messagesSheetRef.current.scrollTop = messagesSheetRef.current.scrollHeight;
+      if (messagesScrollRef.current) messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
     };
     const ro = new ResizeObserver(scrollToBottom);
     ro.observe(messagesListRef.current);
@@ -3467,7 +3467,7 @@ export default function FestivalOptimizer() {
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
           <div style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
-            <div ref={messagesSheetRef} className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
               {!activeThread && !activeRealThreadId ? (
@@ -3486,7 +3486,7 @@ export default function FestivalOptimizer() {
                       <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                     </div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, flex: 1, minHeight: 0, overflowY: "auto" }}>
                     {realThreads.filter((t) => t.other).map((t) => (
                       <button
                         key={t.id}
@@ -3560,7 +3560,8 @@ export default function FestivalOptimizer() {
                         <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
 
-                      <div ref={messagesListRef} style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, minHeight: 160 }}>
+                      <div ref={messagesScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: 16 }}>
+                      <div ref={messagesListRef} style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 160 }}>
                         {t.messages.length === 0 && <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center" }}>Say hi.</p>}
                         {t.messages.map((m) => (
                           <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
@@ -3606,6 +3607,7 @@ export default function FestivalOptimizer() {
                             </div>
                           </div>
                         ))}
+                      </div>
                       </div>
 
                       {attachmentError && (
@@ -3688,7 +3690,8 @@ export default function FestivalOptimizer() {
                         <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, minHeight: 160 }}>
+                      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: 16 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 160 }}>
                         {thread.map((m) => (
                           <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
                             <div style={{
@@ -3701,6 +3704,7 @@ export default function FestivalOptimizer() {
                             </div>
                           </div>
                         ))}
+                      </div>
                       </div>
 
                       <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
