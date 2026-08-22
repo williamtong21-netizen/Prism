@@ -2464,10 +2464,10 @@ export default function FestivalOptimizer() {
 
             <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
-                <div style={{ width: 52, flexShrink: 0, background: "#151024", borderRight: "1px solid #2A2440" }}>
+                <div style={{ width: 60, flexShrink: 0, background: "#151024", borderRight: "1px solid #2A2440" }}>
                   <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                     {Array.from({ length: Math.floor(timelineEnd / 60) + 1 }).map((_, i) => (
-                      <div key={i} style={{ position: "absolute", top: i * 60 * PX_PER_MIN, right: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", transform: "translateY(-50%)" }}>
+                      <div key={i} style={{ position: "absolute", top: i * 60 * PX_PER_MIN, right: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
                         {fmtTime(i * 60, currentDay, currentFestival)}
                       </div>
                     ))}
