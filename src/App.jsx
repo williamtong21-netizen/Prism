@@ -8,6 +8,7 @@ import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
 import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
+import { useBlocking } from "./lib/useBlocking";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -707,13 +708,23 @@ const MUST_HAVES = [
   { id: "ziploc", label: "Ziploc bag for phone/valuables" },
 ];
 
-// Real, general safety resources plus mocked on-site locations tied to the
-// map data we already have (Centeroo/Outeroo). Always reachable from the
-// header, not buried in a tab — emergencies don't wait for navigation.
+// Real, general safety resources. On-site medical locations are keyed per
+// festival since a named tent/plaza is only meaningful (and only true) for
+// the festival it actually belongs to — showing Bonnaroo's Centeroo/Outeroo
+// tents while browsing Governors Ball would be actively wrong, not just
+// unhelpful. Only add a festival here once its real tent names/locations
+// are confirmed; every other festival falls back to safe, general guidance
+// that doesn't invent place names we haven't verified.
 const SAFETY_INFO = {
-  medical: [
-    { name: "Centeroo Medical", note: "Near What Stage, marked with a red cross flag" },
-    { name: "Outeroo Medical — Plaza 6", note: "24/7, closest to camping" },
+  medicalByFestival: {
+    bonnaroo: [
+      { name: "Centeroo Medical", note: "Near What Stage, marked with a red cross flag" },
+      { name: "Outeroo Medical — Plaza 6", note: "24/7, closest to camping" },
+    ],
+  },
+  medicalFallback: [
+    { name: "Ask any staff, security, or vendor", note: "They can point you to the nearest medical tent or radio one in" },
+    { name: "Check the festival's app or text alerts", note: "Most festivals publish exact medical-tent locations there closer to the date" },
   ],
   lostProtocol: [
     "Go to the nearest info booth or medical tent — staff can page over the PA.",
@@ -1481,18 +1492,19 @@ function JoinCrewSheet({ onClose, onSubmit }) {
   );
 }
 
-// Bottom sheet for starting a DM with someone you don't already have a
-// thread with — anyone you share a crew with, across all your crews.
-function NewDmPickerSheet({ members, onClose, onPick }) {
+// Bottom sheet for picking someone from your crews — reused both for
+// starting a DM (anyone you share a crew with) and for the report flow
+// (who to file a report against), since both just need a member picker.
+function NewDmPickerSheet({ members, onClose, onPick, title = "New message", subtitle = "Anyone you share a crew with." }) {
   return (
     <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
       <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>New message</div>
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{title}</div>
           <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
-        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>Anyone you share a crew with.</p>
+        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>{subtitle}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {members.map((m) => (
             <button
@@ -1543,6 +1555,50 @@ export default function FestivalOptimizer() {
   const [messageDraft, setMessageDraft] = useState("");
   const [unreadDMs, setUnreadDMs] = useState(["mia"]); // Mia's last message hasn't been seen yet
   const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
+  const { blockedIds, block: blockUser, unblock: unblockUser, report: reportUser } = useBlocking(profile?.id);
+  const [reportTarget, setReportTarget] = useState(null); // { id, name } | null
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [reportError, setReportError] = useState("");
+  const [blockError, setBlockError] = useState("");
+  const [dmMenuOpen, setDmMenuOpen] = useState(false);
+  const [reportPickerOpen, setReportPickerOpen] = useState(false);
+  const REPORT_REASONS = ["Harassment or abuse", "Spam", "Inappropriate content", "Impersonation", "Something else"];
+
+  async function handleBlockUser(otherProfileId, name) {
+    if (!window.confirm(`Block ${name}? They won't be able to message you anymore, and you won't be able to message them.`)) return;
+    setBlockError("");
+    const result = await blockUser(otherProfileId);
+    if (result?.error) {
+      setBlockError(result.error.message || "Couldn't block them — try again.");
+      return;
+    }
+    setActiveRealThreadId(null);
+    setMessagesOpen(false);
+  }
+
+  async function submitReport() {
+    if (!reportTarget || !reportReason || reportSubmitting) return;
+    setReportSubmitting(true);
+    setReportError("");
+    const result = await reportUser(reportTarget.id, reportReason, reportDetails.trim());
+    setReportSubmitting(false);
+    if (result?.error) {
+      setReportError(result.error.message || "Couldn't send that report — try again.");
+      return;
+    }
+    setReportSubmitted(true);
+  }
+
+  function closeReportSheet() {
+    setReportTarget(null);
+    setReportReason("");
+    setReportDetails("");
+    setReportSubmitted(false);
+    setReportError("");
+  }
   const [activeRealThreadId, setActiveRealThreadId] = useState(null);
   const [realMessageDraft, setRealMessageDraft] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState([]); // File[], staged before Send
@@ -3638,8 +3694,31 @@ export default function FestivalOptimizer() {
                           {t.other.name[0].toUpperCase()}
                         </span>
                         <span style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.other.name}</span>
+                        <div style={{ position: "relative" }}>
+                          <button onClick={() => setDmMenuOpen((v) => !v)} aria-label="Thread options" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>⋯</button>
+                          {dmMenuOpen && (
+                            <>
+                              <div style={{ position: "fixed", inset: 0, zIndex: 29 }} onClick={() => setDmMenuOpen(false)} />
+                              <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                                <button
+                                  onClick={() => { setDmMenuOpen(false); setReportTarget({ id: t.other.id, name: t.other.name }); }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "#F5F0FF", cursor: "pointer" }}
+                                >
+                                  Report {t.other.name}
+                                </button>
+                                <button
+                                  onClick={() => { setDmMenuOpen(false); handleBlockUser(t.other.id, t.other.name); }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "#FF3DA6", cursor: "pointer", borderTop: "1px solid #2A2440" }}
+                                >
+                                  Block {t.other.name}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
                         <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
+                      {blockError && <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 8 }}>{blockError}</div>}
 
                       <div ref={messagesScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: 16 }}>
                       <div ref={messagesListRef} style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 160 }}>
@@ -3838,6 +3917,91 @@ export default function FestivalOptimizer() {
           />
         )}
 
+        {reportPickerOpen && (
+          <NewDmPickerSheet
+            members={allCrewMembers}
+            title="Report someone"
+            subtitle="Anyone you share a crew with."
+            onClose={() => setReportPickerOpen(false)}
+            onPick={(id) => {
+              setReportPickerOpen(false);
+              const m = allCrewMembers.find((x) => x.id === id);
+              if (m) setReportTarget({ id: m.id, name: m.name });
+            }}
+          />
+        )}
+
+        {/* Report-a-user sheet — opened either from a DM thread's "⋯" menu
+            or from Safety > Report someone. */}
+        {reportTarget && (
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 27, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={closeReportSheet}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px", color: "#FF3DA6" }}>Report {reportTarget.name}</div>
+                <button onClick={closeReportSheet} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+              </div>
+
+              {reportSubmitted ? (
+                <div style={{ marginTop: 20, textAlign: "center" }}>
+                  <div style={{ fontSize: 14, color: "#5FD97A", fontWeight: 700 }}>Report sent</div>
+                  <p style={{ fontSize: 12.5, color: "#8B85A3", marginTop: 8 }}>Thanks — our team will review it. You can also block {reportTarget.name} from a DM thread's ⋯ menu.</p>
+                  <button onClick={closeReportSheet} style={{ marginTop: 16, width: "100%", background: "#2A2440", border: "none", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ marginTop: 18 }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>REASON</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {REPORT_REASONS.map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => setReportReason(r)}
+                          style={{
+                            textAlign: "left", padding: "11px 12px", borderRadius: 12, cursor: "pointer",
+                            border: `1px solid ${reportReason === r ? "#FF3DA6" : "#2A2440"}`,
+                            background: reportReason === r ? "rgba(255,61,166,0.12)" : "transparent",
+                            color: reportReason === r ? "#FF3DA6" : "#F5F0FF", fontSize: 13.5,
+                          }}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>DETAILS (OPTIONAL)</div>
+                    <textarea
+                      value={reportDetails}
+                      onChange={(e) => setReportDetails(e.target.value)}
+                      placeholder="Anything else that would help us understand what happened"
+                      aria-label="Report details"
+                      rows={3}
+                      style={{ width: "100%", background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", color: "#F5F0FF", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
+                    />
+                  </div>
+
+                  {reportError && <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 10 }}>{reportError}</div>}
+
+                  <button
+                    onClick={submitReport}
+                    disabled={!reportReason || reportSubmitting}
+                    style={{
+                      width: "100%", marginTop: 16, borderRadius: 12, padding: "13px", border: "none", fontSize: 14, fontWeight: 700, cursor: !reportReason || reportSubmitting ? "default" : "pointer",
+                      background: !reportReason ? "#2A2440" : "linear-gradient(90deg, #FF3DA6, #9D6BFF)",
+                      color: !reportReason ? "#5B5470" : "#0F0B1A",
+                      opacity: reportSubmitting ? 0.7 : 1,
+                    }}
+                  >
+                    {reportSubmitting ? "Sending…" : "Send report"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Safety sheet — reachable from any tab via the header */}
         {safetyOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
@@ -3858,7 +4022,7 @@ export default function FestivalOptimizer() {
 
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>ON-SITE MEDICAL</div>
-                {SAFETY_INFO.medical.map((m) => (
+                {(SAFETY_INFO.medicalByFestival[currentFestival] || SAFETY_INFO.medicalFallback).map((m) => (
                   <div key={m.name} style={{ padding: "8px 0", borderBottom: "1px solid #201A33" }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
                     <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>{m.note}</div>
@@ -3903,6 +4067,42 @@ export default function FestivalOptimizer() {
                     )}
                   </div>
                 ))}
+              </div>
+
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>COMMUNITY SAFETY</div>
+                <button
+                  onClick={() => { setSafetyOpen(false); setReportPickerOpen(true); }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "transparent", color: "#F5F0FF", fontSize: 13, cursor: "pointer" }}
+                >
+                  Report someone
+                  <span style={{ color: "#5B5470" }}>›</span>
+                </button>
+
+                {blockedIds.size > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470", marginBottom: 6 }}>BLOCKED ({blockedIds.size})</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {[...blockedIds].map((id) => {
+                        const m = allCrewMembers.find((x) => x.id === id);
+                        return (
+                          <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
+                            <span style={{ fontSize: 13 }}>{m?.name || "Someone you've blocked"}</span>
+                            <button
+                              onClick={async () => {
+                                const result = await unblockUser(id);
+                                if (result?.error) setBlockError(result.error.message || "Couldn't unblock — try again.");
+                              }}
+                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", background: "transparent", color: "#8B85A3", cursor: "pointer" }}
+                            >
+                              Unblock
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
