@@ -9,6 +9,7 @@ import { usePushSubscription } from "./lib/usePushSubscription";
 import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 import { useBlocking } from "./lib/useBlocking";
+import { useSchedulePicks } from "./lib/useSchedulePicks";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -716,7 +717,6 @@ const FRIEND_MATCHES = {
 const ME = {
   name: "Will",
   handle: "@willrides",
-  discoveredCount: 0, // updated live from addedFromDiscover.length
 };
 
 // Generic festival-day essentials — applies regardless of which festival is
@@ -1755,10 +1755,10 @@ export default function FestivalOptimizer() {
   const [activeCrewId, setActiveCrewId] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [queuedActions, setQueuedActions] = useState(0);
-  const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover
-  const [addedFromDiscover, setAddedFromDiscover] = useState([]);
+  const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover | schedule
   const [currentDay, setCurrentDay] = useState("fri");
   const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || getDefaultFestival());
+  const { pickedIds: schedulePickedIds, crewPicks: schedulePickCrewOverlap, toggle: toggleSchedulePick } = useSchedulePicks(profile?.id, currentFestival);
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
@@ -2017,7 +2017,11 @@ export default function FestivalOptimizer() {
   // s.match is null for real-lineup festivals with no personalized listening
   // data yet — treat that as "always show" rather than letting it coerce to
   // 0 and get filtered out of My Matches like a genuine low match would.
-  const visibleSets = daySets.filter((s) => (lineupSubview === "matches" ? s.match == null || s.match >= threshold || addedFromDiscover.includes(s.id) : true)).filter(passesFriendFilter);
+  const visibleSets = daySets.filter((s) => {
+    if (lineupSubview === "schedule") return schedulePickedIds.has(s.id);
+    if (lineupSubview === "matches") return s.match == null || s.match >= threshold || schedulePickedIds.has(s.id);
+    return true; // full
+  }).filter(passesFriendFilter);
 
   const TABS = [
     { id: "home", label: "Home", icon: "home" },
@@ -2507,11 +2511,11 @@ export default function FestivalOptimizer() {
           </div>
         )}
 
-        {/* Lineup — matches / full / discover */}
+        {/* Lineup — matches / full / discover / schedule */}
         {view === "mine" && (
           <div style={{ padding: "0 14px" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-              {["matches", "full", "discover"].map((sv) => (
+              {["matches", "full", "discover", "schedule"].map((sv) => (
                 <button
                   key={sv}
                   onClick={() => setLineupSubview(sv)}
@@ -2523,12 +2527,12 @@ export default function FestivalOptimizer() {
                     color: lineupSubview === sv ? "#3DF2E0" : "#8B85A3", cursor: "pointer",
                   }}
                 >
-                  {sv === "matches" ? "My Matches" : sv === "full" ? "Full Lineup" : "Discover"}
+                  {sv === "matches" ? "% Match" : sv === "full" ? "Full Lineup" : sv === "discover" ? "Discover" : "My Schedule"}
                 </button>
               ))}
             </div>
 
-            {lineupSubview !== "discover" && (
+            {(lineupSubview === "matches" || lineupSubview === "full") && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
                 <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", whiteSpace: "nowrap" }}>MATCH</label>
                 <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ flex: 1 }} />
@@ -2540,7 +2544,7 @@ export default function FestivalOptimizer() {
             )}
 
             {lineupSubview === "discover" ? (
-              <DiscoverDeck sets={effectiveSets} addedIds={addedFromDiscover} onAdd={(id) => setAddedFromDiscover((prev) => [...prev, id])} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
+              <DiscoverDeck sets={effectiveSets} pickedIds={schedulePickedIds} onAdd={toggleSchedulePick} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
             ) : (
               <>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
@@ -2567,6 +2571,14 @@ export default function FestivalOptimizer() {
               ))}
             </div>
 
+            {lineupSubview === "schedule" && visibleSets.length === 0 ? (
+              <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 14, color: "#8B85A3" }}>Nothing on your schedule for this day yet.</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#5B5470", marginTop: 6 }}>
+                  Tap any set in Full Lineup or % Match to add it.
+                </div>
+              </div>
+            ) : (
             <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
                 <div style={{ width: 60, flexShrink: 0, background: "#151024", borderRight: "1px solid #2A2440" }}>
@@ -2585,12 +2597,13 @@ export default function FestivalOptimizer() {
                         {visibleSets.filter((s) => s.stage === stage.id).map((s) => {
                           const dimmed = lineupSubview === "full" && s.match != null && s.match < threshold;
                           const isConflict = conflicts.has(s.id);
-                          const wasDiscovered = addedFromDiscover.includes(s.id);
+                          const isPicked = schedulePickedIds.has(s.id);
+                          const crewAlsoIn = schedulePickCrewOverlap[s.id]?.length || 0;
                           return (
                             <div key={s.id} className="set-card" onClick={() => setSelected(s)} style={{
                               position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
                               borderRadius: 7, padding: "6px 7px", background: dimmed ? "#161225" : "#1E1832",
-                              border: `1px solid ${isConflict ? "#FF3DA6" : wasDiscovered ? "#9D6BFF" : dimmed ? "#2A2440" : matchColor(s.match)}`,
+                              border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "#2A2440" : matchColor(s.match)}`,
                               opacity: dimmed ? 0.35 : 1, overflow: "hidden",
                             }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -2599,7 +2612,9 @@ export default function FestivalOptimizer() {
                                   <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
                                 )}
                               </div>
-                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: matchColor(s.match), marginTop: 2 }}>{matchLabel(s.match)}</div>
+                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
+                                {crewAlsoIn ? `👥 ${crewAlsoIn} crew too` : matchLabel(s.match)}
+                              </div>
                             </div>
                           );
                         })}
@@ -2609,6 +2624,7 @@ export default function FestivalOptimizer() {
                 </div>
               </div>
             </div>
+            )}
               </>
             )}
           </div>
@@ -3038,6 +3054,22 @@ export default function FestivalOptimizer() {
                 )}
                 {conflicts.has(selected.id) && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#FF3DA6" }}>⚠ overlaps another set</span>}
               </div>
+              <button
+                onClick={() => toggleSchedulePick(selected.id)}
+                style={{
+                  width: "100%", marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, padding: "11px", borderRadius: 10, cursor: "pointer",
+                  border: `1px solid ${schedulePickedIds.has(selected.id) ? "#9D6BFF" : "#2A2440"}`,
+                  background: schedulePickedIds.has(selected.id) ? "rgba(157,107,255,0.12)" : "transparent",
+                  color: schedulePickedIds.has(selected.id) ? "#9D6BFF" : "#8B85A3",
+                }}
+              >
+                {schedulePickedIds.has(selected.id) ? "✓ On your schedule" : "+ Add to my schedule"}
+              </button>
+              {schedulePickCrewOverlap[selected.id]?.length > 0 && (
+                <div style={{ marginTop: 10, fontSize: 12.5, color: "#9D6BFF" }}>
+                  👥 {schedulePickCrewOverlap[selected.id].map((id) => allCrewMembers.find((m) => m.id === id)?.name || "A crew mate").join(", ")} {schedulePickCrewOverlap[selected.id].length === 1 ? "has" : "have"} this on their schedule too
+                </div>
+              )}
               {selected.sounds_like ? (
                 <p style={{ marginTop: 12, fontSize: 14, color: "#C9C3E0", lineHeight: 1.5 }}>{selected.sounds_like}</p>
               ) : (
@@ -3393,8 +3425,8 @@ export default function FestivalOptimizer() {
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>MATCHED SETS</div>
                 </div>
                 <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
-                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{addedFromDiscover.length}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>DISCOVERED</div>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{schedulePickedIds.size}</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>MY SCHEDULE</div>
                 </div>
                 <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{crews.length}</div>
@@ -4228,10 +4260,10 @@ export default function FestivalOptimizer() {
 // Discover — swipe through mid-match artists you don't know yet
 // ---------------------------------------------------------------------------
 
-function DiscoverDeck({ sets, addedIds, onAdd, currentDay, currentFestival, stages }) {
+function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestival, stages }) {
   // The discover range is deliberately mid-tier: high enough to be a
   // plausible fit, low enough that it's not already on your schedule.
-  const deck = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && s.match >= 40 && s.match < 80 && !addedIds.includes(s.id)).sort((a, b) => b.match - a.match);
+  const deck = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && s.match >= 40 && s.match < 80 && !pickedIds.has(s.id)).sort((a, b) => b.match - a.match);
   const [index, setIndex] = useState(0);
   const [skipped, setSkipped] = useState([]);
 
@@ -4243,7 +4275,7 @@ function DiscoverDeck({ sets, addedIds, onAdd, currentDay, currentFestival, stag
       <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
         <div style={{ fontSize: 14, color: "#8B85A3" }}>That's everyone in your discover range.</div>
         <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470", marginTop: 6 }}>
-          {addedIds.length} added to your schedule this session
+          {pickedIds.size} sets on your schedule so far
         </div>
       </div>
     );
