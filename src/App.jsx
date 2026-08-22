@@ -2463,7 +2463,7 @@ export default function FestivalOptimizer() {
             </div>
 
             <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden" }}>
-              <div style={{ display: "flex" }}>
+              <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
                 <div style={{ width: 52, flexShrink: 0, background: "#151024", borderRight: "1px solid #2A2440" }}>
                   <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                     {Array.from({ length: Math.floor(timelineEnd / 60) + 1 }).map((_, i) => (
