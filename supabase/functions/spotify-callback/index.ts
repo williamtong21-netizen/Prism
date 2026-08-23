@@ -25,12 +25,20 @@ const spotifyClientId = Deno.env.get("SPOTIFY_CLIENT_ID")!;
 const spotifyClientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET")!;
 const REDIRECT_URI = "https://prismfest.io/auth/spotify/callback";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Origin allow-list instead of "*" -- this project shares one Supabase
+// backend between local dev and prod (see .env.local), so localhost needs
+// to stay allowed too, not just the real domain.
+const ALLOWED_ORIGINS = ["https://prismfest.io", "http://localhost:5173"];
+function corsHeadersFor(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
