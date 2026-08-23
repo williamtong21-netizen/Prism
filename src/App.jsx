@@ -1383,6 +1383,9 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
           {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
         </form>
       )}
+      <p style={{ fontSize: 11, color: "#5B5470", marginTop: 20 }}>
+        By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Privacy Policy</a>.
+      </p>
       </div>
     </div>
   );
@@ -1559,7 +1562,7 @@ function NewDmPickerSheet({ members, onClose, onPick, title = "New message", sub
 // ---------------------------------------------------------------------------
 
 export default function FestivalOptimizer() {
-  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, verifyCode, signOut, updateProfile } = useAuth();
+  const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, verifyCode, signOut, updateProfile, deleteAccount } = useAuth();
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
@@ -1723,6 +1726,20 @@ export default function FestivalOptimizer() {
   const [editColor, setEditColor] = useState("");
   const [profileEditError, setProfileEditError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState("");
+
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteAccountError("");
+    const result = await deleteAccount();
+    setDeletingAccount(false);
+    if (result?.error) setDeleteAccountError(result.error.message || "Couldn't delete your account — try again.");
+    // No else branch needed on success: deleteAccount() already signs out,
+    // and the auth-state-change listener in useAuth swaps back to the
+    // sign-in screen on its own.
+  }
 
   function startEditingProfile() {
     setEditName(profile.name);
@@ -3512,9 +3529,64 @@ export default function FestivalOptimizer() {
               <button onClick={signOut} style={{ width: "100%", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", color: "#FF3DA6", cursor: "pointer" }}>
                 Sign out
               </button>
+
+              <button onClick={() => setDeleteAccountOpen(true)} style={{ width: "100%", marginTop: 10, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "10px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: "#5B5470", cursor: "pointer" }}>
+                Delete account
+              </button>
+
+              <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16 }}>
+                <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#5B5470" }}>Privacy Policy</a>
+                <a href="/terms.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#5B5470" }}>Terms of Service</a>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Delete account confirmation — reachable from Profile > Settings */}
+        {deleteAccountOpen && (() => {
+          const leadingCrews = crews.filter((c) => c.created_by === profile?.id);
+          return (
+            <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { if (!deletingAccount) setDeleteAccountOpen(false); }}>
+              <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px", color: "#FF3DA6" }}>Delete account</div>
+                  <button onClick={() => setDeleteAccountOpen(false)} disabled={deletingAccount} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: deletingAccount ? "default" : "pointer" }}>×</button>
+                </div>
+
+                <p style={{ marginTop: 14, fontSize: 13.5, color: "#C9C3E0", lineHeight: 1.5 }}>
+                  This permanently deletes your profile, crew memberships, direct messages, camp pins, packing lists, Spotify connection, and everything else tied to your account. This can't be undone.
+                </p>
+
+                {leadingCrews.length > 0 && (
+                  <div style={{ marginTop: 12, border: "1px solid #FFB23D", background: "rgba(255,178,61,0.08)", borderRadius: 12, padding: "10px 12px", fontSize: 12.5, color: "#FFB23D", lineHeight: 1.5 }}>
+                    You lead {leadingCrews.length === 1 ? `"${leadingCrews[0].name}"` : `${leadingCrews.length} crews`} — {leadingCrews.length === 1 ? "it" : "those"} will be disbanded for every member, not just you.
+                  </div>
+                )}
+
+                {deleteAccountError && <div style={{ fontSize: 12.5, color: "#FF3DA6", marginTop: 12 }}>{deleteAccountError}</div>}
+
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  style={{
+                    width: "100%", marginTop: 18, borderRadius: 12, padding: "13px", border: "1px solid #FF3DA6", fontSize: 14, fontWeight: 700, cursor: deletingAccount ? "default" : "pointer",
+                    background: "rgba(255,61,166,0.12)", color: "#FF3DA6", opacity: deletingAccount ? 0.7 : 1,
+                  }}
+                >
+                  {deletingAccount ? "Deleting…" : "Permanently delete my account"}
+                </button>
+                <button
+                  onClick={() => setDeleteAccountOpen(false)}
+                  disabled={deletingAccount}
+                  style={{ width: "100%", marginTop: 10, borderRadius: 12, padding: "13px", border: "1px solid #2A2440", fontSize: 13, background: "transparent", color: "#8B85A3", cursor: deletingAccount ? "default" : "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Artist claim sheet */}
         {claimTarget && (

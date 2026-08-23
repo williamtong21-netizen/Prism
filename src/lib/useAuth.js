@@ -82,6 +82,17 @@ export function useAuth() {
     await supabase.auth.signOut();
   }
 
+  // Deleting the auth.users row (and everything that cascades from it) can
+  // only happen via the Admin API, which needs the service role key -- so
+  // this goes through the delete-account edge function instead of a direct
+  // client call. See that function's own comment for what it touches.
+  async function deleteAccount() {
+    const { error } = await supabase.functions.invoke("delete-account");
+    if (error) return { error };
+    await supabase.auth.signOut();
+    return {};
+  }
+
   async function updateProfile(fields) {
     const { data, error } = await supabase
       .from("profiles")
@@ -106,5 +117,6 @@ export function useAuth() {
     verifyCode,
     signOut,
     updateProfile,
+    deleteAccount,
   };
 }

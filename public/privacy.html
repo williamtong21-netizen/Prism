@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — Prism</title>
+<style>
+  :root {
+    --bg: #0F0B1A; --surface: #171229; --border: #2A2440;
+    --text: #F5F0FF; --text-muted: #8B85A3; --text-dim: #5B5470;
+    --teal: #3DF2E0; --purple: #9D6BFF;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    line-height: 1.65; max-width: 720px; margin: 0 auto; padding: 48px 24px 80px;
+  }
+  h1 { font-family: 'Bebas Neue', 'Inter', sans-serif; letter-spacing: 1px; font-size: 34px; margin: 0 0 4px; }
+  h2 { font-family: 'Bebas Neue', 'Inter', sans-serif; letter-spacing: 0.5px; font-size: 20px; color: var(--teal); margin: 40px 0 12px; }
+  p, li { color: var(--text-muted); font-size: 15px; }
+  strong { color: var(--text); }
+  a { color: var(--purple); }
+  .updated { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-dim); margin: 0 0 32px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { color: var(--text-muted); }
+  .home-link { display: inline-block; margin-bottom: 24px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-dim); text-decoration: none; }
+</style>
+</head>
+<body>
+  <a class="home-link" href="/">← Back to Prism</a>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: August 22, 2026</p>
+
+  <p>Prism ("we," "us") is a festival-companion app that helps you build a schedule, coordinate with your crew, and find your way around a festival. This page explains what information we collect, why, who can see it, and how to delete it.</p>
+
+  <h2>What we collect</h2>
+  <table>
+    <tr><th>Data</th><th>Why we collect it</th></tr>
+    <tr><td><strong>Email address</strong></td><td>To send your sign-in link and account-related emails. We don't use passwords.</td></tr>
+    <tr><td><strong>Display name, handle, avatar color</strong></td><td>Shown to people you share a crew or conversation with.</td></tr>
+    <tr><td><strong>Crew data</strong> (names, membership, invite codes)</td><td>To coordinate a group at a festival.</td></tr>
+    <tr><td><strong>Direct messages and attachments</strong></td><td>To let you message crew-mates. Stored so the conversation persists across sessions.</td></tr>
+    <tr><td><strong>Camp pins</strong> (map coordinates + an optional note)</td><td>So your crew can find your campsite or a meetup spot.</td></tr>
+    <tr><td><strong>Packing checklist state</strong></td><td>So your checklist is there next time you open the app.</td></tr>
+    <tr><td><strong>Schedule picks</strong> (which sets you've added to your own schedule)</td><td>To build your personal lineup and show your crew who's seeing what.</td></tr>
+    <tr><td><strong>Spotify data</strong> (optional — only if you connect Spotify)</td><td>Your top genre and top-20 artist names are used to compute a "match %" against festival lineups and crew-mates. We never see your Spotify password. Access tokens are stored server-side and never exposed to other users or to your device.</td></tr>
+    <tr><td><strong>Push notification subscription</strong> (optional)</td><td>To send you a notification, e.g. for a new DM — only if you turn notifications on.</td></tr>
+    <tr><td><strong>Blocks and reports</strong></td><td>If you block or report someone, we keep a record so the block is enforced and the report can be reviewed.</td></tr>
+  </table>
+
+  <h2>Who can see what</h2>
+  <ul>
+    <li><strong>Direct messages</strong> are visible only to the two people in that conversation.</li>
+    <li><strong>Camp pins, Spotify match data, and schedule picks</strong> are visible to anyone you share a crew with for that same festival — never to strangers, and never across a festival you don't share.</li>
+    <li><strong>Your profile</strong> (name, handle, avatar) is visible to crew-mates and to anyone you message.</li>
+    <li>We do not sell your data, and we do not share it with advertisers.</li>
+  </ul>
+
+  <h2>Third parties we use</h2>
+  <ul>
+    <li><strong>Supabase</strong> — our database, authentication, and file storage provider.</li>
+    <li><strong>Vercel</strong> — our hosting provider.</li>
+    <li><strong>Resend</strong> — sends transactional emails (sign-in links, confirmations) on our behalf.</li>
+    <li><strong>Spotify</strong> — only if you choose to connect your account, governed by Spotify's own privacy policy for the authorization itself.</li>
+  </ul>
+
+  <h2>How long we keep it</h2>
+  <p>We keep your data for as long as your account exists. You can permanently delete your account at any time from <strong>Profile → Settings → Delete account</strong>. This removes your profile, crew memberships, messages, camp pins, packing lists, Spotify connection, schedule picks, and every other record tied to your account, immediately and without a recovery option.</p>
+  <p>One thing worth knowing before you do: if you're the creator of a crew, deleting your account disbands that crew for every member, not just you.</p>
+
+  <h2>Children's privacy</h2>
+  <p>Prism is not directed at children under 13, and we don't knowingly collect data from anyone under that age.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If we make a meaningful change to how we handle your data, we'll update the date at the top of this page.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy or your data: <a href="mailto:privacy@prismfest.io">privacy@prismfest.io</a></p>
+</body>
+</html>

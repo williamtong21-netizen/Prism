@@ -44,3 +44,14 @@ Supabase dashboard:
 
 Spotify's Development Mode caps new apps at 5 authorized users total until
 Extended Quota Mode is granted -- see the Feb 2026 developer policy update.
+
+## Account deletion
+
+One manual step, no migration needed (every per-user table already
+cascades from `profiles`, which cascades from `auth.users`):
+
+1. **Deploy the Edge Function.** Edge Functions -> deploy a new function
+   named `delete-account`, paste in `functions/delete-account/index.ts`.
+
+   No secrets to set -- it only needs the auto-injected `SUPABASE_URL` /
+   `SUPABASE_SERVICE_ROLE_KEY`, same as the other functions.
