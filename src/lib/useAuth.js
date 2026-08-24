@@ -54,11 +54,11 @@ export function useAuth() {
     return () => { cancelled = true; };
   }, [session?.user?.id]);
 
-  async function signInWithEmail(email) {
+  async function signInWithEmail(email, captchaToken) {
     setAuthError("");
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: window.location.origin, captchaToken },
     });
     if (error) {
       setAuthError(error.message);
