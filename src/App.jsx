@@ -232,6 +232,31 @@ function getDefaultFestival() {
   return earliest[0]?.f.id || FESTIVALS[0].id;
 }
 
+const DOW_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Generates `count` consecutive calendar days starting (year, month,
+// startDate) sharing one gate/first-set time -- covers the common case of
+// a festival with no day-specific published start time. `label`/`date` are
+// always the real calendar weekday/date; `id` normally is too, EXCEPT for
+// day one when `firstId` is passed -- that pins the bucket key so it keeps
+// matching whatever day_id existing festival_sets rows already use, even
+// on a festival (like Tomorrowland some years) whose real first day isn't
+// a Friday. `suffix` (e.g. "2") gives a second weekend its own id space
+// without colliding with the first, so a two-weekend festival is just two
+// calls: consecutiveDays(y, m, d1, n, t) and consecutiveDays(y, m, d2, n, t, { suffix: "2" }).
+function consecutiveDays(year, month, startDate, count, startMin, { firstId, suffix = "" } = {}) {
+  const days = [];
+  for (let i = 0; i < count; i++) {
+    const date = new Date(year, month, startDate + i);
+    const dow = date.getDay();
+    const id = (i === 0 && firstId ? firstId : DOW_IDS[dow]) + suffix;
+    days.push({ id, label: DOW_LABELS[dow], date: `${SHORT_MONTHS[month]} ${startDate + i}`, startMin });
+  }
+  return days;
+}
+
 const FESTIVAL_DAYS = {
   bonnaroo: [
     { id: "thu", label: "Thu", date: "Jun 11", startMin: 17 * 60 + 30 },
@@ -247,46 +272,48 @@ const FESTIVAL_DAYS = {
     { id: "sat2", label: "Sat", date: "Apr 18", startMin: 15 * 60 },
     { id: "sun2", label: "Sun", date: "Apr 19", startMin: 16 * 60 },
   ],
-  "electric-forest": [
-    { id: "thu", label: "Thu", date: "Jun 25", startMin: 18 * 60 + 30 },
-  ],
+  // Electric Forest is Thu–Sun; only Thursday has any published lineup
+  // data so far (see festival_sets), but the other three days are real and
+  // shown anyway -- same pattern as Bonnaroo's lightest day below.
+  "electric-forest": consecutiveDays(2027, 5, 24, 4, 18 * 60 + 30),
+  // "Dates not yet announced" (see FESTIVALS) -- no fixed date to expand
+  // against, so this stays a single placeholder day rather than a guess.
   "governors-ball": [
     { id: "sat", label: "Sat", date: "Jun 6", startMin: 12 * 60 },
   ],
   lollapalooza: [
     { id: "sat", label: "Sat", date: "Aug 1", startMin: 12 * 60 },
   ],
-  "outside-lands": [
-    { id: "sat", label: "Sat", date: "Aug 8", startMin: 15 * 60 },
-  ],
-  acl: [
-    { id: "fri", label: "Fri", date: "Oct 2", startMin: 18 * 60 },
-  ],
-  "edc-vegas": [
-    { id: "fri", label: "Fri", date: "May 15", startMin: 21 * 60 },
-  ],
+  "outside-lands": consecutiveDays(2027, 7, 6, 3, 15 * 60),
+  // Two weekends (see FESTIVALS) -- second weekend reuses the same
+  // weekday ids with a "2" suffix, same convention as Coachella above.
+  acl: [...consecutiveDays(2026, 9, 2, 3, 18 * 60), ...consecutiveDays(2026, 9, 9, 3, 18 * 60, { suffix: "2" })],
+  "edc-vegas": [...consecutiveDays(2027, 4, 14, 3, 21 * 60), ...consecutiveDays(2027, 4, 21, 3, 21 * 60, { suffix: "2" })],
+  // Tomorrowland 2027's confirmed dates (Jul 17–19 & 24–26) actually land
+  // on Sat–Mon, not the usual Fri–Sun -- firstId keeps the existing
+  // festival_sets rows (tagged day_id "fri"/"fri2") pointing at the right
+  // day even though its real label is "Sat", rather than needing a data
+  // migration just because the calendar shifted this year.
   tomorrowland: [
-    { id: "fri", label: "Fri", date: "Jul 17", startMin: 14 * 60 },
+    ...consecutiveDays(2027, 6, 17, 3, 14 * 60, { firstId: "fri" }),
+    ...consecutiveDays(2027, 6, 24, 3, 14 * 60, { firstId: "fri", suffix: "2" }),
   ],
-  "lost-lands": [
-    { id: "fri", label: "Fri", date: "Sep 18", startMin: 18 * 60 },
-  ],
+  "lost-lands": consecutiveDays(2026, 8, 18, 3, 18 * 60),
   // Grid starts at 4pm, matching the confirmed 4:00pm start of Frank Walker's
   // Main Stage set (Miami New Times' published 2026 set times).
-  "ultra-miami": [
-    { id: "fri", label: "Fri", date: "Mar 27", startMin: 16 * 60 },
-  ],
+  "ultra-miami": consecutiveDays(2027, 2, 26, 3, 16 * 60),
   // Grid starts at 8pm, matching the confirmed doors/first-set time on
   // ultraeurope.com's published 2026 set times.
-  "ultra-europe": [
-    { id: "fri", label: "Fri", date: "Jul 10", startMin: 20 * 60 },
-  ],
+  "ultra-europe": consecutiveDays(2027, 6, 9, 3, 20 * 60),
   // DJ Mag's Tomorrowland Winter 2026 coverage confirms specific artists on
-  // specific days (see the festival_sets table) but not a published daily set-time grid,
-  // so these are generic evening-start markers.
+  // specific days (see the festival_sets table) but not a published daily
+  // set-time grid, so these are generic evening-start markers -- only the
+  // two days with confirmed artists are modeled, not the full Mar 20–27
+  // run (a ski festival spans far more days than it has concert content).
+  // 2027's real Sat/Sun fall on Mar 20/21 (previously mislabeled Mar 21/22).
   "tomorrowland-winter": [
-    { id: "sat", label: "Sat", date: "Mar 21", startMin: 18 * 60 },
-    { id: "sun", label: "Sun", date: "Mar 22", startMin: 18 * 60 },
+    { id: "sat", label: "Sat", date: "Mar 20", startMin: 18 * 60 },
+    { id: "sun", label: "Sun", date: "Mar 21", startMin: 18 * 60 },
   ],
   // EDC Orlando 2026's day-by-day headliner assignment is confirmed
   // (gottagoorlando.com) but exact set times aren't published yet — the
@@ -301,22 +328,25 @@ const FESTIVAL_DAYS = {
   // hours (edmidentity.com). Chris Lake's and Charlotte de Witte's
   // circuitGROUNDS sets ran back-to-back overnight Fri–Sat, so both are
   // grouped under "fri" here rather than splitting an overnight set across
-  // two day buckets.
+  // two day buckets. 2027's real Fri/Sun fall on Feb 19/21 (previously
+  // mislabeled Feb 20/22).
   "edc-mexico": [
-    { id: "fri", label: "Fri", date: "Feb 20", startMin: 16 * 60 },
-    { id: "sun", label: "Sun", date: "Feb 22", startMin: 16 * 60 },
+    { id: "fri", label: "Fri", date: "Feb 19", startMin: 16 * 60 },
+    { id: "sun", label: "Sun", date: "Feb 21", startMin: 16 * 60 },
   ],
   // Grid starts at 7pm, matching Katseye's confirmed Friday opening slot
   // (perfil.com / lanacion.com.ar's published 2026 day-by-day schedules).
+  // 2027's real Fri/Sun fall on Mar 12/14 (previously mislabeled Mar 13/15);
+  // Saturday has no lineup data yet but is a real day of the festival, so
+  // it's shown (empty) rather than skipped, same as Electric Forest above.
   "lollapalooza-argentina": [
-    { id: "fri", label: "Fri", date: "Mar 13", startMin: 19 * 60 },
-    { id: "sun", label: "Sun", date: "Mar 15", startMin: 18 * 60 + 45 },
+    { id: "fri", label: "Fri", date: "Mar 12", startMin: 19 * 60 },
+    { id: "sat", label: "Sat", date: "Mar 13", startMin: 19 * 60 },
+    { id: "sun", label: "Sun", date: "Mar 14", startMin: 18 * 60 + 45 },
   ],
   // Grid starts at noon, matching Baran Kok's confirmed Essence Stage
   // opening set time (timeout.com/festivawl.com's published 2026 set times).
-  "lollapalooza-berlin": [
-    { id: "sat", label: "Sat", date: "Jul 18", startMin: 12 * 60 },
-  ],
+  "lollapalooza-berlin": consecutiveDays(2027, 6, 17, 2, 12 * 60),
   // Secret Dreams 2026's new venue (The Cardinal Center, Marengo OH).
   // Official dates are Fri–Sun Sep 4–6; Thursday Sep 3 is a separate
   // pre-party rather than part of the paid festival days proper. No
