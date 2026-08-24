@@ -370,60 +370,13 @@ const FESTIVAL_DAYS = {
 // festival, so fmtTime needs both to resolve the right start time.
 const ALL_DAYS = Object.entries(FESTIVAL_DAYS).flatMap(([festivalId, days]) => days.map((d) => ({ ...d, festivalId })));
 
-const FRIENDS = [
-  { id: "mia", name: "Mia", initial: "M", color: "#FF3DA6", sharingOn: true },
-  { id: "jax", name: "Jax", initial: "J", color: "#FFB23D", sharingOn: true },
-  { id: "theo", name: "Theo", initial: "T", color: "#9D6BFF", sharingOn: false },
-];
-
-// Seed DM history per friend — 'you' | 'them' plus a timestamp label. New
-// messages sent in-session get appended on top of this in component state.
-const DM_THREADS = {
-  mia: [
-    { id: "m1", from: "them", text: "yo are we still meeting at the camp pin before OBSIDIAN closes", time: "1h ago" },
-    { id: "m2", from: "you", text: "yeah I'll be there, running a bit behind rn", time: "52m ago" },
-    { id: "m3", from: "them", text: "no worries, we're grabbing food near Plaza 2 first anyway", time: "48m ago" },
-  ],
-  jax: [
-    { id: "j1", from: "them", text: "bro Wet Leg was insane, wish you caught it", time: "3h ago" },
-    { id: "j2", from: "you", text: "I KNOW I saw the clips, so mad I missed it", time: "3h ago" },
-  ],
-  theo: [
-    { id: "t1", from: "you", text: "you still coming through tonight or nah", time: "5h ago" },
-  ],
-};
-
 // Pool the "Simulate a notification" button picks from — stands in for
-// server-side events (a DM, an artist post, a set reminder) until those
-// are real.
+// server-side events (an artist post, a set reminder) until those are real.
 const NOTIFICATION_POOL = [
   { type: "set", title: "OBSIDIAN starts in 15 minutes", body: "What Stage · your #1 match tonight" },
   { type: "artist", title: "RÜFÜS DU SOL posted an update", body: "Closing set is a full production reset — new visuals, new edits" },
-  { type: "dm", title: "New message from Jax", body: "where you at, we're by the water refill" },
   { type: "community", title: "Your crew is talking", body: "3 new replies in a thread you posted" },
 ];
-
-export const FRIEND_MATCHES = {
-  3: { theo: 76 },
-  6: { mia: 71 },
-  9: { jax: 82, mia: 68 },
-  10: { mia: 95, jax: 89, theo: 90 },
-  11: { mia: 84, theo: 79 },
-  13: { jax: 77 },
-  15: { mia: 99, jax: 96, theo: 93 },
-  16: { mia: 90, jax: 85, theo: 88 },
-  24: { theo: 80 },
-  28: { mia: 88 },
-  33: { mia: 96, jax: 91, theo: 94 },
-  37: { mia: 85, jax: 79 },
-  43: { jax: 80 },
-  46: { mia: 92, jax: 87, theo: 90 },
-};
-
-const ME = {
-  name: "Will",
-  handle: "@willrides",
-};
 
 // Generic festival-day essentials — applies regardless of which festival is
 // active, so it lives on Home rather than duplicated per festival.
@@ -902,9 +855,7 @@ function memberAvatarBg(memberId, crew, customColor) {
 }
 
 // Adapts real crew members `{id, name, handle}` into the shape the
-// (mock-data-era) CrewCompare/CampMap components expect. Real members won't
-// have FRIEND_MATCHES or camp-pin data yet, so those views degrade to "no
-// data" for them rather than crashing — that's honest, not a bug.
+// (mock-data-era) CrewCompare/CampMap components expect.
 function toDisplayFriends(members) {
   return (members || []).map((m) => ({ id: m.id, name: m.name, initial: m.name[0].toUpperCase(), color: colorForId(m.id, m.color) }));
 }
@@ -1316,10 +1267,6 @@ export default function FestivalOptimizer() {
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
-  const [activeThread, setActiveThread] = useState(null); // friend id, or null for inbox list
-  const [sentMessages, setSentMessages] = useState({}); // friendId -> [message, ...]
-  const [messageDraft, setMessageDraft] = useState("");
-  const [unreadDMs, setUnreadDMs] = useState(["mia"]); // Mia's last message hasn't been seen yet
   const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
   const { blockedIds, block: blockUser, unblock: unblockUser, report: reportUser } = useBlocking(profile?.id);
   const [reportTarget, setReportTarget] = useState(null); // { id, name } | null
@@ -1443,8 +1390,7 @@ export default function FestivalOptimizer() {
   const [toast, setToast] = useState(null);
   const [toastLeaving, setToastLeaving] = useState(false);
   const [festivalSearch, setFestivalSearch] = useState("");
-  const [activeFriends, setActiveFriends] = useState([]);
-  const [sharing, setSharing] = useState(() => Object.fromEntries(FRIENDS.map((f) => [f.id, f.sharingOn])));
+  const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
@@ -1618,18 +1564,8 @@ export default function FestivalOptimizer() {
     return flagged;
   }, [threshold, daySets]);
 
-  function toggleFriend(id) {
-    setActiveFriends((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
-  }
   function toggleSharing(id) {
     setSharing((prev) => ({ ...prev, [id]: !prev[id] }));
-  }
-  function sendMessage(friendId) {
-    if (!messageDraft.trim()) return;
-    const newMsg = { id: `sent-${Date.now()}`, from: "you", text: messageDraft.trim(), time: isOnline ? "just now" : "queued" };
-    setSentMessages((prev) => ({ ...prev, [friendId]: [...(prev[friendId] || []), newMsg] }));
-    setMessageDraft("");
-    if (!isOnline) setQueuedActions((n) => n + 1);
   }
   async function openRealThread(otherProfileId) {
     const result = await openThreadWith(otherProfileId);
@@ -1751,9 +1687,8 @@ export default function FestivalOptimizer() {
   function openNotification(n) {
     markNotificationRead(n.id);
     setNotificationsOpen(false);
-    if (n.type === "dm" && n.meta?.friendId) {
+    if (n.type === "dm") {
       setMessagesOpen(true);
-      setActiveThread(n.meta.friendId);
     } else if (n.type === "artist" && n.meta?.festival) {
       setCurrentFestival(n.meta.festival);
       setView("community");
@@ -1765,11 +1700,6 @@ export default function FestivalOptimizer() {
     }
   }
 
-  const passesFriendFilter = (s) => {
-    if (activeFriends.length === 0) return true;
-    const fm = FRIEND_MATCHES[s.id] || {};
-    return activeFriends.some((f) => (fm[f] || 0) >= 50);
-  };
   // s.match is null for real-lineup festivals with no personalized listening
   // data yet — treat that as "always show" rather than letting it coerce to
   // 0 and get filtered out of My Matches like a genuine low match would.
@@ -1777,7 +1707,7 @@ export default function FestivalOptimizer() {
     if (lineupSubview === "schedule") return schedulePickedIds.has(s.id);
     if (lineupSubview === "matches") return s.match == null || s.match >= threshold || schedulePickedIds.has(s.id);
     return true; // full
-  }).filter(passesFriendFilter);
+  });
 
   const TABS = [
     { id: "home", label: "Home", icon: "home" },
@@ -2021,7 +1951,7 @@ export default function FestivalOptimizer() {
                 )}
               </button>
               <button
-                onClick={() => { setMessagesOpen(true); setUnreadDMs([]); }}
+                onClick={() => setMessagesOpen(true)}
                 aria-label="Messages"
                 className="tab-btn"
                 style={{
@@ -2031,9 +1961,6 @@ export default function FestivalOptimizer() {
                 }}
               >
                 <svg viewBox="0 0 24 24" width="15" height="15" stroke="#9D6BFF" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z"/></svg>
-                {unreadDMs.length > 0 && (
-                  <span style={{ position: "absolute", top: -2, right: -2, width: 9, height: 9, borderRadius: "50%", background: "#FF3DA6", border: "2px solid #0F0B1A" }} />
-                )}
               </button>
               <button
                 onClick={() => setSafetyOpen(true)}
@@ -2306,21 +2233,6 @@ export default function FestivalOptimizer() {
               </Suspense>
             ) : (
               <>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-              {FRIENDS.map((f) => {
-                const active = activeFriends.includes(f.id);
-                return (
-                  <button key={f.id} onClick={() => toggleFriend(f.id)} className="tab-btn" style={{
-                    display: "flex", alignItems: "center", gap: 6, padding: "5px 11px 5px 5px", borderRadius: 999,
-                    border: `1px solid ${active ? f.color : "#2A2440"}`, background: active ? `${f.color}1A` : "transparent", cursor: "pointer",
-                  }}>
-                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: f.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{f.initial}</span>
-                    <span style={{ fontSize: 12, color: active ? "#F5F0FF" : "#8B85A3" }}>{f.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
               {activeStages.map((s) => (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2584,6 +2496,7 @@ export default function FestivalOptimizer() {
                     onSelect={setSelected}
                     currentDay={currentDay}
                     currentFestival={currentFestival}
+                    crewPicks={schedulePickCrewOverlap}
                   />
                 </Suspense>
               </>
@@ -2922,20 +2835,6 @@ export default function FestivalOptimizer() {
                   >
                     Claim profile
                   </button>
-                </div>
-              )}
-              {FRIEND_MATCHES[selected.id] && (
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>ALSO INTO THIS ARTIST</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {FRIENDS.filter((f) => FRIEND_MATCHES[selected.id][f.id] != null).map((f) => (
-                      <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 18, height: 18, borderRadius: "50%", background: f.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{f.initial}</span>
-                        <span style={{ fontSize: 13 }}>{f.name}</span>
-                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3" }}>{FRIEND_MATCHES[selected.id][f.id]}% match</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
@@ -3594,11 +3493,11 @@ export default function FestivalOptimizer() {
 
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
-          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveThread(null); setActiveRealThreadId(null); }}>
+          <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveRealThreadId(null); }}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
 
-              {!activeThread && !activeRealThreadId ? (
+              {!activeRealThreadId ? (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Messages</div>
@@ -3639,39 +3538,14 @@ export default function FestivalOptimizer() {
                         {t.lastMessage && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>{relativeTime(t.lastMessage.created_at)}</span>}
                       </button>
                     ))}
-                    {FRIENDS.map((f) => {
-                      const thread = [...(DM_THREADS[f.id] || []), ...(sentMessages[f.id] || [])];
-                      const last = thread[thread.length - 1];
-                      const isUnread = unreadDMs.includes(f.id);
-                      return (
-                        <button
-                          key={f.id}
-                          onClick={() => setActiveThread(f.id)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 10, textAlign: "left",
-                            border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px",
-                            background: isUnread ? "rgba(157,107,255,0.08)" : "transparent", cursor: "pointer",
-                          }}
-                        >
-                          <span style={{ width: 34, height: 34, borderRadius: "50%", background: f.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{f.initial}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ fontSize: 13.5, fontWeight: 700 }}>{f.name}</span>
-                              {isUnread && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF3DA6", flexShrink: 0 }} />}
-                            </div>
-                            {last && (
-                              <div style={{ fontSize: 12, color: "#8B85A3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
-                                {last.from === "you" ? "You: " : ""}{last.text}
-                              </div>
-                            )}
-                          </div>
-                          {last && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>{last.time}</span>}
-                        </button>
-                      );
-                    })}
+                    {realThreads.filter((t) => t.other).length === 0 && (
+                      <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center", marginTop: 20 }}>
+                        No messages yet — tap "+ New" to message someone you share a crew with.
+                      </p>
+                    )}
                   </div>
                 </>
-              ) : activeRealThreadId ? (
+              ) : (
                 (() => {
                   const t = realThreads.find((th) => th.id === activeRealThreadId);
                   if (!t || !t.other) return null;
@@ -3830,68 +3704,6 @@ export default function FestivalOptimizer() {
                           {sendingDM ? "Sending…" : "Send"}
                         </button>
                       </div>
-                    </>
-                  );
-                })()
-              ) : (
-                (() => {
-                  const f = FRIENDS.find((fr) => fr.id === activeThread);
-                  const thread = [...(DM_THREADS[activeThread] || []), ...(sentMessages[activeThread] || [])];
-                  return (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <button onClick={() => setActiveThread(null)} aria-label="Back to inbox" style={{ background: "none", border: "none", color: "#8B85A3", cursor: "pointer", padding: 0, display: "flex" }}>
-                          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-                        </button>
-                        <span style={{ width: 28, height: 28, borderRadius: "50%", background: f.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{f.initial}</span>
-                        <span style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
-                        <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
-                      </div>
-
-                      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: 16 }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 160 }}>
-                        {thread.map((m) => (
-                          <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
-                            <div style={{
-                              maxWidth: "78%", borderRadius: 14, padding: "8px 12px",
-                              background: m.from === "you" ? "rgba(61,242,224,0.14)" : "#1E1832",
-                              border: `1px solid ${m.from === "you" ? "#3DF2E0" : "#2A2440"}`,
-                            }}>
-                              <div style={{ fontSize: 13.5, color: "#F5F0FF", lineHeight: 1.4 }}>{m.text}</div>
-                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 3, textAlign: m.from === "you" ? "right" : "left" }}>{m.time}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      </div>
-
-                      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                        <input
-                          value={messageDraft}
-                          onChange={(e) => setMessageDraft(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") sendMessage(activeThread); }}
-                          placeholder={`Message ${f.name}…`}
-                          aria-label={`Message ${f.name}`}
-                          style={{
-                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#F5F0FF",
-                            background: "#1A1428", border: "1px solid #2A2440", borderRadius: 20,
-                            padding: "10px 14px", outline: "none",
-                          }}
-                        />
-                        <button
-                          onClick={() => sendMessage(activeThread)}
-                          style={{
-                            fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 16px", borderRadius: 20,
-                            border: "none", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", color: "#0F0B1A", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-                            boxShadow: "0 2px 14px rgba(157,107,255,0.35)",
-                          }}
-                        >
-                          Send
-                        </button>
-                      </div>
-                      {!isOnline && (
-                        <p style={{ fontSize: 11, color: "#FFB23D", margin: "8px 0 0" }}>Offline — messages will send once you're back online.</p>
-                      )}
                     </>
                   );
                 })()

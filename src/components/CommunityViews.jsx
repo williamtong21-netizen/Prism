@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FRIEND_MATCHES, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, FESTIVAL_POSTS } from "../App.jsx";
+import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, FESTIVAL_POSTS } from "../App.jsx";
 
 // Split out of App.jsx (lazy-loaded from the Lineup/Crew/Community tabs) so
 // a first-time visitor's initial sign-in load doesn't have to fetch this
@@ -76,8 +76,8 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
   );
 }
 
-export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect, currentDay, currentFestival }) {
-  const rows = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && (s.match >= 50 || Object.values(FRIEND_MATCHES[s.id] || {}).some((v) => v >= 50))).sort((a, b) => a.start - b.start);
+export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect, currentDay, currentFestival, crewPicks }) {
+  const rows = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && (s.match >= 50 || (crewPicks[s.id] || []).length > 0)).sort((a, b) => a.start - b.start);
   return (
     <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
       <div style={{ overflowX: "auto" }}>
@@ -109,11 +109,11 @@ export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect,
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(s.match) }}>{matchLabel(s.match)}</span>
                 </td>
                 {friends.map((f) => {
-                  const val = (FRIEND_MATCHES[s.id] || {})[f.id];
+                  const picked = (crewPicks[s.id] || []).includes(f.id);
                   return (
                     <td key={f.id} style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid #201A33" }}>
                       {!sharing[f.id] ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3A3552" }}>hidden</span>
-                        : val != null ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(val) }}>{val}%</span>
+                        : picked ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#3DF2E0" }}>✓ on schedule</span>
                         : <span style={{ color: "#3A3552", fontSize: 12 }}>—</span>}
                     </td>
                   );
