@@ -1318,57 +1318,19 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
-  const turnstileContainerRef = useRef(null);
-  const turnstileWidgetIdRef = useRef(null);
 
-  // Loads Cloudflare's script once (harmless if this effect re-runs and it's
-  // already there) and renders the widget explicitly rather than via the
-  // data-sitekey auto-render attribute, so we control exactly when/how it
-  // mounts and can reset it between submit attempts -- a token is single-use
-  // and expires after a few minutes.
-  useEffect(() => {
-    let cancelled = false;
-    function renderWidget() {
-      if (cancelled || !turnstileContainerRef.current || !window.turnstile) return;
-      turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
-        sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
-        callback: (token) => setCaptchaToken(token),
-        "expired-callback": () => setCaptchaToken(""),
-        "error-callback": () => setCaptchaToken(""),
-      });
-    }
-    if (window.turnstile) {
-      renderWidget();
-    } else {
-      const existing = document.getElementById("cf-turnstile-script");
-      if (!existing) {
-        const script = document.createElement("script");
-        script.id = "cf-turnstile-script";
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-      }
-      const interval = setInterval(() => {
-        if (window.turnstile) {
-          clearInterval(interval);
-          renderWidget();
-        }
-      }, 100);
-      return () => { cancelled = true; clearInterval(interval); };
-    }
-    return () => { cancelled = true; };
-  }, []);
+  // Turnstile CAPTCHA is disabled for now (was correlating with GPU-process
+  // crashes on at least one user's machine, tied to the widget's animation --
+  // see feedback memory). Server-side enforcement in Supabase Auth > Attack
+  // Protection must stay off in lockstep with this, or every sign-in fails
+  // with "no captcha_token found" since nothing here generates one anymore.
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!email.trim() || submitting || !captchaToken) return;
+    if (!email.trim() || submitting) return;
     setSubmitting(true);
-    await onSubmit(email.trim(), captchaToken);
+    await onSubmit(email.trim());
     setSubmitting(false);
-    setCaptchaToken("");
-    if (turnstileWidgetIdRef.current != null) window.turnstile?.reset(turnstileWidgetIdRef.current);
   }
 
   async function handleVerify(e) {
@@ -1438,13 +1400,12 @@ function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
             placeholder="you@example.com"
             style={{ width: "100%", background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14 }}
           />
-          <div ref={turnstileContainerRef} style={{ display: "flex", justifyContent: "center" }} />
           <button
             type="submit"
-            disabled={submitting || !captchaToken}
-            style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting || !captchaToken ? "default" : "pointer", opacity: submitting || !captchaToken ? 0.7 : 1 }}
+            disabled={submitting}
+            style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
           >
-            {submitting ? "Sending…" : !captchaToken ? "Verifying you're not a bot…" : "Send my magic link →"}
+            {submitting ? "Sending…" : "Send my magic link →"}
           </button>
           {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
         </form>
