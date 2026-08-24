@@ -10,6 +10,7 @@ import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 import { useBlocking } from "./lib/useBlocking";
 import { useSchedulePicks } from "./lib/useSchedulePicks";
+import { useFestivalSets } from "./lib/useFestivalSets";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
 // this code before they're even signed in — see src/components/CommunityViews.jsx.
@@ -281,7 +282,7 @@ const FESTIVAL_DAYS = {
     { id: "fri", label: "Fri", date: "Jul 10", startMin: 20 * 60 },
   ],
   // DJ Mag's Tomorrowland Winter 2026 coverage confirms specific artists on
-  // specific days (see SETS below) but not a published daily set-time grid,
+  // specific days (see the festival_sets table) but not a published daily set-time grid,
   // so these are generic evening-start markers.
   "tomorrowland-winter": [
     { id: "sat", label: "Sat", date: "Mar 21", startMin: 18 * 60 },
@@ -331,358 +332,6 @@ const FESTIVAL_DAYS = {
 // Flattened for fmtTime's lookup — day ids are only unique within a
 // festival, so fmtTime needs both to resolve the right start time.
 const ALL_DAYS = Object.entries(FESTIVAL_DAYS).flatMap(([festivalId, days]) => days.map((d) => ({ ...d, festivalId })));
-
-const SETS = [
-  // --- Friday, June 12 ---
-  { id: 1, festival: "bonnaroo", day: "fri", artist: "Dora Jar", stage: "that", start: 0, end: 45, match: 58, genre: "Indie Pop", sounds_like: null, sources: [] },
-  { id: 2, festival: "bonnaroo", day: "fri", artist: "Villanelle", stage: "what", start: 45, end: 90, match: 44, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 3, festival: "bonnaroo", day: "fri", artist: "Lambrini Girls", stage: "which", start: 75, end: 120, match: 71, genre: "Punk", sounds_like: "Raw, high-energy — close to your louder guitar picks", sources: ["soundcloud"] },
-  { id: 4, festival: "bonnaroo", day: "fri", artist: "PawPaw Rod", stage: "that", start: 120, end: 165, match: 39, genre: "Hip-Hop", sounds_like: null, sources: [] },
-  { id: 5, festival: "bonnaroo", day: "fri", artist: "Claire Rosinkranz", stage: "which", start: 135, end: 180, match: 52, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 6, festival: "bonnaroo", day: "fri", artist: "Amble", stage: "what", start: 135, end: 180, match: 83, genre: "Indie Folk", sounds_like: "Close to your Bon Iver / Fleet Foxes listening", sources: ["spotify"] },
-  { id: 7, festival: "bonnaroo", day: "fri", artist: "Blues Traveler", stage: "what", start: 225, end: 285, match: 47, genre: "Rock", sounds_like: null, sources: [] },
-  { id: 8, festival: "bonnaroo", day: "fri", artist: "Zack Fox", stage: "other", start: 240, end: 285, match: 65, genre: "Hip-Hop", sounds_like: "You've streamed a couple of his guest verses", sources: ["spotify"] },
-  { id: 9, festival: "bonnaroo", day: "fri", artist: "Rachel Chinouriri", stage: "this", start: 255, end: 300, match: 79, genre: "Indie Pop", sounds_like: "Like Holly Humberstone, more upbeat", sources: ["spotify", "soundcloud"] },
-  { id: 10, festival: "bonnaroo", day: "fri", artist: "Wet Leg", stage: "which", start: 300, end: 360, match: 94, genre: "Indie Rock", sounds_like: "Your #3 most-played artist this year", sources: ["spotify", "soundcloud"] },
-  { id: 11, festival: "bonnaroo", day: "fri", artist: "Mother Mother", stage: "this", start: 300, end: 360, match: 88, genre: "Indie Rock", sounds_like: "Heavy rotation for you the past few months", sources: ["spotify"] },
-  { id: 12, festival: "bonnaroo", day: "fri", artist: "Łaszewo", stage: "other", start: 300, end: 360, match: 69, genre: "Electronic", sounds_like: "New territory, close to your SoundCloud follows", sources: ["soundcloud"] },
-  { id: 13, festival: "bonnaroo", day: "fri", artist: "Yungblud", stage: "what", start: 345, end: 405, match: 73, genre: "Alt Rock", sounds_like: "Overlaps with your rock-leaning playlists", sources: ["spotify"] },
-  { id: 14, festival: "bonnaroo", day: "fri", artist: "Jessie Murph", stage: "which", start: 420, end: 480, match: 61, genre: "Pop / Country", sounds_like: null, sources: [] },
-  { id: 15, festival: "bonnaroo", day: "fri", artist: "GRiZ", stage: "what", start: 465, end: 540, match: 97, genre: "Funk / Electronic", sounds_like: "Your #1 most-played artist this year", sources: ["spotify", "soundcloud"] },
-  { id: 16, festival: "bonnaroo", day: "fri", artist: "The Strokes", stage: "what", start: 600, end: 675, match: 91, genre: "Rock", sounds_like: "Your #2 most-played artist this year", sources: ["spotify"] },
-
-  // --- Thursday, June 11 — Bonnaroo's lightest day, one stage of data ---
-  { id: 17, festival: "bonnaroo", day: "thu", artist: "Spiritual Cramp", stage: "what", start: 0, end: 60, match: 42, genre: "Punk", sounds_like: null, sources: [] },
-  { id: 18, festival: "bonnaroo", day: "thu", artist: "Vince Staples", stage: "what", start: 90, end: 150, match: 68, genre: "Hip-Hop", sounds_like: "You've streamed a few of his early albums", sources: ["spotify"] },
-  { id: 19, festival: "bonnaroo", day: "thu", artist: "Four Tet", stage: "what", start: 180, end: 270, match: 95, genre: "Electronic", sounds_like: "Heavy rotation for you lately", sources: ["spotify", "soundcloud"] },
-  { id: 20, festival: "bonnaroo", day: "thu", artist: "Skrillex", stage: "what", start: 300, end: 390, match: 89, genre: "Dubstep / Electronic", sounds_like: "Big part of your electronic listening history", sources: ["spotify"] },
-
-  // --- Saturday, June 13 ---
-  { id: 21, festival: "bonnaroo", day: "sat", artist: "Sunami", stage: "this", start: 0, end: 45, match: 35, genre: "Hardcore", sounds_like: null, sources: [] },
-  { id: 22, festival: "bonnaroo", day: "sat", artist: "Midnight Generation", stage: "what", start: 60, end: 105, match: 55, genre: "Indie Rock", sounds_like: null, sources: [] },
-  { id: 23, festival: "bonnaroo", day: "sat", artist: "Arcy Drive", stage: "what", start: 150, end: 195, match: 61, genre: "Alt Rock", sounds_like: null, sources: [] },
-  { id: 24, festival: "bonnaroo", day: "sat", artist: "Tash Sultana", stage: "what", start: 240, end: 300, match: 86, genre: "Psychedelic Soul", sounds_like: "Overlaps with your looping / psych-leaning playlists", sources: ["spotify"] },
-  { id: 25, festival: "bonnaroo", day: "sat", artist: "Trixie Mattel", stage: "that", start: 195, end: 255, match: 30, genre: "Comedy / Variety", sounds_like: null, sources: [] },
-  { id: 26, festival: "bonnaroo", day: "sat", artist: "Holly Humberstone", stage: "which", start: 195, end: 255, match: 77, genre: "Indie Pop", sounds_like: "Similar to Rachel Chinouriri, who you caught Friday", sources: ["spotify"] },
-  { id: 27, festival: "bonnaroo", day: "sat", artist: "Passion Pit", stage: "this", start: 360, end: 420, match: 72, genre: "Indie Electropop", sounds_like: "Nostalgic indie-electropop you still revisit", sources: ["spotify"] },
-  { id: 28, festival: "bonnaroo", day: "sat", artist: "Alabama Shakes", stage: "what", start: 360, end: 420, match: 91, genre: "Rock / Soul", sounds_like: "Your SoundCloud follows lean into this soul-rock sound", sources: ["soundcloud"] },
-  { id: 29, festival: "bonnaroo", day: "sat", artist: "The Neighbourhood", stage: "what", start: 480, end: 555, match: 66, genre: "Alt Rock", sounds_like: null, sources: [] },
-  { id: 30, festival: "bonnaroo", day: "sat", artist: "Kesha Presents: Superjam", stage: "this", start: 480, end: 585, match: 58, genre: "Pop (special set)", sounds_like: null, sources: [] },
-  { id: 31, festival: "bonnaroo", day: "sat", artist: "Teddy Swims", stage: "which", start: 540, end: 615, match: 74, genre: "Soul / Pop", sounds_like: "Close to your soul/pop crossover picks", sources: ["spotify"] },
-  { id: 32, festival: "bonnaroo", day: "sat", artist: "Sara Landry", stage: "other", start: 555, end: 645, match: 82, genre: "Techno", sounds_like: "New territory, close to your SoundCloud follows", sources: ["soundcloud"] },
-  { id: 33, festival: "bonnaroo", day: "sat", artist: "RÜFÜS DU SOL", stage: "what", start: 625, end: 715, match: 98, genre: "Electronic", sounds_like: "Your #1 most-played artist this weekend", sources: ["spotify", "soundcloud"] },
-
-  // --- Sunday, June 14 — closing day ---
-  { id: 34, festival: "bonnaroo", day: "sun", artist: "Spacey Jane", stage: "which", start: 0, end: 60, match: 70, genre: "Indie Rock", sounds_like: null, sources: [] },
-  { id: 35, festival: "bonnaroo", day: "sun", artist: "Blondshell", stage: "that", start: 15, end: 60, match: 80, genre: "Indie Rock", sounds_like: "Close to Wet Leg, who you caught Friday", sources: ["spotify"] },
-  { id: 36, festival: "bonnaroo", day: "sun", artist: "Trombone Shorty", stage: "what", start: 60, end: 120, match: 48, genre: "Funk / Jazz", sounds_like: null, sources: [] },
-  { id: 37, festival: "bonnaroo", day: "sun", artist: "Japanese Breakfast", stage: "which", start: 105, end: 165, match: 92, genre: "Indie Pop", sounds_like: "Heavy rotation for you the past few months", sources: ["spotify", "soundcloud"] },
-  { id: 38, festival: "bonnaroo", day: "sun", artist: "Tedeschi Trucks Band", stage: "what", start: 165, end: 225, match: 53, genre: "Blues Rock", sounds_like: null, sources: [] },
-  { id: 39, festival: "bonnaroo", day: "sun", artist: "Turnover", stage: "this", start: 225, end: 285, match: 64, genre: "Dream Pop", sounds_like: null, sources: [] },
-  { id: 40, festival: "bonnaroo", day: "sun", artist: "Del Water Gap", stage: "that", start: 225, end: 285, match: 76, genre: "Indie Pop", sounds_like: "Close to your Amble listening from Friday", sources: ["spotify"] },
-  { id: 41, festival: "bonnaroo", day: "sun", artist: "Clipse", stage: "which", start: 225, end: 285, match: 71, genre: "Hip-Hop", sounds_like: "A few of their tracks are in your playlists", sources: ["spotify"] },
-  { id: 42, festival: "bonnaroo", day: "sun", artist: "Role Model", stage: "what", start: 285, end: 345, match: 59, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 43, festival: "bonnaroo", day: "sun", artist: "Modest Mouse", stage: "this", start: 330, end: 405, match: 84, genre: "Indie Rock", sounds_like: "Your indie rock taste lines up well here", sources: ["spotify"] },
-  { id: 44, festival: "bonnaroo", day: "sun", artist: "Kesha", stage: "which", start: 345, end: 405, match: 67, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 45, festival: "bonnaroo", day: "sun", artist: "Mariah the Scientist", stage: "that", start: 345, end: 420, match: 73, genre: "R&B", sounds_like: "Close to your R&B listening on SoundCloud", sources: ["soundcloud"] },
-  { id: 46, festival: "bonnaroo", day: "sun", artist: "Noah Kahan", stage: "what", start: 405, end: 480, match: 96, genre: "Folk Pop", sounds_like: "Your #2 most-played artist this weekend", sources: ["spotify"] },
-
-  // --- Coachella, Friday April 10, 2026 — Weekend 1, Day 1 ---
-  { id: 47, festival: "coachella", day: "fri", artist: "Dabeull", stage: "outdoor", start: 0, end: 50, match: 44, genre: "French House / Funk", sounds_like: null, sources: [] },
-  { id: 48, festival: "coachella", day: "fri", artist: "Youna", stage: "sahara", start: 0, end: 50, match: 38, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 49, festival: "coachella", day: "fri", artist: "Bob Baker Marionettes", stage: "gobi", start: 0, end: 40, match: 25, genre: "Variety / Puppetry", sounds_like: null, sources: [] },
-  { id: 50, festival: "coachella", day: "fri", artist: "Wednesday", stage: "sonora", start: 0, end: 40, match: 78, genre: "Indie Rock", sounds_like: "Close to Wet Leg and other fuzzy indie rock you like", sources: ["spotify"] },
-  { id: 51, festival: "coachella", day: "fri", artist: "BINI", stage: "mojave", start: 15, end: 60, match: 41, genre: "P-Pop", sounds_like: null, sources: [] },
-  { id: 52, festival: "coachella", day: "fri", artist: "NewDad", stage: "gobi", start: 45, end: 85, match: 69, genre: "Shoegaze / Indie", sounds_like: "Overlaps with your dreamier indie rock listening", sources: ["soundcloud"] },
-  { id: 53, festival: "coachella", day: "fri", artist: "HUGEL", stage: "sahara", start: 50, end: 110, match: 55, genre: "House", sounds_like: null, sources: [] },
-  { id: 54, festival: "coachella", day: "fri", artist: "Fleshwater", stage: "sonora", start: 50, end: 90, match: 47, genre: "Shoegaze / Metal", sounds_like: null, sources: [] },
-  { id: 55, festival: "coachella", day: "fri", artist: "Tiga", stage: "quasar", start: 60, end: 180, match: 62, genre: "Electro / House", sounds_like: null, sources: [] },
-  { id: 56, festival: "coachella", day: "fri", artist: "Lykke Li", stage: "outdoor", start: 80, end: 130, match: 74, genre: "Indie Pop", sounds_like: "Close to Rachel Chinouriri, who you caught at Bonnaroo", sources: ["spotify"] },
-  { id: 57, festival: "coachella", day: "fri", artist: "Teddy Swims", stage: "coachella-stage", start: 90, end: 140, match: 71, genre: "Soul / Pop", sounds_like: "Close to your soul/pop crossover picks", sources: ["spotify"] },
-  { id: 58, festival: "coachella", day: "fri", artist: "Central Cee", stage: "mojave", start: 90, end: 135, match: 66, genre: "UK Hip-Hop", sounds_like: null, sources: [] },
-  { id: 59, festival: "coachella", day: "fri", artist: "Joyce Manor", stage: "gobi", start: 90, end: 130, match: 58, genre: "Emo / Indie Rock", sounds_like: null, sources: [] },
-  { id: 60, festival: "coachella", day: "fri", artist: "The Two Lips", stage: "sonora", start: 120, end: 160, match: 33, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 61, festival: "coachella", day: "fri", artist: "The xx", stage: "coachella-stage", start: 180, end: 240, match: 90, genre: "Indie Electronic", sounds_like: "Your #1 most-played artist a few years running", sources: ["spotify", "soundcloud"] },
-  { id: 62, festival: "coachella", day: "fri", artist: "Sabrina Carpenter", stage: "coachella-stage", start: 305, end: 395, match: 88, genre: "Pop", sounds_like: "One of your most-streamed pop artists this year", sources: ["spotify"] },
-  { id: 63, festival: "coachella", day: "fri", artist: "Anyma", stage: "coachella-stage", start: 480, end: 570, match: 93, genre: "Melodic Techno / Audiovisual", sounds_like: "Your SoundCloud follows lean heavily into this sound", sources: ["soundcloud"] },
-
-  // --- Coachella, Saturday April 11, 2026 — Weekend 1, Day 2 ---
-  { id: 64, festival: "coachella", day: "sat", artist: "Jack White", stage: "mojave", start: 0, end: 45, match: 82, genre: "Rock / Blues", sounds_like: "Overlaps with your rock and blues-leaning listening", sources: ["spotify"] },
-  { id: 65, festival: "coachella", day: "sat", artist: "Los Hermanos Flores", stage: "outdoor", start: 60, end: 105, match: 40, genre: "Latin / Cumbia", sounds_like: null, sources: [] },
-  { id: 66, festival: "coachella", day: "sat", artist: "Alex G", stage: "outdoor", start: 130, end: 175, match: 77, genre: "Indie Rock", sounds_like: "Consistent with your lo-fi indie rock taste", sources: ["spotify"] },
-  { id: 67, festival: "coachella", day: "sat", artist: "Addison Rae", stage: "coachella-stage", start: 150, end: 195, match: 54, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 68, festival: "coachella", day: "sat", artist: "Geese", stage: "gobi", start: 195, end: 240, match: 72, genre: "Indie Rock", sounds_like: "Fits your fuzzy indie rock taste", sources: ["spotify"] },
-  { id: 69, festival: "coachella", day: "sat", artist: "Blondshell", stage: "outdoor", start: 190, end: 235, match: 85, genre: "Indie Rock", sounds_like: "You caught her Sunday at Bonnaroo — recurring favorite", sources: ["spotify"] },
-  { id: 70, festival: "coachella", day: "sat", artist: "Giveon", stage: "coachella-stage", start: 240, end: 285, match: 68, genre: "R&B", sounds_like: "Close to your R&B listening on SoundCloud", sources: ["soundcloud"] },
-  { id: 71, festival: "coachella", day: "sat", artist: "Sombr", stage: "outdoor", start: 245, end: 290, match: 63, genre: "Indie Pop", sounds_like: null, sources: [] },
-  { id: 72, festival: "coachella", day: "sat", artist: "Nine Inch Noize", stage: "sahara", start: 300, end: 360, match: 89, genre: "Industrial / Electronic", sounds_like: "New territory but close to your industrial/electronic edges", sources: ["soundcloud"] },
-  { id: 73, festival: "coachella", day: "sat", artist: "The Strokes", stage: "coachella-stage", start: 360, end: 410, match: 95, genre: "Rock", sounds_like: "You caught them Friday at Bonnaroo — clearly a top artist for you", sources: ["spotify"] },
-  { id: 74, festival: "coachella", day: "sat", artist: "David Guetta", stage: "quasar", start: 360, end: 450, match: 45, genre: "House / EDM", sounds_like: null, sources: [] },
-  { id: 75, festival: "coachella", day: "sat", artist: "PinkPantheress", stage: "gobi", start: 355, end: 400, match: 59, genre: "Pop / UK Garage", sounds_like: null, sources: [] },
-  { id: 76, festival: "coachella", day: "sat", artist: "Labrinth", stage: "outdoor", start: 330, end: 375, match: 66, genre: "Alt R&B / Pop", sounds_like: null, sources: [] },
-  { id: 77, festival: "coachella", day: "sat", artist: "Interpol", stage: "mojave", start: 435, end: 480, match: 60, genre: "Post-Punk", sounds_like: null, sources: [] },
-  { id: 78, festival: "coachella", day: "sat", artist: "David Byrne", stage: "outdoor", start: 440, end: 490, match: 58, genre: "Art Rock", sounds_like: null, sources: [] },
-  { id: 79, festival: "coachella", day: "sat", artist: "Justin Bieber", stage: "coachella-stage", start: 505, end: 580, match: 71, genre: "Pop", sounds_like: null, sources: [] },
-
-  // --- Coachella, Sunday April 12, 2026 — Weekend 1, Day 3 ---
-  { id: 80, festival: "coachella", day: "sun", artist: "Tijuana Panthers", stage: "coachella-stage", start: 0, end: 45, match: 36, genre: "Surf Rock", sounds_like: null, sources: [] },
-  { id: 81, festival: "coachella", day: "sun", artist: "Gigi Perez", stage: "outdoor", start: 0, end: 45, match: 75, genre: "Indie Pop", sounds_like: "Close to your softer indie pop picks", sources: ["spotify"] },
-  { id: 82, festival: "coachella", day: "sun", artist: "Wet Leg", stage: "coachella-stage", start: 45, end: 90, match: 97, genre: "Indie Rock", sounds_like: "You caught them Friday at Bonnaroo — your #3 most-played artist this year", sources: ["spotify", "soundcloud"] },
-  { id: 83, festival: "coachella", day: "sun", artist: "Clipse", stage: "outdoor", start: 75, end: 120, match: 74, genre: "Hip-Hop", sounds_like: "You caught them Sunday at Bonnaroo too", sources: ["spotify"] },
-  { id: 84, festival: "coachella", day: "sun", artist: "Major Lazer", stage: "coachella-stage", start: 130, end: 175, match: 64, genre: "Dancehall / Electronic", sounds_like: null, sources: [] },
-  { id: 85, festival: "coachella", day: "sun", artist: "Foster the People", stage: "outdoor", start: 165, end: 210, match: 69, genre: "Indie Pop / Rock", sounds_like: null, sources: [] },
-  { id: 86, festival: "coachella", day: "sun", artist: "Drain", stage: "gobi", start: 240, end: 285, match: 52, genre: "Hardcore Punk", sounds_like: null, sources: [] },
-  { id: 87, festival: "coachella", day: "sun", artist: "Young Thug", stage: "coachella-stage", start: 230, end: 275, match: 57, genre: "Hip-Hop", sounds_like: null, sources: [] },
-  { id: 88, festival: "coachella", day: "sun", artist: "Laufey", stage: "outdoor", start: 280, end: 325, match: 86, genre: "Jazz Pop", sounds_like: "Overlaps with your jazzier, softer listening moods", sources: ["spotify"] },
-  { id: 89, festival: "coachella", day: "sun", artist: "Glitterer", stage: "gobi", start: 375, end: 420, match: 65, genre: "Indie Rock / Punk", sounds_like: null, sources: [] },
-  { id: 90, festival: "coachella", day: "sun", artist: "Karol G", stage: "coachella-stage", start: 355, end: 430, match: 80, genre: "Reggaeton / Latin Pop", sounds_like: "Outside your usual genres but heavily hyped in your circles", sources: ["spotify"] },
-  { id: 91, festival: "coachella", day: "sun", artist: "BIGBANG", stage: "outdoor", start: 390, end: 450, match: 48, genre: "K-Pop", sounds_like: null, sources: [] },
-
-  // --- Coachella Weekend 2 (April 17-19) — same lineup as Weekend 1 ---
-  { id: 92, festival: "coachella", day: "fri2", artist: "Dabeull", stage: "outdoor", start: 0, end: 50, match: 44, genre: "French House / Funk", sounds_like: null, sources: [] },
-  { id: 93, festival: "coachella", day: "fri2", artist: "Youna", stage: "sahara", start: 0, end: 50, match: 38, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 94, festival: "coachella", day: "fri2", artist: "Bob Baker Marionettes", stage: "gobi", start: 0, end: 40, match: 25, genre: "Variety / Puppetry", sounds_like: null, sources: [] },
-  { id: 95, festival: "coachella", day: "fri2", artist: "Wednesday", stage: "sonora", start: 0, end: 40, match: 78, genre: "Indie Rock", sounds_like: "Close to Wet Leg and other fuzzy indie rock you like", sources: ["spotify"] },
-  { id: 96, festival: "coachella", day: "fri2", artist: "BINI", stage: "mojave", start: 15, end: 60, match: 41, genre: "P-Pop", sounds_like: null, sources: [] },
-  { id: 97, festival: "coachella", day: "fri2", artist: "NewDad", stage: "gobi", start: 45, end: 85, match: 69, genre: "Shoegaze / Indie", sounds_like: "Overlaps with your dreamier indie rock listening", sources: ["soundcloud"] },
-  { id: 98, festival: "coachella", day: "fri2", artist: "HUGEL", stage: "sahara", start: 50, end: 110, match: 55, genre: "House", sounds_like: null, sources: [] },
-  { id: 99, festival: "coachella", day: "fri2", artist: "Fleshwater", stage: "sonora", start: 50, end: 90, match: 47, genre: "Shoegaze / Metal", sounds_like: null, sources: [] },
-  { id: 100, festival: "coachella", day: "fri2", artist: "Tiga", stage: "quasar", start: 60, end: 180, match: 62, genre: "Electro / House", sounds_like: null, sources: [] },
-  { id: 101, festival: "coachella", day: "fri2", artist: "Lykke Li", stage: "outdoor", start: 80, end: 130, match: 74, genre: "Indie Pop", sounds_like: "Close to Rachel Chinouriri, who you caught at Bonnaroo", sources: ["spotify"] },
-  { id: 102, festival: "coachella", day: "fri2", artist: "Teddy Swims", stage: "coachella-stage", start: 90, end: 140, match: 71, genre: "Soul / Pop", sounds_like: "Close to your soul/pop crossover picks", sources: ["spotify"] },
-  { id: 103, festival: "coachella", day: "fri2", artist: "Central Cee", stage: "mojave", start: 90, end: 135, match: 66, genre: "UK Hip-Hop", sounds_like: null, sources: [] },
-  { id: 104, festival: "coachella", day: "fri2", artist: "Joyce Manor", stage: "gobi", start: 90, end: 130, match: 58, genre: "Emo / Indie Rock", sounds_like: null, sources: [] },
-  { id: 105, festival: "coachella", day: "fri2", artist: "The Two Lips", stage: "sonora", start: 120, end: 160, match: 33, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 106, festival: "coachella", day: "fri2", artist: "The xx", stage: "coachella-stage", start: 180, end: 240, match: 90, genre: "Indie Electronic", sounds_like: "Your #1 most-played artist a few years running", sources: ["spotify", "soundcloud"] },
-  { id: 107, festival: "coachella", day: "fri2", artist: "Sabrina Carpenter", stage: "coachella-stage", start: 305, end: 395, match: 88, genre: "Pop", sounds_like: "One of your most-streamed pop artists this year", sources: ["spotify"] },
-  { id: 108, festival: "coachella", day: "fri2", artist: "Anyma", stage: "coachella-stage", start: 480, end: 570, match: 93, genre: "Melodic Techno / Audiovisual", sounds_like: "Your SoundCloud follows lean heavily into this sound", sources: ["soundcloud"] },
-  { id: 109, festival: "coachella", day: "sat2", artist: "Jack White", stage: "mojave", start: 0, end: 45, match: 82, genre: "Rock / Blues", sounds_like: "Overlaps with your rock and blues-leaning listening", sources: ["spotify"] },
-  { id: 110, festival: "coachella", day: "sat2", artist: "Los Hermanos Flores", stage: "outdoor", start: 60, end: 105, match: 40, genre: "Latin / Cumbia", sounds_like: null, sources: [] },
-  { id: 111, festival: "coachella", day: "sat2", artist: "Alex G", stage: "outdoor", start: 130, end: 175, match: 77, genre: "Indie Rock", sounds_like: "Consistent with your lo-fi indie rock taste", sources: ["spotify"] },
-  { id: 112, festival: "coachella", day: "sat2", artist: "Addison Rae", stage: "coachella-stage", start: 150, end: 195, match: 54, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 113, festival: "coachella", day: "sat2", artist: "Geese", stage: "gobi", start: 195, end: 240, match: 72, genre: "Indie Rock", sounds_like: "Fits your fuzzy indie rock taste", sources: ["spotify"] },
-  { id: 114, festival: "coachella", day: "sat2", artist: "Blondshell", stage: "outdoor", start: 190, end: 235, match: 85, genre: "Indie Rock", sounds_like: "You caught her Sunday at Bonnaroo — recurring favorite", sources: ["spotify"] },
-  { id: 115, festival: "coachella", day: "sat2", artist: "Giveon", stage: "coachella-stage", start: 240, end: 285, match: 68, genre: "R&B", sounds_like: "Close to your R&B listening on SoundCloud", sources: ["soundcloud"] },
-  { id: 116, festival: "coachella", day: "sat2", artist: "Sombr", stage: "outdoor", start: 245, end: 290, match: 63, genre: "Indie Pop", sounds_like: null, sources: [] },
-  { id: 117, festival: "coachella", day: "sat2", artist: "Nine Inch Noize", stage: "sahara", start: 300, end: 360, match: 89, genre: "Industrial / Electronic", sounds_like: "New territory but close to your industrial/electronic edges", sources: ["soundcloud"] },
-  { id: 118, festival: "coachella", day: "sat2", artist: "The Strokes", stage: "coachella-stage", start: 360, end: 410, match: 95, genre: "Rock", sounds_like: "You caught them Friday at Bonnaroo — clearly a top artist for you", sources: ["spotify"] },
-  { id: 119, festival: "coachella", day: "sat2", artist: "David Guetta", stage: "quasar", start: 360, end: 450, match: 45, genre: "House / EDM", sounds_like: null, sources: [] },
-  { id: 120, festival: "coachella", day: "sat2", artist: "PinkPantheress", stage: "gobi", start: 355, end: 400, match: 59, genre: "Pop / UK Garage", sounds_like: null, sources: [] },
-  { id: 121, festival: "coachella", day: "sat2", artist: "Labrinth", stage: "outdoor", start: 330, end: 375, match: 66, genre: "Alt R&B / Pop", sounds_like: null, sources: [] },
-  { id: 122, festival: "coachella", day: "sat2", artist: "Interpol", stage: "mojave", start: 435, end: 480, match: 60, genre: "Post-Punk", sounds_like: null, sources: [] },
-  { id: 123, festival: "coachella", day: "sat2", artist: "David Byrne", stage: "outdoor", start: 440, end: 490, match: 58, genre: "Art Rock", sounds_like: null, sources: [] },
-  { id: 124, festival: "coachella", day: "sat2", artist: "Justin Bieber", stage: "coachella-stage", start: 505, end: 580, match: 71, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 125, festival: "coachella", day: "sun2", artist: "Tijuana Panthers", stage: "coachella-stage", start: 0, end: 45, match: 36, genre: "Surf Rock", sounds_like: null, sources: [] },
-  { id: 126, festival: "coachella", day: "sun2", artist: "Gigi Perez", stage: "outdoor", start: 0, end: 45, match: 75, genre: "Indie Pop", sounds_like: "Close to your softer indie pop picks", sources: ["spotify"] },
-  { id: 127, festival: "coachella", day: "sun2", artist: "Wet Leg", stage: "coachella-stage", start: 45, end: 90, match: 97, genre: "Indie Rock", sounds_like: "You caught them Friday at Bonnaroo — your #3 most-played artist this year", sources: ["spotify", "soundcloud"] },
-  { id: 128, festival: "coachella", day: "sun2", artist: "Clipse", stage: "outdoor", start: 75, end: 120, match: 74, genre: "Hip-Hop", sounds_like: "You caught them Sunday at Bonnaroo too", sources: ["spotify"] },
-  { id: 129, festival: "coachella", day: "sun2", artist: "Major Lazer", stage: "coachella-stage", start: 130, end: 175, match: 64, genre: "Dancehall / Electronic", sounds_like: null, sources: [] },
-  { id: 130, festival: "coachella", day: "sun2", artist: "Foster the People", stage: "outdoor", start: 165, end: 210, match: 69, genre: "Indie Pop / Rock", sounds_like: null, sources: [] },
-  { id: 131, festival: "coachella", day: "sun2", artist: "Drain", stage: "gobi", start: 240, end: 285, match: 52, genre: "Hardcore Punk", sounds_like: null, sources: [] },
-  { id: 132, festival: "coachella", day: "sun2", artist: "Young Thug", stage: "coachella-stage", start: 230, end: 275, match: 57, genre: "Hip-Hop", sounds_like: null, sources: [] },
-  { id: 133, festival: "coachella", day: "sun2", artist: "Laufey", stage: "outdoor", start: 280, end: 325, match: 86, genre: "Jazz Pop", sounds_like: "Overlaps with your jazzier, softer listening moods", sources: ["spotify"] },
-  { id: 134, festival: "coachella", day: "sun2", artist: "Glitterer", stage: "gobi", start: 375, end: 420, match: 65, genre: "Indie Rock / Punk", sounds_like: null, sources: [] },
-  { id: 135, festival: "coachella", day: "sun2", artist: "Karol G", stage: "coachella-stage", start: 355, end: 430, match: 80, genre: "Reggaeton / Latin Pop", sounds_like: "Outside your usual genres but heavily hyped in your circles", sources: ["spotify"] },
-  { id: 136, festival: "coachella", day: "sun2", artist: "BIGBANG", stage: "outdoor", start: 390, end: 450, match: 48, genre: "K-Pop", sounds_like: null, sources: [] },
-
-  // --- Electric Forest, Thursday June 25, 2026 — Day 1 ---
-  { id: 137, festival: "electric-forest", day: "thu", artist: "EFFIN", stage: "ranch", start: 0, end: 75, match: 58, genre: "Bass / Dubstep", sounds_like: null, sources: [] },
-  { id: 138, festival: "electric-forest", day: "thu", artist: "Midnight Generation", stage: "ranch", start: 105, end: 165, match: 71, genre: "Indie Rock", sounds_like: "You caught them at Bonnaroo too — recurring pick for you", sources: ["spotify"] },
-  { id: 139, festival: "electric-forest", day: "thu", artist: "Disco Lines", stage: "ranch", start: 195, end: 270, match: 84, genre: "Tech House / Bass", sounds_like: "Overlaps with your tech house listening", sources: ["soundcloud"] },
-  { id: 140, festival: "electric-forest", day: "thu", artist: "Excision", stage: "ranch", start: 360, end: 450, match: 93, genre: "Dubstep", sounds_like: "Lost Lands' headliner and a heavy part of your bass rotation", sources: ["spotify", "soundcloud"] },
-  { id: 141, festival: "electric-forest", day: "thu", artist: "Eggy", stage: "sherwood", start: 30, end: 105, match: 45, genre: "Jam Band", sounds_like: null, sources: [] },
-  { id: 142, festival: "electric-forest", day: "thu", artist: "Night Tapes", stage: "sherwood", start: 150, end: 210, match: 76, genre: "Dream Pop / Electronic", sounds_like: "Close to your dreamier indie/electronic crossover picks", sources: ["spotify"] },
-  { id: 143, festival: "electric-forest", day: "thu", artist: "Alleycvt", stage: "sherwood", start: 270, end: 345, match: 62, genre: "Bass", sounds_like: null, sources: [] },
-  { id: 144, festival: "electric-forest", day: "thu", artist: "Ganja White Night", stage: "sherwood", start: 435, end: 510, match: 81, genre: "Dubstep", sounds_like: "New territory, close to your SoundCloud dubstep follows", sources: ["soundcloud"] },
-  { id: 145, festival: "electric-forest", day: "thu", artist: "H&RRY", stage: "tripolee", start: 0, end: 75, match: 55, genre: "Electronic / House", sounds_like: null, sources: [] },
-  { id: 146, festival: "electric-forest", day: "thu", artist: "Close Friends Only", stage: "tripolee", start: 75, end: 135, match: 69, genre: "Indie Electronic", sounds_like: null, sources: [] },
-  { id: 147, festival: "electric-forest", day: "thu", artist: "Jackie Hollander", stage: "tripolee", start: 135, end: 195, match: 73, genre: "House", sounds_like: "Fits your house listening on weekends", sources: ["spotify"] },
-  { id: 148, festival: "electric-forest", day: "thu", artist: "Daniel Allan", stage: "tripolee", start: 195, end: 255, match: 88, genre: "Melodic Bass", sounds_like: "Heavy rotation for you lately", sources: ["spotify", "soundcloud"] },
-  { id: 149, festival: "electric-forest", day: "thu", artist: "DEVAULT", stage: "tripolee", start: 255, end: 315, match: 48, genre: "Bass / Dubstep", sounds_like: null, sources: [] },
-  { id: 150, festival: "electric-forest", day: "thu", artist: "WESTEND", stage: "tripolee", start: 315, end: 375, match: 60, genre: "House", sounds_like: null, sources: [] },
-  { id: 151, festival: "electric-forest", day: "thu", artist: "D.O.D", stage: "tripolee", start: 375, end: 435, match: 77, genre: "Techno / Bass", sounds_like: "Close to your techno/bass crossover taste", sources: ["soundcloud"] },
-  { id: 152, festival: "electric-forest", day: "thu", artist: "ODD MOB", stage: "tripolee", start: 435, end: 495, match: 54, genre: "Bass House", sounds_like: null, sources: [] },
-  { id: 153, festival: "electric-forest", day: "thu", artist: "Eli Brown", stage: "tripolee", start: 495, end: 570, match: 90, genre: "Tech House", sounds_like: "Your SoundCloud follows lean heavily into UK house/tech", sources: ["soundcloud"] },
-
-  // --- Governors Ball, Saturday June 6, 2026 ---
-  { id: 154, festival: "governors-ball", day: "sat", artist: "Jimmyboy", stage: "verizon", start: 0, end: 45, match: 40, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 155, festival: "governors-ball", day: "sat", artist: "Jade LeMac", stage: "grove", start: 15, end: 60, match: 52, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 156, festival: "governors-ball", day: "sat", artist: "Chanpan", stage: "snapchat", start: 30, end: 75, match: 47, genre: "Electronic", sounds_like: null, sources: [] },
-  { id: 157, festival: "governors-ball", day: "sat", artist: "Spacey Jane", stage: "grove", start: 120, end: 165, match: 70, genre: "Indie Rock", sounds_like: null, sources: [] },
-  { id: 158, festival: "governors-ball", day: "sat", artist: "2hollis", stage: "snapchat", start: 150, end: 195, match: 61, genre: "Alt Pop / Electronic", sounds_like: null, sources: [] },
-  { id: 159, festival: "governors-ball", day: "sat", artist: "Jane Remover", stage: "verizon", start: 180, end: 225, match: 65, genre: "Shoegaze / Digicore", sounds_like: null, sources: [] },
-  { id: 160, festival: "governors-ball", day: "sat", artist: "Ravyn Lenae", stage: "verizon", start: 240, end: 285, match: 79, genre: "R&B", sounds_like: "Close to your R&B listening on SoundCloud", sources: ["soundcloud"] },
-  { id: 161, festival: "governors-ball", day: "sat", artist: "Wet Leg", stage: "grove", start: 240, end: 285, match: 97, genre: "Indie Rock", sounds_like: "You caught them at Bonnaroo and Coachella — clearly a favorite", sources: ["spotify", "soundcloud"] },
-  { id: 162, festival: "governors-ball", day: "sat", artist: "Snow Strippers", stage: "snapchat", start: 240, end: 285, match: 58, genre: "Electroclash", sounds_like: null, sources: [] },
-  { id: 163, festival: "governors-ball", day: "sat", artist: "Stray Kids", stage: "verizon", start: 510, end: 585, match: 55, genre: "K-Pop", sounds_like: null, sources: [] },
-
-  // --- Lollapalooza, Saturday August 1, 2026 ---
-  { id: 164, festival: "lollapalooza", day: "sat", artist: "Peace Control", stage: "perrys", start: 0, end: 30, match: 42, genre: "Bass", sounds_like: null, sources: [] },
-  { id: 165, festival: "lollapalooza", day: "sat", artist: "MC4D", stage: "perrys", start: 45, end: 90, match: 50, genre: "Trap / Bass", sounds_like: null, sources: [] },
-  { id: 166, festival: "lollapalooza", day: "sat", artist: "OMNOM", stage: "perrys", start: 105, end: 165, match: 63, genre: "Dubstep", sounds_like: null, sources: [] },
-  { id: 167, festival: "lollapalooza", day: "sat", artist: "AYYBO", stage: "perrys", start: 180, end: 240, match: 68, genre: "Hyperpop / Bass", sounds_like: null, sources: [] },
-  { id: 168, festival: "lollapalooza", day: "sat", artist: "Whethan", stage: "perrys", start: 255, end: 315, match: 71, genre: "Electropop", sounds_like: "Fits your electropop crossover listening", sources: ["spotify"] },
-  { id: 169, festival: "lollapalooza", day: "sat", artist: "Max Styler", stage: "perrys", start: 345, end: 405, match: 74, genre: "Tech House", sounds_like: null, sources: [] },
-  { id: 170, festival: "lollapalooza", day: "sat", artist: "Alison Wonderland", stage: "perrys", start: 420, end: 480, match: 85, genre: "Bass / Pop", sounds_like: "Your SoundCloud follows lean into this bass/pop crossover", sources: ["soundcloud"] },
-  { id: 171, festival: "lollapalooza", day: "sat", artist: "Disco Lines", stage: "perrys", start: 510, end: 585, match: 84, genre: "Tech House", sounds_like: "You caught them at Electric Forest too", sources: ["soundcloud"] },
-  { id: 172, festival: "lollapalooza", day: "sat", artist: "Olivia Dean", stage: "tmobile", start: 510, end: 585, match: 76, genre: "Soul / Pop", sounds_like: null, sources: [] },
-  { id: 173, festival: "lollapalooza", day: "sat", artist: "JENNIE", stage: "budlight", start: 535, end: 600, match: 60, genre: "K-Pop", sounds_like: null, sources: [] },
-
-  // --- Outside Lands, Saturday August 8, 2026 ---
-  { id: 174, festival: "outside-lands", day: "sat", artist: "Malcolm Todd", stage: "twinpeaks", start: 0, end: 45, match: 64, genre: "Indie Pop", sounds_like: null, sources: [] },
-  { id: 175, festival: "outside-lands", day: "sat", artist: "Djo", stage: "landsend", start: 60, end: 105, match: 78, genre: "Indie Rock / Synth Pop", sounds_like: "Fits your synth-pop leaning indie listening", sources: ["spotify"] },
-  { id: 176, festival: "outside-lands", day: "sat", artist: "Lucy Dacus", stage: "twinpeaks", start: 120, end: 165, match: 72, genre: "Indie Rock", sounds_like: null, sources: [] },
-  { id: 177, festival: "outside-lands", day: "sat", artist: "Ethel Cain", stage: "sutro", start: 180, end: 240, match: 81, genre: "Alt / Gothic Americana", sounds_like: "New territory, close to your slower indie moods", sources: ["soundcloud"] },
-  { id: 178, festival: "outside-lands", day: "sat", artist: "Dijon", stage: "sutro", start: 255, end: 300, match: 69, genre: "Alt R&B", sounds_like: null, sources: [] },
-  { id: 179, festival: "outside-lands", day: "sat", artist: "The xx", stage: "twinpeaks", start: 310, end: 370, match: 90, genre: "Indie Electronic", sounds_like: "Your #1 most-played artist a few years running", sources: ["spotify", "soundcloud"] },
-  { id: 180, festival: "outside-lands", day: "sat", artist: "The Strokes", stage: "landsend", start: 335, end: 395, match: 95, genre: "Rock", sounds_like: "You caught them at Bonnaroo and Coachella — clearly a top artist for you", sources: ["spotify"] },
-  { id: 181, festival: "outside-lands", day: "sat", artist: "PinkPantheress", stage: "sutro", start: 345, end: 405, match: 59, genre: "Pop / UK Garage", sounds_like: null, sources: [] },
-
-  // --- Austin City Limits, Friday October 2, 2026 — headliners only; exact
-  // set times for 2026 weren't published in public listings at research
-  // time, so these three are estimated evening slots on their confirmed
-  // real stages, not exact clock times like the other festivals here. ---
-  { id: 182, festival: "acl", day: "fri", artist: "Skrillex", stage: "millerlite", start: 120, end: 195, match: 89, genre: "Electronic / Dubstep", sounds_like: "Big part of your electronic listening history", sources: ["spotify"] },
-  { id: 183, festival: "acl", day: "fri", artist: "Kings of Leon", stage: "tmobile-acl", start: 120, end: 210, match: 62, genre: "Rock", sounds_like: null, sources: [] },
-  { id: 184, festival: "acl", day: "fri", artist: "Charli XCX", stage: "honda", start: 150, end: 225, match: 77, genre: "Pop", sounds_like: null, sources: [] },
-
-  // --- EDC Las Vegas, Friday May 15, 2026 — kineticFIELD's Fisher/Porter
-  // Robinson/de Witte order is confirmed real; other stages' set times
-  // weren't published with exact clock times at research time, so those
-  // are estimated placements on their confirmed real stages. ---
-  { id: 185, festival: "edc-vegas", day: "fri", artist: "Fisher", stage: "kineticfield", start: 0, end: 60, match: 88, genre: "Tech House", sounds_like: "One of your most-played dance artists", sources: ["spotify"] },
-  { id: 186, festival: "edc-vegas", day: "fri", artist: "Underworld", stage: "cosmicmeadow", start: 60, end: 120, match: 66, genre: "Electronic / Techno Legends", sounds_like: null, sources: [] },
-  { id: 187, festival: "edc-vegas", day: "fri", artist: "Porter Robinson", stage: "kineticfield", start: 75, end: 135, match: 91, genre: "Melodic Electronic", sounds_like: "Heavy rotation for you lately", sources: ["spotify", "soundcloud"] },
-  { id: 188, festival: "edc-vegas", day: "fri", artist: "Subtronics", stage: "circuitgrounds", start: 90, end: 150, match: 73, genre: "Dubstep", sounds_like: "You caught similar acts at Lost Lands too", sources: ["soundcloud"] },
-  { id: 189, festival: "edc-vegas", day: "fri", artist: "Sara Landry", stage: "neongarden", start: 120, end: 180, match: 82, genre: "Techno", sounds_like: "You caught her at Bonnaroo too", sources: ["soundcloud"] },
-  { id: 190, festival: "edc-vegas", day: "fri", artist: "Meduza", stage: "cosmicmeadow", start: 150, end: 210, match: 61, genre: "Dance / Pop", sounds_like: null, sources: [] },
-  { id: 191, festival: "edc-vegas", day: "fri", artist: "Vintage Culture", stage: "circuitgrounds", start: 180, end: 240, match: 75, genre: "House", sounds_like: "You caught them at Tomorrowland too", sources: ["spotify"] },
-  { id: 192, festival: "edc-vegas", day: "fri", artist: "Charlotte de Witte", stage: "kineticfield", start: 150, end: 240, match: 94, genre: "Techno", sounds_like: "Closing kineticFIELD Night 1 — a real highlight for your taste", sources: ["spotify", "soundcloud"] },
-
-  // --- Tomorrowland, Friday July 17, 2026 — Weekend 1, Day 1 ---
-  { id: 193, festival: "tomorrowland", day: "fri", artist: "Vintage Culture", stage: "mainstage", start: 0, end: 90, match: 75, genre: "House", sounds_like: "You caught them at EDC too", sources: ["spotify"] },
-  { id: 194, festival: "tomorrowland", day: "fri", artist: "Disco Lines", stage: "mainstage", start: 90, end: 150, match: 84, genre: "Tech House", sounds_like: "You caught them at Electric Forest and Lollapalooza too", sources: ["soundcloud"] },
-  { id: 195, festival: "tomorrowland", day: "fri", artist: "Bassjackers", stage: "mainstage", start: 150, end: 205, match: 55, genre: "Big Room", sounds_like: null, sources: [] },
-  { id: 196, festival: "tomorrowland", day: "fri", artist: "Frank Verstraeten", stage: "freedom", start: 150, end: 240, match: 48, genre: "Techno", sounds_like: null, sources: [] },
-  { id: 197, festival: "tomorrowland", day: "fri", artist: "Henri PFR", stage: "mainstage", start: 210, end: 270, match: 63, genre: "Melodic Techno", sounds_like: null, sources: [] },
-  { id: 198, festival: "tomorrowland", day: "fri", artist: "Max Styler", stage: "freedom", start: 240, end: 330, match: 74, genre: "Tech House", sounds_like: "You caught them at Lollapalooza too", sources: ["spotify"] },
-  { id: 199, festival: "tomorrowland", day: "fri", artist: "NERVO", stage: "mainstage", start: 270, end: 335, match: 58, genre: "Electro House", sounds_like: null, sources: [] },
-  { id: 200, festival: "tomorrowland", day: "fri", artist: "Miss Monique", stage: "freedom", start: 330, end: 420, match: 79, genre: "Melodic Techno", sounds_like: "New territory, close to your melodic electronic taste", sources: ["soundcloud"] },
-  { id: 201, festival: "tomorrowland", day: "fri", artist: "Marlon Hoffstadt", stage: "mainstage", start: 335, end: 395, match: 52, genre: "Tech House", sounds_like: null, sources: [] },
-  { id: 202, festival: "tomorrowland", day: "fri", artist: "Mind Against", stage: "freedom", start: 420, end: 510, match: 86, genre: "Melodic Techno", sounds_like: "Heavy rotation for you lately", sources: ["spotify", "soundcloud"] },
-  { id: 203, festival: "tomorrowland", day: "fri", artist: "NOVAH", stage: "mainstage", start: 395, end: 460, match: 60, genre: "Progressive House", sounds_like: null, sources: [] },
-  { id: 204, festival: "tomorrowland", day: "fri", artist: "The Chainsmokers", stage: "mainstage", start: 460, end: 525, match: 68, genre: "EDM Pop", sounds_like: null, sources: [] },
-  { id: 205, festival: "tomorrowland", day: "fri", artist: "4444 of a Kind", stage: "freedom", start: 510, end: 570, match: 57, genre: "Techno", sounds_like: null, sources: [] },
-  { id: 206, festival: "tomorrowland", day: "fri", artist: "Sebastian Ingrosso", stage: "mainstage", start: 525, end: 585, match: 65, genre: "Progressive House", sounds_like: null, sources: [] },
-  { id: 207, festival: "tomorrowland", day: "fri", artist: "Holy Priest", stage: "freedom", start: 570, end: 660, match: 71, genre: "Techno", sounds_like: null, sources: [] },
-  { id: 208, festival: "tomorrowland", day: "fri", artist: "Martin Garrix", stage: "mainstage", start: 585, end: 660, match: 80, genre: "Progressive House / EDM", sounds_like: "Closing Mainstage — a genuine highlight for your taste", sources: ["spotify"] },
-
-  // --- Lost Lands, Friday September 18, 2026 — real 2026 lineup; exact
-  // stage assignments and set times weren't published at research time
-  // beyond Excision's confirmed 2-hour solo set, so placements here are
-  // estimated on real, confirmed stage names (Crater is real; Mainstage
-  // is the festival's standard main stage naming). ---
-  { id: 209, festival: "lost-lands", day: "fri", artist: "Excision", stage: "ll-mainstage", start: 0, end: 120, match: 93, genre: "Dubstep", sounds_like: "A heavy part of your bass rotation", sources: ["spotify", "soundcloud"] },
-  { id: 210, festival: "lost-lands", day: "fri", artist: "Subtronics", stage: "crater", start: 60, end: 120, match: 73, genre: "Dubstep", sounds_like: "You caught them at EDC too", sources: ["soundcloud"] },
-  { id: 211, festival: "lost-lands", day: "fri", artist: "Wooli", stage: "ll-mainstage", start: 150, end: 210, match: 68, genre: "Dubstep / Riddim", sounds_like: null, sources: [] },
-  { id: 212, festival: "lost-lands", day: "fri", artist: "Ganja White Night", stage: "crater", start: 150, end: 210, match: 81, genre: "Dubstep", sounds_like: "You caught them at Electric Forest too", sources: ["soundcloud"] },
-  { id: 213, festival: "lost-lands", day: "fri", artist: "Seven Lions", stage: "ll-mainstage", start: 240, end: 300, match: 86, genre: "Melodic Dubstep", sounds_like: "Fits your melodic bass listening well", sources: ["spotify"] },
-  { id: 214, festival: "lost-lands", day: "fri", artist: "ALLEYCVT", stage: "crater", start: 240, end: 300, match: 62, genre: "Bass", sounds_like: "You caught them at Electric Forest too", sources: ["soundcloud"] },
-  { id: 215, festival: "lost-lands", day: "fri", artist: "Flux Pavilion", stage: "crater", start: 330, end: 390, match: 71, genre: "Dubstep", sounds_like: null, sources: [] },
-
-  // --- Ultra Miami, Friday March 27, 2026 — start times are Ultra's own
-  // published 2026 set times (Miami New Times); end times are derived from
-  // the next confirmed set on the same stage, since Ultra's release only
-  // listed start times. ---
-  { id: 216, festival: "ultra-miami", day: "fri", artist: "Illenium", stage: "main", start: 180, end: 245, match: null, genre: "Melodic Dubstep", sounds_like: null, sources: [] },
-  { id: 217, festival: "ultra-miami", day: "fri", artist: "Bzrp", stage: "main", start: 245, end: 320, match: null, genre: "Latin Electronic", sounds_like: null, sources: [] },
-  { id: 218, festival: "ultra-miami", day: "fri", artist: "Vini Vici", stage: "worldwide", start: 180, end: 240, match: null, genre: "Psytrance", sounds_like: null, sources: [] },
-  { id: 219, festival: "ultra-miami", day: "fri", artist: "Armin van Buuren B2B Marlon Hoffstadt", stage: "worldwide", start: 300, end: 390, match: null, genre: "Trance", sounds_like: null, sources: [] },
-
-  // --- Ultra Europe, Friday July 10, 2026 — real, fully-confirmed start AND
-  // end times from Ultra Europe's own published 2026 set times
-  // (ultraeurope.com, via CULTR's coverage). ---
-  { id: 220, festival: "ultra-europe", day: "fri", artist: "Subtronics", stage: "main", start: 130, end: 195, match: null, genre: "Dubstep", sounds_like: null, sources: [] },
-  { id: 221, festival: "ultra-europe", day: "fri", artist: "Oliver Heldens", stage: "main", start: 195, end: 275, match: null, genre: "Future House", sounds_like: null, sources: [] },
-  { id: 222, festival: "ultra-europe", day: "fri", artist: "Miss Monique", stage: "resistance", start: 180, end: 300, match: null, genre: "Melodic Techno", sounds_like: null, sources: [] },
-  { id: 223, festival: "ultra-europe", day: "fri", artist: "Adam Beyer", stage: "resistance", start: 300, end: 420, match: null, genre: "Techno", sounds_like: null, sources: [] },
-
-  // --- Tomorrowland Winter 2026 — each pairing's day + stage is real and
-  // confirmed (DJ Mag's lineup coverage), but exact set-time clocks weren't
-  // published in the sources found, so these are estimated slots on the
-  // confirmed real Orbyz stage, not exact confirmed times. ---
-  { id: 243, festival: "tomorrowland-winter", day: "sat", artist: "Oliver Heldens' HI-LO b2b Maddix", stage: "orbyz", start: 180, end: 240, match: null, genre: "House", sounds_like: null, sources: [] },
-  { id: 244, festival: "tomorrowland-winter", day: "sun", artist: "Nervo b2b MATTN", stage: "orbyz", start: 180, end: 240, match: null, genre: "Electro House", sounds_like: null, sources: [] },
-  { id: 245, festival: "tomorrowland-winter", day: "sun", artist: "Dimitri Vegas b2b Steve Aoki", stage: "orbyz", start: 240, end: 300, match: null, genre: "Big Room / EDM", sounds_like: null, sources: [] },
-
-  // --- EDC Orlando 2026 — each artist's headlining day is real and
-  // confirmed (gottagoorlando.com's lineup-by-day coverage), but exact
-  // set-time clocks aren't published yet (event is Nov 2026), so these are
-  // estimated closing-set slots on the confirmed real kineticFIELD stage,
-  // not exact confirmed times. ---
-  { id: 246, festival: "edc-orlando", day: "fri", artist: "David Guetta", stage: "kineticfield", start: 240, end: 330, match: null, genre: "House / EDM", sounds_like: null, sources: [] },
-  { id: 247, festival: "edc-orlando", day: "sat", artist: "Kaskade", stage: "kineticfield", start: 240, end: 330, match: null, genre: "Progressive House", sounds_like: null, sources: [] },
-  { id: 248, festival: "edc-orlando", day: "sun", artist: "Martin Garrix", stage: "kineticfield", start: 150, end: 240, match: null, genre: "Progressive House / EDM", sounds_like: null, sources: [] },
-  { id: 249, festival: "edc-orlando", day: "sun", artist: "Hardwell", stage: "kineticfield", start: 240, end: 330, match: null, genre: "Big Room / EDM", sounds_like: null, sources: [] },
-
-  // --- EDC Mexico 2026 — Chris Lake and Charlotte de Witte's circuitGROUNDS
-  // times are real and fully confirmed (pulseoftechno.com / 1001tracklists
-  // coverage); Anyma's kineticFIELD closing set on Sunday is a confirmed
-  // real day+stage pairing but an estimated time, since an exact clock time
-  // wasn't published in the sources found. ---
-  { id: 250, festival: "edc-mexico", day: "fri", artist: "Chris Lake", stage: "circuitgrounds", start: 390, end: 480, match: null, genre: "Tech House", sounds_like: null, sources: [] },
-  { id: 251, festival: "edc-mexico", day: "fri", artist: "Charlotte de Witte", stage: "circuitgrounds", start: 510, end: 600, match: null, genre: "Techno", sounds_like: null, sources: [] },
-  { id: 252, festival: "edc-mexico", day: "sun", artist: "Anyma", stage: "kineticfield", start: 390, end: 450, match: null, genre: "Melodic Techno / Audiovisual", sounds_like: null, sources: [] },
-
-  // --- Lollapalooza Argentina 2026 — start times are real and confirmed
-  // (perfil.com / lanacion.com.ar's published day-by-day schedules); end
-  // times are estimated typical set lengths since exact end times weren't
-  // published in the sources found. ---
-  { id: 253, festival: "lollapalooza-argentina", day: "fri", artist: "Lorde", stage: "samsung", start: 120, end: 165, match: null, genre: "Art Pop", sounds_like: null, sources: [] },
-  { id: 254, festival: "lollapalooza-argentina", day: "fri", artist: "Tyler, The Creator", stage: "flow", start: 195, end: 270, match: null, genre: "Hip-Hop", sounds_like: null, sources: [] },
-  { id: 255, festival: "lollapalooza-argentina", day: "sun", artist: "Interpol", stage: "alternative", start: 0, end: 60, match: null, genre: "Post-Punk", sounds_like: null, sources: [] },
-  { id: 256, festival: "lollapalooza-argentina", day: "sun", artist: "Sabrina Carpenter", stage: "flow", start: 195, end: 270, match: null, genre: "Pop", sounds_like: null, sources: [] },
-
-  // --- Lollapalooza Berlin, Saturday July 18 2026 — real, fully-confirmed
-  // start AND end times (timeout.com / festivawl.com's published 2026 set
-  // times, all on the Essence Stage). ---
-  { id: 257, festival: "lollapalooza-berlin", day: "sat", artist: "Balu Brigada", stage: "essence", start: 90, end: 130, match: null, genre: "Electropop", sounds_like: null, sources: [] },
-  { id: 258, festival: "lollapalooza-berlin", day: "sat", artist: "Young Miko", stage: "essence", start: 180, end: 225, match: null, genre: "Reggaeton / Latin Trap", sounds_like: null, sources: [] },
-  { id: 259, festival: "lollapalooza-berlin", day: "sat", artist: "Tom Odell", stage: "essence", start: 280, end: 335, match: null, genre: "Piano Pop", sounds_like: null, sources: [] },
-  { id: 260, festival: "lollapalooza-berlin", day: "sat", artist: "Zara Larsson", stage: "essence", start: 405, end: 465, match: null, genre: "Pop", sounds_like: null, sources: [] },
-  { id: 261, festival: "lollapalooza-berlin", day: "sat", artist: "Pitbull", stage: "essence", start: 565, end: 655, match: null, genre: "Pop / Latin Hip-Hop", sounds_like: null, sources: [] },
-
-  // --- Secret Dreams 2026 — real, confirmed lineup (secretdreamsfest.com /
-  // riverbeats.life's published daily breakdown) for the festival's new
-  // Cardinal Center venue. No official set-time grid published yet, so
-  // start/end here are plausible placeholders on the two confirmed stages
-  // (PG Stage, Woods Stage), not confirmed set times. ---
-  { id: 262, festival: "secret-dreams", day: "thu", artist: "Yoko", stage: "woods", start: 0, end: 40, match: null, genre: "Bass", sounds_like: null, sources: [] },
-  { id: 263, festival: "secret-dreams", day: "thu", artist: "Skysia", stage: "pg", start: 40, end: 85, match: null, genre: "Global Bass", sounds_like: null, sources: [] },
-  { id: 264, festival: "secret-dreams", day: "thu", artist: "Saturna", stage: "woods", start: 85, end: 130, match: null, genre: "Bass", sounds_like: null, sources: [] },
-  { id: 265, festival: "secret-dreams", day: "thu", artist: "Mickman", stage: "pg", start: 130, end: 190, match: null, genre: "Electronic", sounds_like: null, sources: [] },
-  { id: 266, festival: "secret-dreams", day: "thu", artist: "The Werks", stage: "woods", start: 190, end: 260, match: null, genre: "Jam / Livetronica", sounds_like: null, sources: [] },
-  { id: 267, festival: "secret-dreams", day: "thu", artist: "CloZee", stage: "pg", start: 260, end: 330, match: null, genre: "Global Bass", sounds_like: null, sources: [] },
-  { id: 268, festival: "secret-dreams", day: "fri", artist: "Detox Unit", stage: "woods", start: 0, end: 45, match: null, genre: "Dubstep", sounds_like: null, sources: [] },
-  { id: 269, festival: "secret-dreams", day: "fri", artist: "Mr. Bill", stage: "pg", start: 45, end: 100, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
-  { id: 270, festival: "secret-dreams", day: "fri", artist: "Opiuo", stage: "woods", start: 100, end: 160, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
-  { id: 271, festival: "secret-dreams", day: "fri", artist: "Pigeons Playing Ping Pong", stage: "pg", start: 160, end: 230, match: null, genre: "Jam / Funk", sounds_like: null, sources: [] },
-  { id: 272, festival: "secret-dreams", day: "fri", artist: "Emancipator", stage: "woods", start: 230, end: 290, match: null, genre: "Downtempo", sounds_like: null, sources: [] },
-  { id: 273, festival: "secret-dreams", day: "fri", artist: "Of The Trees", stage: "pg", start: 290, end: 360, match: null, genre: "Bass / Glitch Hop", sounds_like: null, sources: [] },
-  { id: 274, festival: "secret-dreams", day: "sat", artist: "Wonky Llama", stage: "woods", start: 0, end: 50, match: null, genre: "Bass", sounds_like: null, sources: [] },
-  { id: 275, festival: "secret-dreams", day: "sat", artist: "Come Back to Earth", stage: "pg", start: 50, end: 110, match: null, genre: "Hip-Hop Tribute (Mac Miller)", sounds_like: null, sources: [] },
-  { id: 276, festival: "secret-dreams", day: "sat", artist: "EarthGang", stage: "woods", start: 110, end: 170, match: null, genre: "Hip-Hop", sounds_like: null, sources: [] },
-  { id: 277, festival: "secret-dreams", day: "sat", artist: "Daily Bread", stage: "pg", start: 170, end: 230, match: null, genre: "Bass / Soul", sounds_like: null, sources: [] },
-  { id: 278, festival: "secret-dreams", day: "sat", artist: "Pretty Lights", stage: "woods", start: 230, end: 320, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
-  { id: 279, festival: "secret-dreams", day: "sat", artist: "Pretty Lights", stage: "pg", start: 320, end: 410, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
-  { id: 280, festival: "secret-dreams", day: "sun", artist: "Flamingosis", stage: "woods", start: 0, end: 50, match: null, genre: "Funk / Chillhop", sounds_like: null, sources: [] },
-  { id: 281, festival: "secret-dreams", day: "sun", artist: "Late Night Radio", stage: "pg", start: 50, end: 110, match: null, genre: "Bass / Livetronica", sounds_like: null, sources: [] },
-  { id: 282, festival: "secret-dreams", day: "sun", artist: "Daily Bread", stage: "woods", start: 110, end: 160, match: null, genre: "Bass / Soul", sounds_like: null, sources: [] },
-  { id: 283, festival: "secret-dreams", day: "sun", artist: "Gramatik", stage: "pg", start: 160, end: 230, match: null, genre: "Glitch Hop", sounds_like: null, sources: [] },
-  { id: 284, festival: "secret-dreams", day: "sun", artist: "Tape B", stage: "woods", start: 230, end: 300, match: null, genre: "Bass House", sounds_like: null, sources: [] },
-  { id: 285, festival: "secret-dreams", day: "sun", artist: "Pretty Lights", stage: "pg", start: 300, end: 390, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
-  { id: 286, festival: "secret-dreams", day: "sun", artist: "Pretty Lights", stage: "woods", start: 390, end: 480, match: null, genre: "Glitch Hop / Electronic", sounds_like: null, sources: [] },
-];
 
 const FRIENDS = [
   { id: "mia", name: "Mia", initial: "M", color: "#FF3DA6", sharingOn: true },
@@ -845,8 +494,8 @@ const FESTIVAL_CAMPGROUND_MAP_IMAGES = {
 
 // Verified artist posts — visually distinct from crowd posts, always pinned
 // to the top of Community regardless of sort. `artistOf` links back to a
-// SETS id so the schedule can show a small "artist posted" indicator.
-// Verification status per artist, keyed by their SETS id. Only 'verified'
+// festival_sets row id so the schedule can show a small "artist posted" indicator.
+// Verification status per artist, keyed by their festival_sets row id. Only 'verified'
 // artists can post to Community or unlock exclusive content — this is what
 // stops anyone from posting as "GRiZ" without proof it's actually them.
 export const ARTIST_VERIFICATION = {
@@ -1893,23 +1542,25 @@ export default function FestivalOptimizer() {
     }
   }, [currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Real match data, as far as it goes: SETS.match is otherwise entirely
-  // simulated (see the comment at the top of this file), but if a lineup
-  // artist is literally one of your own top-20 Spotify artists, that's a
-  // real signal worth surfacing -- overridden to 100% and flagged via
-  // realMatch so the UI can show it's not just another simulated number.
-  // Genre-based partial matching isn't possible: Spotify's tightened
-  // Development Mode access returns empty genre tags on /me/top/artists,
-  // so a name match against top_artist_names is the only real signal
-  // available (see useSpotify.js).
+  const { sets: festivalSets } = useFestivalSets(currentFestival);
+
+  // Real match data, as far as it goes: festivalSets' own match value is
+  // otherwise entirely simulated (see the comment at the top of this
+  // file), but if a lineup artist is literally one of your own top-20
+  // Spotify artists, that's a real signal worth surfacing -- overridden to
+  // 100% and flagged via realMatch so the UI can show it's not just
+  // another simulated number. Genre-based partial matching isn't possible:
+  // Spotify's tightened Development Mode access returns empty genre tags
+  // on /me/top/artists, so a name match against top_artist_names is the
+  // only real signal available (see useSpotify.js).
   const effectiveSets = useMemo(() => {
     const topNames = spotify.connection?.top_artist_names;
-    if (!topNames?.length) return SETS;
+    if (!topNames?.length) return festivalSets;
     const topNameSet = new Set(topNames.map((n) => n.toLowerCase().trim()));
-    return SETS.map((s) =>
+    return festivalSets.map((s) =>
       topNameSet.has(s.artist.toLowerCase().trim()) ? { ...s, match: 100, realMatch: true } : s
     );
-  }, [spotify.connection]);
+  }, [festivalSets, spotify.connection]);
 
   const daySets = useMemo(
     () => effectiveSets.filter((s) => s.festival === currentFestival && s.day === currentDay),
