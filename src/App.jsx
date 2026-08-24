@@ -287,7 +287,10 @@ const FESTIVAL_DAYS = {
   "outside-lands": consecutiveDays(2027, 7, 6, 3, 15 * 60),
   // Two weekends (see FESTIVALS) -- second weekend reuses the same
   // weekday ids with a "2" suffix, same convention as Coachella above.
-  acl: [...consecutiveDays(2026, 9, 2, 3, 18 * 60), ...consecutiveDays(2026, 9, 9, 3, 18 * 60, { suffix: "2" })],
+  // Noon start covers the real full-day lineup now loaded (see
+  // festival_sets) -- the previous 6pm marker only reflected the 3
+  // headliner-adjacent sets originally on file.
+  acl: [...consecutiveDays(2026, 9, 2, 3, 12 * 60), ...consecutiveDays(2026, 9, 9, 3, 12 * 60, { suffix: "2" })],
   "edc-vegas": [...consecutiveDays(2027, 4, 14, 3, 21 * 60), ...consecutiveDays(2027, 4, 21, 3, 21 * 60, { suffix: "2" })],
   // Tomorrowland 2027's confirmed dates (Jul 17–19 & 24–26) actually land
   // on Sat–Mon, not the usual Fri–Sun -- firstId keeps the existing
