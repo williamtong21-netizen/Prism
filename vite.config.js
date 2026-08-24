@@ -4,6 +4,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    // PWA precache manifest injection only matters for `vite build`, not
+    // tests, and running it here just adds noise/slowdown per test file.
+    exclude: ['**/node_modules/**', '**/dist/**'],
+  },
   plugins: [
     react(),
     VitePWA({

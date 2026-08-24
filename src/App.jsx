@@ -1336,7 +1336,7 @@ const AUTH_SCREEN_SHARED_CSS = `
   }
 `;
 
-function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
+export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
