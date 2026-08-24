@@ -164,24 +164,38 @@ const FESTIVAL_STAGES = {
 // festival partnerships for real data feeds, the same gap flagged early on
 // for how Bonnaroo's own data would ideally get sourced at scale.
 const FESTIVALS = [
-  { id: "bonnaroo", name: "Bonnaroo", location: "Manchester, TN", dates: "Jun 11–14, 2026", hasData: true },
-  { id: "coachella", name: "Coachella", location: "Indio, CA", dates: "Apr 10–19, 2026", hasData: true },
-  { id: "edc-vegas", name: "EDC Las Vegas", location: "Las Vegas, NV", dates: "May 15–17, 2026", hasData: true, noCamping: true },
-  { id: "electric-forest", name: "Electric Forest", location: "Rothbury, MI", dates: "Jun 25–28, 2026", hasData: true },
-  { id: "governors-ball", name: "Governors Ball", location: "New York, NY", dates: "Jun 5–7, 2026", hasData: true, noCamping: true },
-  { id: "lollapalooza", name: "Lollapalooza", location: "Chicago, IL", dates: "Jul 30–Aug 2, 2026", hasData: true, noCamping: true },
-  { id: "outside-lands", name: "Outside Lands", location: "San Francisco, CA", dates: "Aug 7–9, 2026", hasData: true, noCamping: true },
+  // Bonnaroo, Governors Ball, and Lollapalooza (Chicago)'s 2026 editions have
+  // already passed as of today; their `dates` strings below reflect the
+  // real, current status of each rather than a guessed 2027 date -- see the
+  // per-entry comments for sourcing. A non-parseable `dates` string (no
+  // "Mon D...,YYYY" shape) is intentional: festivalStartDate() then returns
+  // null for it, which correctly keeps it out of getDefaultFestival()'s
+  // "soonest upcoming" pick without needing a separate status field.
+  { id: "bonnaroo", name: "Bonnaroo", location: "Manchester, TN", dates: "On hiatus for 2027 — organizers say The Farm needs to recover after storm damage", hasData: true },
+  { id: "coachella", name: "Coachella", location: "Indio, CA", dates: "Apr 9–11 & 16–18, 2027", hasData: true },
+  { id: "edc-vegas", name: "EDC Las Vegas", location: "Las Vegas, NV", dates: "May 14–16 & 21–23, 2027", hasData: true, noCamping: true, note: "First year expanding to two weekends." },
+  { id: "electric-forest", name: "Electric Forest", location: "Rothbury, MI", dates: "Jun 24–27, 2027", hasData: true, note: "Widely reported but not yet confirmed on the festival's own site." },
+  { id: "governors-ball", name: "Governors Ball", location: "New York, NY", dates: "2027 dates not yet announced", hasData: true, noCamping: true },
+  { id: "lollapalooza", name: "Lollapalooza", location: "Chicago, IL", dates: "2027 dates not yet announced", hasData: true, noCamping: true },
+  { id: "outside-lands", name: "Outside Lands", location: "San Francisco, CA", dates: "Aug 6–8, 2027", hasData: true, noCamping: true },
   { id: "acl", name: "Austin City Limits", location: "Austin, TX", dates: "Oct 2–4 & 9–11, 2026", hasData: true, noCamping: true },
-  { id: "tomorrowland", name: "Tomorrowland", location: "Boom, Belgium", dates: "Jul 17–19 & 24–26, 2026", hasData: true },
+  { id: "tomorrowland", name: "Tomorrowland", location: "Boom, Belgium", dates: "Jul 17–19 & 24–26, 2027", hasData: true },
   { id: "lost-lands", name: "Lost Lands", location: "Thornville, OH", dates: "Sep 18–20, 2026", hasData: true },
-  { id: "ultra-miami", name: "Ultra Miami", location: "Miami, FL", dates: "Mar 27–29, 2026", hasData: true, noCamping: true },
-  { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 10–12, 2026", hasData: true, noCamping: true },
-  { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 21–28, 2026", hasData: true, noCamping: true },
+  { id: "ultra-miami", name: "Ultra Miami", location: "Miami, FL", dates: "Mar 26–28, 2027", hasData: true, noCamping: true },
+  { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 9–11, 2027", hasData: true, noCamping: true },
+  { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 20–27, 2027", hasData: true, noCamping: true },
   { id: "edc-orlando", name: "EDC Orlando", location: "Orlando, FL", dates: "Nov 6–8, 2026", hasData: true, noCamping: true },
-  { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 20–22, 2026", hasData: true, noCamping: true },
-  { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 13–15, 2026", hasData: true, noCamping: true },
-  { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 18–19, 2026", hasData: true, noCamping: true },
+  { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 19–21, 2027", hasData: true, noCamping: true },
+  { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 12–14, 2027", hasData: true, noCamping: true },
+  { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 17–18, 2027", hasData: true, noCamping: true },
   { id: "secret-dreams", name: "Secret Dreams", location: "Marengo, OH", dates: "Sep 3–6, 2026", hasData: true },
+  // Newly added -- real festivals with confirmed dates, but no lineup/map
+  // data built out yet (see the `hasData: false` "Request data" flow in the
+  // festival picker rather than faking a schedule for any of these).
+  { id: "shaky-knees", name: "Shaky Knees", location: "Atlanta, GA", dates: "Sep 18–20, 2026" },
+  { id: "hangout", name: "Hangout Music Festival", location: "Gulf Shores, AL", dates: "May 20–23, 2027", noCamping: true },
+  { id: "primavera-sound", name: "Primavera Sound", location: "Barcelona, Spain", dates: "Jun 3–5, 2027", noCamping: true },
+  { id: "glastonbury", name: "Glastonbury", location: "Pilton, England", dates: "Jun 23–27, 2027" },
 ];
 
 const MONTH_ABBR = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
@@ -780,6 +794,13 @@ const PENDING_INVITES = [
 // - Lost Lands: the full stages/grounds map is only released via the
 //   festival app about a week out; this is the camping-only map, the one
 //   real official graphic public this far ahead of the Sept 2026 event.
+//
+// Tomorrowland Winter has no entry here on purpose (same reasoning as
+// DreamVille below): it's spread across an active ski resort rather than a
+// single grounds layout, and there's no genuine static wayfinding graphic
+// published for it — only the resort's own piste map, which shows ski runs,
+// not stage locations, and would be actively misleading relabeled as a
+// festival map. Falls back to the "map isn't available yet" empty state.
 const FESTIVAL_MAP_IMAGES = {
   bonnaroo: { src: "/festival-maps/bonnaroo.jpg", year: 2026 },
   coachella: { src: "/festival-maps/coachella.jpg", year: 2026 },
@@ -1823,6 +1844,7 @@ export default function FestivalOptimizer() {
   const { pickedIds: schedulePickedIds, crewPicks: schedulePickCrewOverlap, toggle: toggleSchedulePick } = useSchedulePicks(profile?.id, currentFestival);
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
+  const [campingMapOpen, setCampingMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
   const [requestedFestivals, setRequestedFestivals] = useState([]);
   const { byFestival: campPinsByFestival, refresh: refreshCampPins, addPin: addCampPin, updatePin: updateCampPin, deletePin: deleteCampPin } = useCampPins(profile?.id);
@@ -2559,6 +2581,7 @@ export default function FestivalOptimizer() {
                         {f.hasData && <Icon name="verified" />}
                       </div>
                       <div style={{ fontSize: 12, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
+                      {f.note && <div style={{ fontSize: 10.5, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                     </div>
                     {isActive ? (
                       <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Last viewed</span>
@@ -2939,6 +2962,47 @@ export default function FestivalOptimizer() {
                 </div>
               );
             })()}
+
+            {FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival] && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>CAMPING MAP</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].year}</span>
+                </div>
+                <button
+                  onClick={() => setCampingMapOpen(true)}
+                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                >
+                  <img
+                    src={FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].src}
+                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} camping map`}
+                    draggable={false}
+                    style={{ width: "100%", display: "block", maxHeight: 240, objectFit: "cover", WebkitUserDrag: "none", userSelect: "none" }}
+                    onDragStart={(e) => e.preventDefault()}
+                  />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {campingMapOpen && FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival] && (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
+            onClick={() => setCampingMapOpen(false)}
+          >
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
+              <button onClick={() => setCampingMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
+            </div>
+            <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain" }} onClick={(e) => e.stopPropagation()}>
+              <img
+                src={FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].src}
+                alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} camping map, full size`}
+                draggable={false}
+                style={{ width: "100%", display: "block", WebkitUserDrag: "none", userSelect: "none" }}
+                onDragStart={(e) => e.preventDefault()}
+              />
+            </div>
           </div>
         )}
 
@@ -3723,6 +3787,7 @@ export default function FestivalOptimizer() {
                             {f.hasData && <Icon name="verified" />}
                           </div>
                           <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
+                          {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                         </div>
                         {f.hasData ? (
                           f.id === currentFestival ? (
