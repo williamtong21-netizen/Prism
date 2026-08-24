@@ -196,7 +196,10 @@ const FESTIVALS = [
   { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 9–11, 2027", hasData: true, noCamping: true },
   { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 20–27, 2027", hasData: true, noCamping: true },
   { id: "edc-orlando", name: "EDC Orlando", location: "Orlando, FL", dates: "Nov 6–8, 2026", hasData: true, noCamping: true },
-  { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 19–21, 2027", hasData: true, noCamping: true },
+  // Real confirmed dates (the official 2026 poster) are Feb 20-22, 2026 --
+  // already passed as of today, unlike this app's other 2027-dated
+  // festivals. Corrected from a wrong "Feb 19-21, 2027" placeholder.
+  { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 20–22, 2026", hasData: true, noCamping: true },
   { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 12–14, 2027", hasData: true, noCamping: true },
   { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 17–18, 2027", hasData: true, noCamping: true },
   { id: "secret-dreams", name: "Secret Dreams", location: "Marengo, OH", dates: "Sep 3–6, 2026", hasData: true },
@@ -331,16 +334,10 @@ const FESTIVAL_DAYS = {
     { id: "sat", label: "Sat", date: "Nov 7", startMin: 19 * 60 },
     { id: "sun", label: "Sun", date: "Nov 8", startMin: 19 * 60 },
   ],
-  // Grid starts at 4pm, matching EDC Mexico's published Friday gate/stage
-  // hours (edmidentity.com). Chris Lake's and Charlotte de Witte's
-  // circuitGROUNDS sets ran back-to-back overnight Fri–Sat, so both are
-  // grouped under "fri" here rather than splitting an overnight set across
-  // two day buckets. 2027's real Fri/Sun fall on Feb 19/21 (previously
-  // mislabeled Feb 20/22).
-  "edc-mexico": [
-    { id: "fri", label: "Fri", date: "Feb 19", startMin: 16 * 60 },
-    { id: "sun", label: "Sun", date: "Feb 21", startMin: 16 * 60 },
-  ],
+  // Full real 3-day grid (Feb 20-22, 2026) now that the complete official
+  // poster is loaded -- previously only 2 sparse days existed under a
+  // wrong 2027 date.
+  "edc-mexico": consecutiveDays(2026, 1, 20, 3, 16 * 60),
   // Grid starts at 7pm, matching Katseye's confirmed Friday opening slot
   // (perfil.com / lanacion.com.ar's published 2026 day-by-day schedules).
   // 2027's real Fri/Sun fall on Mar 12/14 (previously mislabeled Mar 13/15);
