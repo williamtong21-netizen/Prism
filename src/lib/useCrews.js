@@ -103,18 +103,16 @@ export function useCrews(profileId) {
     return { data: crew };
   }
 
+  // Goes through the join_crew_by_code RPC rather than a plain select+insert
+  // so attempts are rate-limited server-side (see 022_crew_join_rate_limit.sql)
+  // -- a client-side-only limit wouldn't stop anything hitting the REST API
+  // directly.
   async function joinCrew(code) {
-    const { data: crew, error } = await supabase
-      .from("crews")
-      .select("id, name")
-      .eq("code", normalizeCode(code))
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("join_crew_by_code", { join_code: normalizeCode(code) });
     if (error) return { error };
-    if (!crew) return { error: { message: "No crew found with that code." } };
-    const { error: joinError } = await supabase.from("crew_members").insert({ crew_id: crew.id, profile_id: profileId });
-    if (joinError && joinError.code !== "23505") return { error: joinError }; // 23505 = already a member, fine
+    if (data?.error) return { error: { message: data.error } };
     await refresh();
-    return { data: crew };
+    return { data };
   }
 
   async function setCrewPersistent(crewId, persistent) {
