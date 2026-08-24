@@ -2907,7 +2907,17 @@ export default function FestivalOptimizer() {
                         <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{mapInfo.note}</p>
                       )}
                       {(campPinsByFestival[currentFestival]?.length || 0) > 0 && (
-                        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#3DF2E0", margin: "6px 0 0" }}>
+                        <p
+                          onClick={() => {
+                            const pins = campPinsByFestival[currentFestival] || [];
+                            setOfficialMapOpen(true);
+                            setOpenMapPin(pins.find((p) => p.profile_id === profile?.id) || pins[0] || null);
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click(); }}
+                          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#3DF2E0", margin: "6px 0 0", cursor: "pointer" }}
+                        >
                           📍 {campPinsByFestival[currentFestival].length} crew pin{campPinsByFestival[currentFestival].length === 1 ? "" : "s"} dropped — tap to view
                         </p>
                       )}
