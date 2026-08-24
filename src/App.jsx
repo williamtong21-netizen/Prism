@@ -2235,7 +2235,7 @@ export default function FestivalOptimizer() {
         {view === "mine" && (
           <div style={{ padding: "0 14px" }}>
             <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-              {["matches", "full", "discover", "schedule"].map((sv) => (
+              {["full", "schedule", "matches", "discover"].map((sv) => (
                 <button
                   key={sv}
                   onClick={() => setLineupSubview(sv)}
