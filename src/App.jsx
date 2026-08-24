@@ -34,12 +34,16 @@ const Community = lazy(() => import("./components/CommunityViews").then((m) => (
 // Stages and days are scoped per festival so the picker can actually switch
 // between festivals rather than just relabeling Bonnaroo's data.
 const FESTIVAL_STAGES = {
+  // "Where Stage" is a real new-for-2026 6th stage (Centeroo, late-night
+  // bass/electronic programming Fri-Sat) confirmed via The Daily
+  // Frequency's coverage -- was missing entirely before.
   bonnaroo: [
     { id: "what", name: "What Stage", color: "#3DF2E0" },
     { id: "which", name: "Which Stage", color: "#FF3DA6" },
     { id: "this", name: "This Tent", color: "#FFB23D" },
     { id: "that", name: "That Tent", color: "#9D6BFF" },
     { id: "other", name: "Other Tent", color: "#5FD97A" },
+    { id: "where", name: "Where Stage", color: "#4D96FF" },
   ],
   coachella: [
     { id: "coachella-stage", name: "Coachella Stage", color: "#3DF2E0" },
