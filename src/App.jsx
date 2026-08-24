@@ -2568,7 +2568,7 @@ export default function FestivalOptimizer() {
                     onClick={() => { setCurrentFestival(f.id); setView("mine"); }}
                     className="tab-btn"
                     style={{
-                      textAlign: "left", cursor: "pointer",
+                      textAlign: "left", cursor: "pointer", color: "#F5F0FF",
                       border: `1px solid ${isActive ? "#3DF2E0" : "#2A2440"}`,
                       background: isActive ? "rgba(61,242,224,0.08)" : "#161225",
                       borderRadius: 14, padding: "14px 16px",
