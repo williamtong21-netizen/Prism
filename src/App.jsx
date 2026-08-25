@@ -198,6 +198,15 @@ const FESTIVAL_STAGES = {
     { id: "impact", name: "Impact Stage", color: "#FF7A3D" },
     { id: "bigbourbon", name: "Big Bourbon Bar", color: "#7ADFFF" },
   ],
+  // Real Riot Fest 2026 stage names, per riotfest.org's own official daily
+  // schedule graphics (Riot, Roots, Rebel, Rise, Radical -- all 5 stages).
+  "riot-fest": [
+    { id: "riot", name: "Riot Stage", color: "#3DF2E0" },
+    { id: "roots", name: "Roots Stage", color: "#FF3DA6" },
+    { id: "rebel", name: "Rebel Stage", color: "#9D6BFF" },
+    { id: "rise", name: "Rise Stage", color: "#FFB23D" },
+    { id: "radical", name: "Radical Stage", color: "#5FD97A" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -258,7 +267,7 @@ const FESTIVALS = [
   { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", noCamping: true },
   { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
   { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", noCamping: true },
-  { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", noCamping: true },
+  { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
   { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
   { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026" },
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
@@ -462,6 +471,10 @@ const FESTIVAL_DAYS = {
   // therockfather.com's coverage -- matches the offset baseline used for
   // the real set times now loaded (see festival_sets).
   "louder-than-life": consecutiveDays(2026, 8, 17, 4, 10 * 60 + 45),
+  // Riot Fest 2026 (Sep 18-20). Gates open 11:30am per riotfest.org's own
+  // daily schedule graphics -- matches the offset baseline used for the
+  // real set times now loaded.
+  "riot-fest": consecutiveDays(2026, 8, 18, 3, 11 * 60 + 30),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -574,6 +587,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "secret-dreams": { src: "/festival-lineups/secret-dreams.jpg", year: 2026 },
   "reading-leeds": { src: "/festival-lineups/reading-leeds.jpg", year: 2026 },
   "louder-than-life": { src: "/festival-lineups/louder-than-life.jpg", year: 2026 },
+  "riot-fest": { src: "/festival-lineups/riot-fest.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
