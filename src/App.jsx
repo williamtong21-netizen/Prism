@@ -1452,16 +1452,6 @@ export default function FestivalOptimizer() {
   const [festivalsExpanded, setFestivalsExpanded] = useState(false);
   const [festivalRegionFilter, setFestivalRegionFilter] = useState("All");
   const [pickerExpanded, setPickerExpanded] = useState(false);
-  const [recentFestivalIds, setRecentFestivalIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("prism:recentFestivals") || "[]"); } catch { return []; }
-  });
-  useEffect(() => {
-    setRecentFestivalIds((prev) => {
-      const next = [currentFestival, ...prev.filter((id) => id !== currentFestival)].slice(0, 5);
-      localStorage.setItem("prism:recentFestivals", JSON.stringify(next));
-      return next;
-    });
-  }, [currentFestival]);
   const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -1529,6 +1519,16 @@ export default function FestivalOptimizer() {
   const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover | schedule
   const [currentDay, setCurrentDay] = useState("fri");
   const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || getDefaultFestival());
+  const [recentFestivalIds, setRecentFestivalIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("prism:recentFestivals") || "[]"); } catch { return []; }
+  });
+  useEffect(() => {
+    setRecentFestivalIds((prev) => {
+      const next = [currentFestival, ...prev.filter((id) => id !== currentFestival)].slice(0, 5);
+      localStorage.setItem("prism:recentFestivals", JSON.stringify(next));
+      return next;
+    });
+  }, [currentFestival]);
   const { pickedIds: schedulePickedIds, crewPicks: schedulePickCrewOverlap, toggle: toggleSchedulePick } = useSchedulePicks(profile?.id, currentFestival);
   const [festivalPickerOpen, setFestivalPickerOpen] = useState(false);
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
