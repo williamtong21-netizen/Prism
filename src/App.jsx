@@ -463,6 +463,12 @@ const FESTIVAL_MAP_IMAGES = {
   "secret-dreams": { src: "/festival-maps/secret-dreams.jpg", year: 2026, note: "Map subject to change, per the festival's own note." },
 };
 
+// Official lineup flyers -- the festival's own poster graphic, shown
+// alongside (not instead of) the real per-artist schedule data above.
+const FESTIVAL_LINEUP_IMAGES = {
+  "edc-mexico": { src: "/festival-lineups/edc-mexico.jpg", year: 2026 },
+};
+
 // Dedicated campground/camping maps — only for festivals that actually have
 // on-site camping (see FESTIVALS' `noCamping` flag) AND publish a genuinely
 // separate camping document distinct from their main stages/grounds map.
@@ -1459,6 +1465,8 @@ export default function FestivalOptimizer() {
   const [officialMapOpen, setOfficialMapOpen] = useState(false);
   const [campingMapOpen, setCampingMapOpen] = useState(false);
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
+  const [lineupFlyerOpen, setLineupFlyerOpen] = useState(false);
+  const [lineupFlyerLoadFailed, setLineupFlyerLoadFailed] = useState({});
   const [requestedFestivals, setRequestedFestivals] = useState([]);
   const { byFestival: campPinsByFestival, refresh: refreshCampPins, addPin: addCampPin, updatePin: updateCampPin, deletePin: deleteCampPin } = useCampPins(profile?.id);
   const [pinPlacing, setPinPlacing] = useState(null); // null | 'camp' | 'meetup' | 'other'
@@ -2230,6 +2238,22 @@ export default function FestivalOptimizer() {
               </Suspense>
             ) : (
               <>
+            {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
+              <button
+                onClick={() => setLineupFlyerOpen(true)}
+                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+              >
+                <img
+                  src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
+                  alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
+                  draggable={false}
+                  style={{ width: "100%", display: "block", maxHeight: 200, objectFit: "cover", objectPosition: "top", WebkitUserDrag: "none", userSelect: "none" }}
+                  onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              </button>
+            )}
+
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
               {activeStages.map((s) => (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2745,6 +2769,26 @@ export default function FestivalOptimizer() {
             </div>
           );
         })()}
+
+        {lineupFlyerOpen && FESTIVAL_LINEUP_IMAGES[currentFestival] && (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 30, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column" }}
+            onClick={() => setLineupFlyerOpen(false)}
+          >
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
+              <button onClick={() => setLineupFlyerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#F5F0FF", fontSize: 26, cursor: "pointer" }}>×</button>
+            </div>
+            <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+              <img
+                src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
+                alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer, full size`}
+                draggable={false}
+                style={{ width: "100%", display: "block" }}
+                onDragStart={(e) => e.preventDefault()}
+              />
+            </div>
+          </div>
+        )}
 
         {view === "community" && (
           <div style={{ padding: "0 14px" }}>
