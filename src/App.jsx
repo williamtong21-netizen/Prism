@@ -1397,6 +1397,7 @@ export default function FestivalOptimizer() {
   const [toast, setToast] = useState(null);
   const [toastLeaving, setToastLeaving] = useState(false);
   const [festivalSearch, setFestivalSearch] = useState("");
+  const [festivalsExpanded, setFestivalsExpanded] = useState(false);
   const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -2157,10 +2158,19 @@ export default function FestivalOptimizer() {
               )}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {(() => {
                 const q = festivalSearch.trim().toLowerCase();
-                const filtered = FESTIVALS.filter((f) => !q || f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+                const now = new Date();
+                const filtered = FESTIVALS
+                  .filter((f) => !q || f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q))
+                  .sort((a, b) => {
+                    const da = festivalStartDate(a), db = festivalStartDate(b);
+                    const ua = da && da >= now, ub = db && db >= now;
+                    if (ua !== ub) return ua ? -1 : 1; // upcoming-dated festivals first
+                    if (ua && ub) return da - db; // soonest first
+                    return a.name.localeCompare(b.name); // past/TBA festivals: alphabetical, at the end
+                  });
                 if (filtered.length === 0) {
                   return (
                     <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
@@ -2168,37 +2178,58 @@ export default function FestivalOptimizer() {
                     </div>
                   );
                 }
-                return filtered.map((f) => {
-              const isActive = f.id === currentFestival;
+                const COLLAPSED_COUNT = 6;
+                const showAll = !!q || festivalsExpanded;
+                const visible = showAll ? filtered : filtered.slice(0, COLLAPSED_COUNT);
+                const hiddenCount = filtered.length - visible.length;
                 return (
-                  <button
-                    key={f.id}
-                    onClick={() => { setCurrentFestival(f.id); setView("mine"); }}
-                    className="tab-btn"
-                    style={{
-                      textAlign: "left", cursor: "pointer", color: "#F5F0FF",
-                      border: `1px solid ${isActive ? "#3DF2E0" : "#2A2440"}`,
-                      background: isActive ? "rgba(61,242,224,0.08)" : "#161225",
-                      borderRadius: 14, padding: "14px 16px",
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                        {f.name}
-                        {f.hasData && <Icon name="verified" />}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
-                      {f.note && <div style={{ fontSize: 10.5, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
-                    </div>
-                    {isActive ? (
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Last viewed</span>
-                    ) : (
-                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+                  <>
+                    {visible.map((f) => {
+                      const isActive = f.id === currentFestival;
+                      return (
+                        <button
+                          key={f.id}
+                          onClick={() => { setCurrentFestival(f.id); setView("mine"); }}
+                          className="tab-btn"
+                          style={{
+                            textAlign: "left", cursor: "pointer", color: "#F5F0FF",
+                            border: `1px solid ${isActive ? "#3DF2E0" : "#2A2440"}`,
+                            background: isActive ? "rgba(61,242,224,0.08)" : "#161225",
+                            borderRadius: 12, padding: "10px 14px",
+                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                          }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                              {f.name}
+                              {f.hasData && <Icon name="verified" />}
+                            </div>
+                            <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.location} · {f.dates}</div>
+                            {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
+                          </div>
+                          {isActive ? (
+                            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap", flexShrink: 0 }}>Last viewed</span>
+                          ) : (
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                    {!q && filtered.length > COLLAPSED_COUNT && (
+                      <button
+                        onClick={() => setFestivalsExpanded((v) => !v)}
+                        style={{
+                          textAlign: "center", cursor: "pointer", background: "none", border: "none",
+                          fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#8B85A3",
+                          padding: "8px 6px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        }}
+                      >
+                        {festivalsExpanded ? "Show fewer" : `Show ${hiddenCount} more`}
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: festivalsExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
+                      </button>
                     )}
-                  </button>
+                  </>
                 );
-                });
               })()}
             </div>
           </div>
