@@ -248,6 +248,15 @@ const FESTIVAL_STAGES = {
     { id: "poncedeleon", name: "Ponce de Leon Stage", color: "#9D6BFF" },
     { id: "criminalrecords", name: "Criminal Records Stage", color: "#FFB23D" },
   ],
+  // Real Aftershock 2026 stage names + full per-day set times, per the
+  // festival's own official schedule release (all 5 stages, all 4 days).
+  aftershock: [
+    { id: "aftershock", name: "Aftershock Stage", color: "#3DF2E0" },
+    { id: "shockwave", name: "Shockwave Stage", color: "#FF3DA6" },
+    { id: "thepoint", name: "The Point Stage", color: "#9D6BFF" },
+    { id: "faultline", name: "Faultline Stage", color: "#FFB23D" },
+    { id: "epicenter", name: "Epicenter Stage", color: "#5FD97A" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -305,7 +314,7 @@ const FESTIVALS = [
   { id: "louder-than-life", name: "Louder Than Life", location: "Louisville, KY", dates: "Sep 17–20, 2026", hasData: true },
   { id: "summer-smash", name: "Summer Smash Festival", location: "Chicago, IL", dates: "2027 dates not yet announced", noCamping: true },
   { id: "sonic-temple", name: "Sonic Temple Festival", location: "Columbus, OH", dates: "May 13–16, 2027" },
-  { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", noCamping: true },
+  { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", hasData: true },
   { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
   { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", hasData: true, noCamping: true },
   { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
@@ -537,6 +546,9 @@ const FESTIVAL_DAYS = {
     { id: "sat", label: "Sat", date: "Sep 19", startMin: 11 * 60 + 30 },
     { id: "sun", label: "Sun", date: "Sep 20", startMin: 11 * 60 + 30 },
   ],
+  // Aftershock 2026 (Discovery Park, Sacramento, Oct 1-4). 11:30am is the
+  // earliest confirmed slot every day per the official schedule release.
+  aftershock: consecutiveDays(2026, 9, 1, 4, 11 * 60 + 30),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -654,6 +666,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "bourbon-and-beyond": { src: "/festival-lineups/bourbon-and-beyond.jpg", year: 2026 },
   "all-things-go": { src: "/festival-lineups/all-things-go.jpg", year: 2026 },
   "shaky-knees": { src: "/festival-lineups/shaky-knees.jpg", year: 2026 },
+  aftershock: { src: "/festival-lineups/aftershock.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
