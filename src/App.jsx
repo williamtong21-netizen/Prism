@@ -470,6 +470,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   acl: { src: "/festival-lineups/acl.webp", year: 2026 },
   "lost-lands": { src: "/festival-lineups/lost-lands.jpg", year: 2026 },
   "edc-orlando": { src: "/festival-lineups/edc-orlando.jpg", year: 2026 },
+  "secret-dreams": { src: "/festival-lineups/secret-dreams.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
@@ -2224,7 +2225,7 @@ export default function FestivalOptimizer() {
               ))}
             </div>
 
-            {(lineupSubview === "matches" || lineupSubview === "full") && (
+            {lineupSubview === "matches" && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
                 <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", whiteSpace: "nowrap" }}>MATCH</label>
                 <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ flex: 1 }} />
