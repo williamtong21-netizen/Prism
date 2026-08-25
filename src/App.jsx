@@ -1208,6 +1208,70 @@ const AUTH_SCREEN_SHARED_CSS = `
   }
 `;
 
+// Shown once, before the sign-in form, on a browser/device that's never
+// opened Prism (gated by localStorage in FestivalOptimizer, not session
+// state, since it's about first-run vs. returning — not signed-in vs.
+// signed-out). Its whole job is answering "what is this" in one glance
+// before asking for an email; existing users skip straight to SignInScreen.
+const WELCOME_FEATURES = [
+  { icon: "schedule", title: "Build your lineup", body: "Every set, every stage — see what's playing and build a schedule that's actually yours." },
+  { icon: "crew", title: "See who's into what", body: "Match up with your crew's picks and never lose each other in the crowd." },
+  { icon: "map", title: "Find your camp spot", body: "Official festival maps with your crew's pins dropped right on them." },
+  { icon: "community", title: "What's happening live", body: "Real-time posts from the crowd — meetups, tips, lost & found, vibes." },
+];
+
+function WelcomeScreen({ onGetStarted }) {
+  return (
+    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 10vh) 28px 24px", textAlign: "center" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        ${AUTH_SCREEN_SHARED_CSS}
+      `}</style>
+      <div className="frame">
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div className="prism-glow" style={{
+            position: "absolute", top: -40, width: 220, height: 220, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(157,107,255,0.35), rgba(61,242,224,0.18) 45%, transparent 70%)",
+            filter: "blur(8px)", pointerEvents: "none",
+          }} />
+          <div style={{ position: "relative" }}><PrismLogo size={56} /></div>
+          <div style={{ position: "relative", fontFamily: "'Bebas Neue', sans-serif", fontSize: 30, letterSpacing: "3px", marginTop: 12, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            PRISM
+          </div>
+        </div>
+
+        <p style={{ fontSize: 14.5, color: "#F5F0FF", marginTop: 14, lineHeight: 1.5, fontWeight: 600 }}>
+          Your festival season, all in one place.
+        </p>
+
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
+          {WELCOME_FEATURES.map((f) => (
+            <div key={f.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: "rgba(61,242,224,0.08)", border: "1px solid #2A2440", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name={f.icon} active />
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{f.title}</div>
+                <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "2px 0 0", lineHeight: 1.4 }}>{f.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={onGetStarted}
+          style={{ width: "100%", marginTop: 28, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "13px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+        >
+          Get started →
+        </button>
+        <p style={{ fontSize: 11, color: "#5B5470", marginTop: 20 }}>
+          By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -1485,6 +1549,7 @@ function NewDmPickerSheet({ members, onClose, onPick, title = "New message", sub
 
 export default function FestivalOptimizer() {
   const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, verifyCode, signOut, updateProfile, deleteAccount } = useAuth();
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(() => localStorage.getItem("prism:seenWelcome") === "1");
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
@@ -1972,6 +2037,16 @@ export default function FestivalOptimizer() {
     return <div style={{ minHeight: "100svh", background: "#0F0B1A" }} />;
   }
   if (!session || !profile) {
+    if (!hasSeenWelcome) {
+      return (
+        <WelcomeScreen
+          onGetStarted={() => {
+            localStorage.setItem("prism:seenWelcome", "1");
+            setHasSeenWelcome(true);
+          }}
+        />
+      );
+    }
     return <SignInScreen onSubmit={signInWithEmail} onVerifyCode={verifyCode} sent={magicLinkSent} error={authError} />;
   }
   if (!profile.onboarded) {
