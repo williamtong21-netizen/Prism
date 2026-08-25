@@ -1451,6 +1451,17 @@ export default function FestivalOptimizer() {
   const [festivalSearch, setFestivalSearch] = useState("");
   const [festivalsExpanded, setFestivalsExpanded] = useState(false);
   const [festivalRegionFilter, setFestivalRegionFilter] = useState("All");
+  const [pickerExpanded, setPickerExpanded] = useState(false);
+  const [recentFestivalIds, setRecentFestivalIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("prism:recentFestivals") || "[]"); } catch { return []; }
+  });
+  useEffect(() => {
+    setRecentFestivalIds((prev) => {
+      const next = [currentFestival, ...prev.filter((id) => id !== currentFestival)].slice(0, 5);
+      localStorage.setItem("prism:recentFestivals", JSON.stringify(next));
+      return next;
+    });
+  }, [currentFestival]);
   const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -3505,59 +3516,103 @@ export default function FestivalOptimizer() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {(() => {
                   const q = festivalSearch.trim().toLowerCase();
-                  const filtered = FESTIVALS.filter((f) => !q || f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
-                  if (filtered.length === 0) {
+                  const now = new Date();
+                  const byDateSoonestFirst = (a, b) => {
+                    const da = festivalStartDate(a), db = festivalStartDate(b);
+                    const ua = da && da >= now, ub = db && db >= now;
+                    if (ua !== ub) return ua ? -1 : 1;
+                    if (ua && ub) return da - db;
+                    return a.name.localeCompare(b.name);
+                  };
+                  const renderRow = (f) => {
+                    const requested = requestedFestivals.includes(f.id);
                     return (
-                      <div style={{ border: "1px solid #2A2440", borderRadius: 12, padding: "20px 14px", textAlign: "center" }}>
-                        <div style={{ fontSize: 13, color: "#8B85A3" }}>No festivals match "{festivalSearch}"</div>
-                      </div>
-                    );
-                  }
-                  return filtered.map((f) => {
-                  const requested = requestedFestivals.includes(f.id);
-                  return (
-                    <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "#2A2440"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                            {f.name}
-                            {f.hasData && <Icon name="verified" />}
+                      <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "#2A2440"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                              {f.name}
+                              {f.hasData && <Icon name="verified" />}
+                            </div>
+                            <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
+                            {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
-                          <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
-                          {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
-                        </div>
-                        {f.hasData ? (
-                          f.id === currentFestival ? (
-                            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Viewing</span>
+                          {f.hasData ? (
+                            f.id === currentFestival ? (
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap", flexShrink: 0 }}>Viewing</span>
+                            ) : (
+                              <button
+                                onClick={() => { setCurrentFestival(f.id); setFestivalPickerOpen(false); }}
+                                style={{
+                                  fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20, flexShrink: 0,
+                                  border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer",
+                                }}
+                              >
+                                Switch
+                              </button>
+                            )
                           ) : (
                             <button
-                              onClick={() => { setCurrentFestival(f.id); setFestivalPickerOpen(false); }}
+                              onClick={() => setRequestedFestivals((prev) => (prev.includes(f.id) ? prev : [...prev, f.id]))}
+                              disabled={requested}
                               style={{
-                                fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20,
-                                border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer",
+                                fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20, flexShrink: 0,
+                                border: `1px solid ${requested ? "#2A2440" : "#9D6BFF"}`,
+                                background: requested ? "transparent" : "rgba(157,107,255,0.12)",
+                                color: requested ? "#5B5470" : "#9D6BFF", cursor: requested ? "default" : "pointer",
                               }}
                             >
-                              Switch
+                              {requested ? "Requested" : "Request data"}
                             </button>
-                          )
-                        ) : (
-                          <button
-                            onClick={() => setRequestedFestivals((prev) => (prev.includes(f.id) ? prev : [...prev, f.id]))}
-                            disabled={requested}
-                            style={{
-                              fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20,
-                              border: `1px solid ${requested ? "#2A2440" : "#9D6BFF"}`,
-                              background: requested ? "transparent" : "rgba(157,107,255,0.12)",
-                              color: requested ? "#5B5470" : "#9D6BFF", cursor: requested ? "default" : "pointer",
-                            }}
-                          >
-                            {requested ? "Requested" : "Request data"}
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    );
+                  };
+
+                  if (q) {
+                    const filtered = FESTIVALS.filter((f) => f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q)).sort(byDateSoonestFirst);
+                    if (filtered.length === 0) {
+                      return (
+                        <div style={{ border: "1px solid #2A2440", borderRadius: 12, padding: "20px 14px", textAlign: "center" }}>
+                          <div style={{ fontSize: 13, color: "#8B85A3" }}>No festivals match "{festivalSearch}"</div>
+                        </div>
+                      );
+                    }
+                    return filtered.map(renderRow);
+                  }
+
+                  const recents = recentFestivalIds.map((id) => FESTIVALS.find((f) => f.id === id)).filter(Boolean).slice(0, 4);
+                  const sorted = [...FESTIVALS].sort(byDateSoonestFirst);
+                  const COLLAPSED_COUNT = 6;
+                  const visible = pickerExpanded ? sorted : sorted.slice(0, COLLAPSED_COUNT);
+                  const hiddenCount = sorted.length - visible.length;
+
+                  return (
+                    <>
+                      {recents.length > 0 && (
+                        <>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3", letterSpacing: "0.3px" }}>RECENTLY VIEWED</div>
+                          {recents.map(renderRow)}
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3", letterSpacing: "0.3px", marginTop: 4 }}>ALL FESTIVALS</div>
+                        </>
+                      )}
+                      {visible.map(renderRow)}
+                      {hiddenCount > 0 && (
+                        <button
+                          onClick={() => setPickerExpanded((v) => !v)}
+                          style={{
+                            textAlign: "center", cursor: "pointer", background: "none", border: "none",
+                            fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#8B85A3",
+                            padding: "8px 6px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                          }}
+                        >
+                          {pickerExpanded ? "Show fewer" : `Show ${hiddenCount} more`}
+                          <svg viewBox="0 0 24 24" width="12" height="12" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: pickerExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                      )}
+                    </>
                   );
-                  });
                 })()}
               </div>
               <p style={{ fontSize: 11, color: "#5B5470", margin: "14px 0 0", lineHeight: 1.5 }}>
