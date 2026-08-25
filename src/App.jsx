@@ -10,6 +10,7 @@ import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 import { useBlocking } from "./lib/useBlocking";
 import { useSchedulePicks } from "./lib/useSchedulePicks";
+import { useFestivalRequests } from "./lib/useFestivalRequests";
 import { useFestivalSets } from "./lib/useFestivalSets";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
@@ -1536,7 +1537,7 @@ export default function FestivalOptimizer() {
   const [mapLoadFailed, setMapLoadFailed] = useState({}); // festival id -> true once its image 404s/fails
   const [lineupFlyerOpen, setLineupFlyerOpen] = useState(false);
   const [lineupFlyerLoadFailed, setLineupFlyerLoadFailed] = useState({});
-  const [requestedFestivals, setRequestedFestivals] = useState([]);
+  const { requestedIds: requestedFestivalIds, requestFestival } = useFestivalRequests(profile?.id);
   const { byFestival: campPinsByFestival, refresh: refreshCampPins, addPin: addCampPin, updatePin: updateCampPin, deletePin: deleteCampPin } = useCampPins(profile?.id);
   const [pinPlacing, setPinPlacing] = useState(null); // null | 'camp' | 'meetup' | 'other'
   const [openMapPin, setOpenMapPin] = useState(null);
@@ -3558,7 +3559,7 @@ export default function FestivalOptimizer() {
                     return a.name.localeCompare(b.name);
                   };
                   const renderRow = (f) => {
-                    const requested = requestedFestivals.includes(f.id);
+                    const requested = requestedFestivalIds.has(f.id);
                     return (
                       <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "#2A2440"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -3586,7 +3587,7 @@ export default function FestivalOptimizer() {
                             )
                           ) : (
                             <button
-                              onClick={() => setRequestedFestivals((prev) => (prev.includes(f.id) ? prev : [...prev, f.id]))}
+                              onClick={() => requestFestival(f.id)}
                               disabled={requested}
                               style={{
                                 fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20, flexShrink: 0,
