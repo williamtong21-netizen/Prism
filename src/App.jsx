@@ -2130,6 +2130,39 @@ export default function FestivalOptimizer() {
         {/* Home — hub: must-haves, quick access, and your festivals */}
         {view === "home" && (
           <div style={{ padding: "0 14px" }}>
+            {/* Quick-stats dashboard strip — days to the soonest real upcoming
+                festival (across all festivals, not just the active one),
+                plus schedule/crew counts scoped to the currently active one. */}
+            {(() => {
+              const now = new Date();
+              const upcoming = FESTIVALS
+                .map((f) => ({ f, d: festivalStartDate(f) }))
+                .filter((x) => x.d && x.d >= now)
+                .sort((a, b) => a.d - b.d)[0];
+              const daysUntil = upcoming ? Math.ceil((upcoming.d - now) / 86400000) : null;
+              const pickedCount = schedulePickedIds.size;
+              const crewCount = crews.length;
+              const stats = [
+                {
+                  value: daysUntil != null ? daysUntil : "—",
+                  color: "#3DF2E0",
+                  label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${upcoming.f.name}` : "no upcoming dates",
+                },
+                { value: pickedCount, color: "#9D6BFF", label: `set${pickedCount === 1 ? "" : "s"} picked` },
+                { value: crewCount, color: "#FF3DA6", label: crewCount === 1 ? "crew" : "crews" },
+              ];
+              return (
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  {stats.map((s, i) => (
+                    <div key={i} style={{ flex: 1, minWidth: 0, border: "1px solid #2A2440", borderRadius: 14, padding: "12px 8px", textAlign: "center", background: "#161225" }}>
+                      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 26, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#8B85A3", marginTop: 4, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
             {/* Must-haves checklist — collapsed by default, small footprint */}
             <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "12px 16px", marginBottom: 16 }}>
               <button
