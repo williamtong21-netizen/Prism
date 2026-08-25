@@ -11,6 +11,7 @@ import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 import { useBlocking } from "./lib/useBlocking";
 import { useSchedulePicks } from "./lib/useSchedulePicks";
 import { useFestivalRequests } from "./lib/useFestivalRequests";
+import { useAttendingFestivals } from "./lib/useAttendingFestivals";
 import { useFestivalSets } from "./lib/useFestivalSets";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
@@ -1778,6 +1779,7 @@ export default function FestivalOptimizer() {
   const [lineupFlyerOpen, setLineupFlyerOpen] = useState(false);
   const [lineupFlyerLoadFailed, setLineupFlyerLoadFailed] = useState({});
   const { requestedIds: requestedFestivalIds, requestFestival } = useFestivalRequests(profile?.id);
+  const { attendingIds, toggleAttending } = useAttendingFestivals(profile?.id);
   const { byFestival: campPinsByFestival, refresh: refreshCampPins, addPin: addCampPin, updatePin: updateCampPin, deletePin: deleteCampPin } = useCampPins(profile?.id);
   const [pinPlacing, setPinPlacing] = useState(null); // null | 'camp' | 'meetup' | 'other'
   const [openMapPin, setOpenMapPin] = useState(null);
@@ -2381,14 +2383,24 @@ export default function FestivalOptimizer() {
         {/* Home — hub: must-haves, quick access, and your festivals */}
         {view === "home" && (
           <div style={{ padding: "0 14px" }}>
-            {/* Quick-stats dashboard strip — all three scoped to whichever
-                festival is currently active (the one you last tapped into),
-                not a global scan across the whole catalog. Tapping a
-                different festival below changes what this strip is about. */}
+            {/* Quick-stats dashboard strip. Countdown prefers the nearest
+                upcoming festival among the ones starred "attending" (a
+                stable signal you set explicitly) -- falls back to
+                currentFestival (whatever's last been tapped into/browsed)
+                only if nothing's starred yet, so this doesn't regress for
+                anyone who hasn't used the new star toggle. Sets/crews stay
+                scoped to whichever festival is currently active. */}
             {(() => {
               const now = new Date();
+              const attendingUpcoming = FESTIVALS
+                .filter((f) => attendingIds.has(f.id))
+                .map((f) => ({ f, d: festivalStartDate(f) }))
+                .filter((x) => x.d && x.d >= now)
+                .sort((a, b) => a.d - b.d)[0];
               const activeFestival = FESTIVALS.find((f) => f.id === currentFestival);
-              const startDate = activeFestival ? festivalStartDate(activeFestival) : null;
+              const fallbackDate = attendingIds.size === 0 && activeFestival ? festivalStartDate(activeFestival) : null;
+              const countdownFestival = attendingUpcoming ? attendingUpcoming.f : activeFestival;
+              const startDate = attendingUpcoming ? attendingUpcoming.d : fallbackDate;
               const daysUntil = startDate && startDate >= now ? Math.ceil((startDate - now) / 86400000) : null;
               const pickedCount = schedulePickedIds.size;
               const crewCount = festivalCrews.length;
@@ -2396,7 +2408,7 @@ export default function FestivalOptimizer() {
                 {
                   value: daysUntil != null ? daysUntil : "—",
                   color: "#3DF2E0",
-                  label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${activeFestival.name}` : "no upcoming date",
+                  label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${countdownFestival.name}` : "no upcoming date",
                 },
                 { value: pickedCount, color: "#9D6BFF", label: `set${pickedCount === 1 ? "" : "s"} picked` },
                 { value: crewCount, color: "#FF3DA6", label: crewCount === 1 ? "crew" : "crews" },
@@ -2554,10 +2566,14 @@ export default function FestivalOptimizer() {
                   <>
                     {visible.map((f) => {
                       const isActive = f.id === currentFestival;
+                      const isAttending = attendingIds.has(f.id);
                       return (
-                        <button
+                        <div
                           key={f.id}
                           onClick={() => { setCurrentFestival(f.id); setView("mine"); }}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentFestival(f.id); setView("mine"); } }}
+                          role="button"
+                          tabIndex={0}
                           className="tab-btn"
                           style={{
                             textAlign: "left", cursor: "pointer", color: "#F5F0FF",
@@ -2575,12 +2591,22 @@ export default function FestivalOptimizer() {
                             <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
-                          {isActive ? (
-                            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap", flexShrink: 0 }}>Last viewed</span>
-                          ) : (
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
-                          )}
-                        </button>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleAttending(f.id); }}
+                              aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
+                              aria-pressed={isAttending}
+                              style={{ background: "none", border: "none", padding: 4, cursor: "pointer", display: "flex", lineHeight: 0 }}
+                            >
+                              <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                            </button>
+                            {isActive ? (
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Last viewed</span>
+                            ) : (
+                              <svg viewBox="0 0 24 24" width="16" height="16" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                            )}
+                          </div>
+                        </div>
                       );
                     })}
                     {!q && filtered.length > COLLAPSED_COUNT && (
@@ -3812,6 +3838,7 @@ export default function FestivalOptimizer() {
                   };
                   const renderRow = (f) => {
                     const requested = requestedFestivalIds.has(f.id);
+                    const isAttending = attendingIds.has(f.id);
                     return (
                       <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "#2A2440"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -3823,6 +3850,15 @@ export default function FestivalOptimizer() {
                             <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <button
+                            onClick={() => toggleAttending(f.id)}
+                            aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
+                            aria-pressed={isAttending}
+                            style={{ background: "none", border: "none", padding: 4, cursor: "pointer", display: "flex", lineHeight: 0 }}
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                          </button>
                           {f.hasData ? (
                             f.id === currentFestival ? (
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap", flexShrink: 0 }}>Viewing</span>
@@ -3851,6 +3887,7 @@ export default function FestivalOptimizer() {
                               {requested ? "Requested" : "Request data"}
                             </button>
                           )}
+                          </div>
                         </div>
                       </div>
                     );
