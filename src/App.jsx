@@ -2381,23 +2381,22 @@ export default function FestivalOptimizer() {
         {/* Home — hub: must-haves, quick access, and your festivals */}
         {view === "home" && (
           <div style={{ padding: "0 14px" }}>
-            {/* Quick-stats dashboard strip — days to the soonest real upcoming
-                festival (across all festivals, not just the active one),
-                plus schedule/crew counts scoped to the currently active one. */}
+            {/* Quick-stats dashboard strip — all three scoped to whichever
+                festival is currently active (the one you last tapped into),
+                not a global scan across the whole catalog. Tapping a
+                different festival below changes what this strip is about. */}
             {(() => {
               const now = new Date();
-              const upcoming = FESTIVALS
-                .map((f) => ({ f, d: festivalStartDate(f) }))
-                .filter((x) => x.d && x.d >= now)
-                .sort((a, b) => a.d - b.d)[0];
-              const daysUntil = upcoming ? Math.ceil((upcoming.d - now) / 86400000) : null;
+              const activeFestival = FESTIVALS.find((f) => f.id === currentFestival);
+              const startDate = activeFestival ? festivalStartDate(activeFestival) : null;
+              const daysUntil = startDate && startDate >= now ? Math.ceil((startDate - now) / 86400000) : null;
               const pickedCount = schedulePickedIds.size;
-              const crewCount = crews.length;
+              const crewCount = festivalCrews.length;
               const stats = [
                 {
                   value: daysUntil != null ? daysUntil : "—",
                   color: "#3DF2E0",
-                  label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${upcoming.f.name}` : "no upcoming dates",
+                  label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${activeFestival.name}` : "no upcoming date",
                 },
                 { value: pickedCount, color: "#9D6BFF", label: `set${pickedCount === 1 ? "" : "s"} picked` },
                 { value: crewCount, color: "#FF3DA6", label: crewCount === 1 ? "crew" : "crews" },
