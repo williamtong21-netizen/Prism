@@ -165,6 +165,16 @@ const FESTIVAL_STAGES = {
     { id: "pg", name: "PG Stage", color: "#3DF2E0" },
     { id: "woods", name: "Woods Stage", color: "#9D6BFF" },
   ],
+  // Real Reading & Leeds 2026 stage names, per readingfestival.com/lineup's
+  // own stage filter (The Grid, The Gallery presented by Budweiser, The
+  // Warehouse, The Ballroom, The Canopy).
+  "reading-leeds": [
+    { id: "grid", name: "The Grid", color: "#3DF2E0" },
+    { id: "gallery", name: "The Gallery", color: "#FF3DA6" },
+    { id: "warehouse", name: "The Warehouse", color: "#9D6BFF" },
+    { id: "ballroom", name: "The Ballroom", color: "#FFB23D" },
+    { id: "canopy", name: "The Canopy", color: "#5FD97A" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -236,7 +246,7 @@ const FESTIVALS = [
   // recognized to leave out. Sourced the same way as the batch above (MFW's
   // Europe Top 50 + Rock in Rio's own real confirmed dates).
   { id: "rock-in-rio", name: "Rock in Rio", location: "Rio de Janeiro, Brazil", dates: "Sep 4–13, 2026", noCamping: true },
-  { id: "reading-leeds", name: "Reading & Leeds Festival", location: "Reading, UK", dates: "Aug 27–30, 2026" },
+  { id: "reading-leeds", name: "Reading & Leeds Festival", location: "Reading, UK", dates: "Aug 27–30, 2026", hasData: true },
   { id: "sziget", name: "Sziget Festival", location: "Budapest, Hungary", dates: "Aug 10–15, 2027" },
   { id: "wacken", name: "Wacken Open Air", location: "Wacken, Germany", dates: "Jul 28–31, 2027" },
   { id: "rock-am-ring", name: "Rock am Ring", location: "Nürburg, Germany", dates: "Jun 4–6, 2027" },
@@ -414,6 +424,12 @@ const FESTIVAL_DAYS = {
     { id: "sat", label: "Sat", date: "Sep 5", startMin: 13 * 60 },
     { id: "sun", label: "Sun", date: "Sep 6", startMin: 13 * 60 },
   ],
+  // Reading & Leeds 2026 runs Aug 27-30; day one is arrival/campsite-opening
+  // only (no acts play, per readingfestival.com/lineup only listing
+  // Fri/Sat/Sun) but is shown anyway, same as Electric Forest's empty first
+  // day above. Noon start matches the earliest slot used for the real
+  // day/stage data now loaded (see festival_sets).
+  "reading-leeds": consecutiveDays(2026, 7, 27, 4, 12 * 60),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
