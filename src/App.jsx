@@ -540,6 +540,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "lost-lands": { src: "/festival-lineups/lost-lands.jpg", year: 2026 },
   "edc-orlando": { src: "/festival-lineups/edc-orlando.jpg", year: 2026 },
   "secret-dreams": { src: "/festival-lineups/secret-dreams.jpg", year: 2026 },
+  "reading-leeds": { src: "/festival-lineups/reading-leeds.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
