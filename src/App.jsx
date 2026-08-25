@@ -1666,7 +1666,7 @@ export default function FestivalOptimizer() {
   const [activeCrewId, setActiveCrewId] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [queuedActions, setQueuedActions] = useState(0);
-  const [lineupSubview, setLineupSubview] = useState("matches"); // matches | full | discover | schedule
+  const [lineupSubview, setLineupSubview] = useState("full"); // matches | full | discover | schedule
   const [currentDay, setCurrentDay] = useState("fri");
   const [currentFestival, setCurrentFestival] = useState(() => localStorage.getItem("prism:lastFestival") || getDefaultFestival());
   const [recentFestivalIds, setRecentFestivalIds] = useState(() => {
