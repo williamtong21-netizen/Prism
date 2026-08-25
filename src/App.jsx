@@ -239,6 +239,15 @@ const FESTIVAL_STAGES = {
   "all-things-go": [
     { id: "stage-tba", name: "Pavilion / Chrysalis (stage TBA)", color: "#3DF2E0" },
   ],
+  // Real Shaky Knees 2026 stage names + full per-day set times, per
+  // shakykneesfestival.com's own official daily schedule graphics (all 4
+  // stages, all 3 days).
+  "shaky-knees": [
+    { id: "peachtree", name: "Peachtree Stage", color: "#3DF2E0" },
+    { id: "piedmont", name: "Piedmont Stage", color: "#FF3DA6" },
+    { id: "poncedeleon", name: "Ponce de Leon Stage", color: "#9D6BFF" },
+    { id: "criminalrecords", name: "Criminal Records Stage", color: "#FFB23D" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -281,7 +290,7 @@ const FESTIVALS = [
   // Newly added -- real festivals with confirmed dates, but no lineup/map
   // data built out yet (see the `hasData: false` "Request data" flow in the
   // festival picker rather than faking a schedule for any of these).
-  { id: "shaky-knees", name: "Shaky Knees", location: "Atlanta, GA", dates: "Sep 18–20, 2026" },
+  { id: "shaky-knees", name: "Shaky Knees", location: "Atlanta, GA", dates: "Sep 18–20, 2026", hasData: true },
   { id: "hangout", name: "Hangout Music Festival", location: "Gulf Shores, AL", dates: "May 20–23, 2027", noCamping: true },
   { id: "primavera-sound", name: "Primavera Sound", location: "Barcelona, Spain", dates: "Jun 3–5, 2027", noCamping: true },
   { id: "glastonbury", name: "Glastonbury", location: "Pilton, England", dates: "Jun 23–27, 2027" },
@@ -519,6 +528,15 @@ const FESTIVAL_DAYS = {
   // time published (no set-time grid exists at all -- see FESTIVAL_STAGES
   // note) -- 3pm is just a display anchor for the placeholder evening slots.
   "all-things-go": consecutiveDays(2026, 8, 25, 3, 15 * 60),
+  // Shaky Knees 2026 (Piedmont Park, Atlanta, Sep 18-20). Friday doors
+  // 4:00pm; Saturday/Sunday doors 11:30am -- per the festival's own
+  // schedule graphics. Different per-day start times, so this is a manual
+  // array rather than consecutiveDays().
+  "shaky-knees": [
+    { id: "fri", label: "Fri", date: "Sep 18", startMin: 16 * 60 },
+    { id: "sat", label: "Sat", date: "Sep 19", startMin: 11 * 60 + 30 },
+    { id: "sun", label: "Sun", date: "Sep 20", startMin: 11 * 60 + 30 },
+  ],
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -635,6 +653,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "nocturnal-wonderland": { src: "/festival-lineups/nocturnal-wonderland.jpg", year: 2026 },
   "bourbon-and-beyond": { src: "/festival-lineups/bourbon-and-beyond.jpg", year: 2026 },
   "all-things-go": { src: "/festival-lineups/all-things-go.jpg", year: 2026 },
+  "shaky-knees": { src: "/festival-lineups/shaky-knees.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
