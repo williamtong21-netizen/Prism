@@ -664,6 +664,12 @@ const FESTIVAL_MAP_IMAGES = {
 
 // Official lineup flyers -- the festival's own poster graphic, shown
 // alongside (not instead of) the real per-artist schedule data above.
+//
+// Rock in Rio has no entry here on purpose: unlike every other hasData
+// festival, it doesn't promote itself with a single all-in-one poster
+// graphic at all -- its own site (rockinrio.com/rio/line-up) is a
+// per-day, per-stage interactive listing, and its social pushes are
+// per-day PDF press releases. There's no genuine single image to show.
 const FESTIVAL_LINEUP_IMAGES = {
   "edc-mexico": { src: "/festival-lineups/edc-mexico.jpg", year: 2026 },
   acl: { src: "/festival-lineups/acl.webp", year: 2026 },
