@@ -14,6 +14,20 @@ export function useAuth() {
   const [authError, setAuthError] = useState("");
 
   useEffect(() => {
+    // A magic-link redirect that fails (expired/already-used link, code
+    // exchange error, etc.) comes back as origin/?error=...&error_description=...
+    // (or the same in the hash, depending on flow) rather than throwing
+    // anywhere reachable from here -- surface it instead of silently
+    // landing back on the sign-in screen with no explanation.
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const redirectError = params.get("error_description") || hashParams.get("error_description")
+      || params.get("error") || hashParams.get("error");
+    if (redirectError) {
+      setAuthError(decodeURIComponent(redirectError.replace(/\+/g, " ")));
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
