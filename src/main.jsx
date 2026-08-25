@@ -26,6 +26,21 @@ function ErrorFallback() {
   )
 }
 
+// The service worker now activates a new version immediately on install
+// (skipWaiting + clientsClaim in src/sw.js) instead of waiting for every
+// tab to close -- this is the other half: once that handoff happens,
+// reload once so the page actually shows the new version instead of
+// running old JS under a new worker. Reload-in-progress ref guards
+// against the rare double-fire some browsers do.
+if ('serviceWorker' in navigator) {
+  let reloaded = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) return
+    reloaded = true
+    window.location.reload()
+  })
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />}>

@@ -2,6 +2,16 @@ import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { CacheFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
+import { clientsClaim } from "workbox-core";
+
+// Without these, a new deploy's service worker installs but sits
+// "waiting" until every open tab/PWA instance is fully closed -- which on
+// a phone PWA that's rarely force-quit can mean days of a stale bundle
+// even though the site "deployed successfully." skipWaiting + clientsClaim
+// make a new version take over immediately instead (paired with the
+// controllerchange reload in main.jsx so the page actually refreshes).
+self.skipWaiting();
+clientsClaim();
 
 // vite-plugin-pwa injects the list of build assets to precache here —
 // same offline-caching behavior as before, just written by hand instead
