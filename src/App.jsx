@@ -329,7 +329,7 @@ const FESTIVALS = [
   // Europe Top 50 + Rock in Rio's own real confirmed dates).
   { id: "rock-in-rio", name: "Rock in Rio", location: "Rio de Janeiro, Brazil", dates: "Sep 4–13, 2026", hasData: true, noCamping: true },
   { id: "reading-leeds", name: "Reading & Leeds Festival", location: "Reading, UK", dates: "Aug 27–30, 2026", hasData: true },
-  { id: "sziget", name: "Sziget Festival", location: "Budapest, Hungary", dates: "Aug 10–15, 2027" },
+  { id: "sziget", name: "Sziget Festival", location: "Budapest, Hungary", dates: "Aug 10–14, 2027" },
   { id: "wacken", name: "Wacken Open Air", location: "Wacken, Germany", dates: "Jul 28–31, 2027" },
   { id: "rock-am-ring", name: "Rock am Ring", location: "Nürburg, Germany", dates: "Jun 4–6, 2027" },
   { id: "download-festival", name: "Download Festival", location: "Donington Park, UK", dates: "Jun 9–13, 2027" },
