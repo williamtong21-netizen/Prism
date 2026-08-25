@@ -667,6 +667,12 @@ const FESTIVAL_LINEUP_IMAGES = {
   "all-things-go": { src: "/festival-lineups/all-things-go.jpg", year: 2026 },
   "shaky-knees": { src: "/festival-lineups/shaky-knees.jpg", year: 2026 },
   aftershock: { src: "/festival-lineups/aftershock.jpg", year: 2026 },
+  // Camp Flog Gnaw 2026's own official poster (campfloggnaw.com) doesn't
+  // split artists by day at all (Nov 14-15 is shown as one flat lineup) --
+  // even less structure than Nocturnal Wonderland/All Things Go had, so
+  // there's no real day/stage/time data to responsibly build a schedule
+  // from. Showing the real poster only, no festival_sets/hasData yet.
+  "camp-flog-gnaw": { src: "/festival-lineups/camp-flog-gnaw.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
