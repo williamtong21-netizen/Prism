@@ -242,6 +242,28 @@ const FESTIVALS = [
   { id: "download-festival", name: "Download Festival", location: "Donington Park, UK", dates: "Jun 9–13, 2027" },
 ];
 
+// US_STATE_CODES lets festivalRegion() tell "Austin, TX" (USA) apart from
+// "Berlin, Germany" (Europe) using the same `location` string already on
+// every festival, rather than adding a parallel `region` field to keep in
+// sync by hand.
+const US_STATE_CODES = new Set([
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+  "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+  "VA", "WA", "WV", "WI", "WY", "DC",
+]);
+const COUNTRY_REGION = {
+  Belgium: "Europe", Croatia: "Europe", France: "Europe", Germany: "Europe", UK: "Europe",
+  England: "Europe", Hungary: "Europe", Spain: "Europe",
+  Mexico: "Latin America", Argentina: "Latin America", Brazil: "Latin America",
+};
+const FESTIVAL_REGIONS = ["USA", "Europe", "Latin America"];
+function festivalRegion(f) {
+  const last = f.location.split(",").pop().trim();
+  if (US_STATE_CODES.has(last)) return "USA";
+  return COUNTRY_REGION[last] || "Other";
+}
+
 const MONTH_ABBR = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
 
 // Every FESTIVALS.dates string starts with "Mon D" (the first day of the
@@ -1428,6 +1450,7 @@ export default function FestivalOptimizer() {
   const [toastLeaving, setToastLeaving] = useState(false);
   const [festivalSearch, setFestivalSearch] = useState("");
   const [festivalsExpanded, setFestivalsExpanded] = useState(false);
+  const [festivalRegionFilter, setFestivalRegionFilter] = useState("All");
   const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -2188,12 +2211,31 @@ export default function FestivalOptimizer() {
               )}
             </div>
 
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto" }}>
+              {["All", ...FESTIVAL_REGIONS].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setFestivalRegionFilter(r)}
+                  style={{
+                    flexShrink: 0,
+                    fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, textTransform: "uppercase", whiteSpace: "nowrap",
+                    padding: "7px 12px", borderRadius: 20, border: "1px solid " + (festivalRegionFilter === r ? "#3DF2E0" : "#2A2440"),
+                    background: festivalRegionFilter === r ? "rgba(61,242,224,0.12)" : "transparent",
+                    color: festivalRegionFilter === r ? "#3DF2E0" : "#8B85A3", cursor: "pointer",
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {(() => {
                 const q = festivalSearch.trim().toLowerCase();
                 const now = new Date();
                 const filtered = FESTIVALS
                   .filter((f) => !q || f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q))
+                  .filter((f) => festivalRegionFilter === "All" || festivalRegion(f) === festivalRegionFilter)
                   .sort((a, b) => {
                     const da = festivalStartDate(a), db = festivalStartDate(b);
                     const ua = da && da >= now, ub = db && db >= now;
@@ -2204,7 +2246,9 @@ export default function FestivalOptimizer() {
                 if (filtered.length === 0) {
                   return (
                     <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
-                      <div style={{ fontSize: 13.5, color: "#8B85A3" }}>No festivals match "{festivalSearch}"</div>
+                      <div style={{ fontSize: 13.5, color: "#8B85A3" }}>
+                        {q ? `No festivals match "${festivalSearch}"` : `No ${festivalRegionFilter} festivals yet`}
+                      </div>
                     </div>
                   );
                 }
