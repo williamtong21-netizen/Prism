@@ -649,6 +649,17 @@ const FESTIVAL_MAP_IMAGES = {
   "lollapalooza-argentina": { src: "/festival-maps/lollapalooza-argentina.jpg", year: 2026 },
   "lollapalooza-berlin": { src: "/festival-maps/lollapalooza-berlin.jpg", year: 2026 },
   "secret-dreams": { src: "/festival-maps/secret-dreams.jpg", year: 2026, note: "Map subject to change, per the festival's own note." },
+  "louder-than-life": { src: "/festival-maps/louder-than-life.jpg", year: 2026 },
+  "bourbon-and-beyond": { src: "/festival-maps/bourbon-and-beyond.jpg", year: 2026 },
+  aftershock: { src: "/festival-maps/aftershock.jpg", year: 2026 },
+  "shaky-knees": { src: "/festival-maps/shaky-knees.jpg", year: 2026 },
+  // Riot Fest's 2026 map isn't published yet (last year's dropped just
+  // days before the festival) -- this is 2025's official map.
+  "riot-fest": { src: "/festival-maps/riot-fest.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
+  // Reading & Leeds has no image-format grounds map -- the festival's own
+  // site only publishes one as a PDF, which can't be shown as an <img>.
+  // Its campsite map (a real image) covers the app's one combined entry
+  // instead; see FESTIVAL_CAMPGROUND_MAP_IMAGES' note on this below.
 };
 
 // Official lineup flyers -- the festival's own poster graphic, shown
@@ -689,6 +700,15 @@ const FESTIVAL_LINEUP_IMAGES = {
 const FESTIVAL_CAMPGROUND_MAP_IMAGES = {
   bonnaroo: { src: "/festival-maps/bonnaroo-camping.jpg", year: 2026 },
   coachella: { src: "/festival-maps/coachella-camping.jpg", year: 2026 },
+  "louder-than-life": { src: "/festival-maps/louder-than-life-camping.jpg", year: 2026 },
+  aftershock: { src: "/festival-maps/aftershock-camping.jpg", year: 2026, note: "2026 is the festival's first year offering on-site camping." },
+  // Reading & Leeds is one combined app entry for two separate physical
+  // festivals (Reading's own site at Richfield Ave, Leeds' at Bramham
+  // Park), each with its own real campsite map -- this is Reading's.
+  // There's no image-format grounds/arena map for either site (both
+  // publish that one as a PDF only, which can't render as an <img>), so
+  // this camping map is the one real graphic shown for this entry.
+  "reading-leeds": { src: "/festival-maps/reading-leeds.jpg", year: 2026, note: "Reading's own campsite map — Leeds (the other half of this combined listing) has a separate map on its own site." },
 };
 
 // Verified artist posts — visually distinct from crowd posts, always pinned
@@ -2904,6 +2924,9 @@ export default function FestivalOptimizer() {
                     onDragStart={(e) => e.preventDefault()}
                   />
                 </button>
+                {FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].note && (
+                  <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0", lineHeight: 1.4 }}>{FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].note}</p>
+                )}
               </div>
             )}
           </div>
