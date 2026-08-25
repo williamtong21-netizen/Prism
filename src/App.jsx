@@ -207,6 +207,17 @@ const FESTIVAL_STAGES = {
     { id: "rise", name: "Rise Stage", color: "#FFB23D" },
     { id: "radical", name: "Radical Stage", color: "#5FD97A" },
   ],
+  // Nocturnal Wonderland 2026's own lineup page only groups artists by day,
+  // not by stage or time (confirmed via nocturnalwonderland.com/lineup and
+  // its official poster) -- the venue's 4 real stages (per
+  // nocturnalwonderland.com/experience/stages: Mystic Wild, Dawn Mountain,
+  // Aurora Plains, Rave Cave) aren't mapped to specific artists anywhere
+  // public yet. Rather than guess which of the 4 each headliner plays, the
+  // handful of real, day-confirmed headliners loaded (see festival_sets)
+  // all sit under a single stage placeholder pending a real breakdown.
+  "nocturnal-wonderland": [
+    { id: "mysticwild", name: "Mystic Wild (stage TBA)", color: "#3DF2E0" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -269,7 +280,7 @@ const FESTIVALS = [
   { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", noCamping: true },
   { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
   { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
-  { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026" },
+  { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026", hasData: true },
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
   { id: "new-orleans-jazz-fest", name: "New Orleans Jazz Fest", location: "New Orleans, LA", dates: "Apr 22–May 2, 2027", noCamping: true },
   { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026" },
@@ -475,6 +486,9 @@ const FESTIVAL_DAYS = {
   // daily schedule graphics -- matches the offset baseline used for the
   // real set times now loaded.
   "riot-fest": consecutiveDays(2026, 8, 18, 3, 11 * 60 + 30),
+  // Nocturnal Wonderland 2026 (Sep 19-20), 3pm-12am daily per Insomniac's
+  // own event listing.
+  "nocturnal-wonderland": consecutiveDays(2026, 8, 19, 2, 15 * 60),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -588,6 +602,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "reading-leeds": { src: "/festival-lineups/reading-leeds.jpg", year: 2026 },
   "louder-than-life": { src: "/festival-lineups/louder-than-life.jpg", year: 2026 },
   "riot-fest": { src: "/festival-lineups/riot-fest.jpg", year: 2026 },
+  "nocturnal-wonderland": { src: "/festival-lineups/nocturnal-wonderland.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
