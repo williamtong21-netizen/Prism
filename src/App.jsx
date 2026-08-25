@@ -218,6 +218,16 @@ const FESTIVAL_STAGES = {
   "nocturnal-wonderland": [
     { id: "mysticwild", name: "Mystic Wild (stage TBA)", color: "#3DF2E0" },
   ],
+  // Real Bourbon & Beyond 2026 stage names + full per-day set times, per
+  // bourbonandbeyond.com's own official TIMELINE schedule widget (all 5
+  // stages, all 4 days extracted directly from the live widget).
+  "bourbon-and-beyond": [
+    { id: "oak", name: "Oak Stage", color: "#3DF2E0" },
+    { id: "barrel", name: "Barrel Stage", color: "#FF3DA6" },
+    { id: "100proof", name: "100 Proof Stage", color: "#9D6BFF" },
+    { id: "revival", name: "Revival Stage", color: "#FFB23D" },
+    { id: "bluegrass", name: "The Bluegrass Situation Stage", color: "#5FD97A" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -283,7 +293,7 @@ const FESTIVALS = [
   { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026", hasData: true },
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
   { id: "new-orleans-jazz-fest", name: "New Orleans Jazz Fest", location: "New Orleans, LA", dates: "Apr 22–May 2, 2027", noCamping: true },
-  { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026" },
+  { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026", hasData: true },
   // A small, deliberately short list of internationally major festivals --
   // the app stays US-focused overall, but these are too iconic/globally
   // recognized to leave out. Sourced the same way as the batch above (MFW's
@@ -489,6 +499,11 @@ const FESTIVAL_DAYS = {
   // Nocturnal Wonderland 2026 (Sep 19-20), 3pm-12am daily per Insomniac's
   // own event listing.
   "nocturnal-wonderland": consecutiveDays(2026, 8, 19, 2, 15 * 60),
+  // Bourbon & Beyond 2026 (Sep 24-27). Earliest published set across all 4
+  // days/5 stages is 11:45am (Sunday's Barrel Stage) per bourbonandbeyond.com's
+  // own TIMELINE widget -- 11:30am offset baseline matches the real set
+  // times now loaded (see festival_sets).
+  "bourbon-and-beyond": consecutiveDays(2026, 8, 24, 4, 11 * 60 + 30),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -603,6 +618,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "louder-than-life": { src: "/festival-lineups/louder-than-life.jpg", year: 2026 },
   "riot-fest": { src: "/festival-lineups/riot-fest.jpg", year: 2026 },
   "nocturnal-wonderland": { src: "/festival-lineups/nocturnal-wonderland.jpg", year: 2026 },
+  "bourbon-and-beyond": { src: "/festival-lineups/bourbon-and-beyond.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
