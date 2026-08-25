@@ -228,6 +228,17 @@ const FESTIVAL_STAGES = {
     { id: "revival", name: "Revival Stage", color: "#FFB23D" },
     { id: "bluegrass", name: "The Bluegrass Situation Stage", color: "#5FD97A" },
   ],
+  // All Things Go 2026 (DC/Columbia MD edition)'s own site confirms the
+  // full real per-day lineup (see allthingsgofestival.com/dmv) and that the
+  // venue has two real stages (Pavilion Stage, Chrysalis Stage, per the
+  // ticket tiers' own wording) -- but doesn't publish which artist plays
+  // which stage or at what time anywhere public yet. Same call as
+  // Nocturnal Wonderland: rather than guess a stage/time grid, only the
+  // clear top-billed acts per day are loaded (see festival_sets) under one
+  // honestly-labeled placeholder.
+  "all-things-go": [
+    { id: "stage-tba", name: "Pavilion / Chrysalis (stage TBA)", color: "#3DF2E0" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -287,7 +298,7 @@ const FESTIVALS = [
   { id: "sonic-temple", name: "Sonic Temple Festival", location: "Columbus, OH", dates: "May 13–16, 2027" },
   { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", noCamping: true },
   { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
-  { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", noCamping: true },
+  { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", hasData: true, noCamping: true },
   { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
   { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
   { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026", hasData: true },
@@ -504,6 +515,10 @@ const FESTIVAL_DAYS = {
   // own TIMELINE widget -- 11:30am offset baseline matches the real set
   // times now loaded (see festival_sets).
   "bourbon-and-beyond": consecutiveDays(2026, 8, 24, 4, 11 * 60 + 30),
+  // All Things Go 2026 (DC/Columbia MD), Fri-Sun Sep 25-27. No real gates
+  // time published (no set-time grid exists at all -- see FESTIVAL_STAGES
+  // note) -- 3pm is just a display anchor for the placeholder evening slots.
+  "all-things-go": consecutiveDays(2026, 8, 25, 3, 15 * 60),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -619,6 +634,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "riot-fest": { src: "/festival-lineups/riot-fest.jpg", year: 2026 },
   "nocturnal-wonderland": { src: "/festival-lineups/nocturnal-wonderland.jpg", year: 2026 },
   "bourbon-and-beyond": { src: "/festival-lineups/bourbon-and-beyond.jpg", year: 2026 },
+  "all-things-go": { src: "/festival-lineups/all-things-go.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
