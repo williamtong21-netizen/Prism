@@ -230,6 +230,16 @@ const FESTIVALS = [
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
   { id: "new-orleans-jazz-fest", name: "New Orleans Jazz Fest", location: "New Orleans, LA", dates: "Apr 22–May 2, 2027", noCamping: true },
   { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026" },
+  // A small, deliberately short list of internationally major festivals --
+  // the app stays US-focused overall, but these are too iconic/globally
+  // recognized to leave out. Sourced the same way as the batch above (MFW's
+  // Europe Top 50 + Rock in Rio's own real confirmed dates).
+  { id: "rock-in-rio", name: "Rock in Rio", location: "Rio de Janeiro, Brazil", dates: "Sep 4–13, 2026", noCamping: true },
+  { id: "reading-leeds", name: "Reading & Leeds Festival", location: "Reading, UK", dates: "Aug 27–30, 2026" },
+  { id: "sziget", name: "Sziget Festival", location: "Budapest, Hungary", dates: "Aug 10–15, 2027" },
+  { id: "wacken", name: "Wacken Open Air", location: "Wacken, Germany", dates: "Jul 28–31, 2027" },
+  { id: "rock-am-ring", name: "Rock am Ring", location: "Nürburg, Germany", dates: "Jun 4–6, 2027" },
+  { id: "download-festival", name: "Download Festival", location: "Donington Park, UK", dates: "Jun 9–13, 2027" },
 ];
 
 const MONTH_ABBR = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
