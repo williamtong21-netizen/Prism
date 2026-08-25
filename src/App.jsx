@@ -210,6 +210,26 @@ const FESTIVALS = [
   { id: "hangout", name: "Hangout Music Festival", location: "Gulf Shores, AL", dates: "May 20–23, 2027", noCamping: true },
   { id: "primavera-sound", name: "Primavera Sound", location: "Barcelona, Spain", dates: "Jun 3–5, 2027", noCamping: true },
   { id: "glastonbury", name: "Glastonbury", location: "Pilton, England", dates: "Jun 23–27, 2027" },
+  // Added from Music Festival Wizard's Top 50 Most Popular Fests in the
+  // USA -- real, confirmed-date, well-known recurring festivals not yet
+  // in the app. Same `hasData: false` pattern as the batch above: no
+  // fabricated schedule, just enough to track/follow. A few other MFW
+  // Top 50 names (When We Were Young, Rolling Loud Cali/USA, One
+  // MusicFest) were skipped here because MFW's own pages list their next
+  // edition as cancelled or unconfirmed as of this writing.
+  { id: "camp-flog-gnaw", name: "Camp Flog Gnaw Carnival", location: "Los Angeles, CA", dates: "Nov 14–15, 2026", noCamping: true },
+  { id: "louder-than-life", name: "Louder Than Life", location: "Louisville, KY", dates: "Sep 17–20, 2026" },
+  { id: "summer-smash", name: "Summer Smash Festival", location: "Chicago, IL", dates: "2027 dates not yet announced", noCamping: true },
+  { id: "sonic-temple", name: "Sonic Temple Festival", location: "Columbus, OH", dates: "May 13–16, 2027" },
+  { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", noCamping: true },
+  { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
+  { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", noCamping: true },
+  { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", noCamping: true },
+  { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
+  { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026" },
+  { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
+  { id: "new-orleans-jazz-fest", name: "New Orleans Jazz Fest", location: "New Orleans, LA", dates: "Apr 22–May 2, 2027", noCamping: true },
+  { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026" },
 ];
 
 const MONTH_ABBR = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
