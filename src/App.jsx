@@ -186,6 +186,18 @@ const FESTIVAL_STAGES = {
     { id: "globalvillage", name: "Global Village", color: "#5FD97A" },
     { id: "supernova", name: "Supernova", color: "#FF7A3D" },
   ],
+  // Real Louder Than Life 2026 stage names, per therockfather.com's own
+  // set-times coverage (Louder, Life, Decibel, Reverb, Loudmouth, Impact,
+  // Big Bourbon Bar -- all 7 stages).
+  "louder-than-life": [
+    { id: "louder", name: "Louder Stage", color: "#3DF2E0" },
+    { id: "life", name: "Life Stage", color: "#FF3DA6" },
+    { id: "decibel", name: "Decibel Stage", color: "#9D6BFF" },
+    { id: "reverb", name: "Reverb Stage", color: "#FFB23D" },
+    { id: "loudmouth", name: "Loudmouth Stage", color: "#5FD97A" },
+    { id: "impact", name: "Impact Stage", color: "#FF7A3D" },
+    { id: "bigbourbon", name: "Big Bourbon Bar", color: "#7ADFFF" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -240,7 +252,7 @@ const FESTIVALS = [
   // MusicFest) were skipped here because MFW's own pages list their next
   // edition as cancelled or unconfirmed as of this writing.
   { id: "camp-flog-gnaw", name: "Camp Flog Gnaw Carnival", location: "Los Angeles, CA", dates: "Nov 14–15, 2026", noCamping: true },
-  { id: "louder-than-life", name: "Louder Than Life", location: "Louisville, KY", dates: "Sep 17–20, 2026" },
+  { id: "louder-than-life", name: "Louder Than Life", location: "Louisville, KY", dates: "Sep 17–20, 2026", hasData: true },
   { id: "summer-smash", name: "Summer Smash Festival", location: "Chicago, IL", dates: "2027 dates not yet announced", noCamping: true },
   { id: "sonic-temple", name: "Sonic Temple Festival", location: "Columbus, OH", dates: "May 13–16, 2027" },
   { id: "aftershock", name: "Aftershock Festival", location: "Sacramento, CA", dates: "Oct 1–4, 2026", noCamping: true },
@@ -446,6 +458,10 @@ const FESTIVAL_DAYS = {
   // banner ("4, 5, 6, 7, 11, 12 E 13.SET 2026"). Noon start matches the
   // earliest slot used for the real day/stage data now loaded.
   "rock-in-rio": [...consecutiveDays(2026, 8, 4, 4, 12 * 60), ...consecutiveDays(2026, 8, 11, 3, 12 * 60, { suffix: "2" })],
+  // Louder Than Life 2026 (Sep 17-20). Gates open 10:45am daily per
+  // therockfather.com's coverage -- matches the offset baseline used for
+  // the real set times now loaded (see festival_sets).
+  "louder-than-life": consecutiveDays(2026, 8, 17, 4, 10 * 60 + 45),
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
@@ -557,6 +573,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   "edc-orlando": { src: "/festival-lineups/edc-orlando.jpg", year: 2026 },
   "secret-dreams": { src: "/festival-lineups/secret-dreams.jpg", year: 2026 },
   "reading-leeds": { src: "/festival-lineups/reading-leeds.jpg", year: 2026 },
+  "louder-than-life": { src: "/festival-lineups/louder-than-life.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
