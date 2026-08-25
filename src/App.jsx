@@ -467,6 +467,9 @@ const FESTIVAL_MAP_IMAGES = {
 // alongside (not instead of) the real per-artist schedule data above.
 const FESTIVAL_LINEUP_IMAGES = {
   "edc-mexico": { src: "/festival-lineups/edc-mexico.jpg", year: 2026 },
+  acl: { src: "/festival-lineups/acl.webp", year: 2026 },
+  "lost-lands": { src: "/festival-lineups/lost-lands.jpg", year: 2026 },
+  "edc-orlando": { src: "/festival-lineups/edc-orlando.jpg", year: 2026 },
 };
 
 // Dedicated campground/camping maps — only for festivals that actually have
