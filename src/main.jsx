@@ -32,12 +32,34 @@ function ErrorFallback() {
 // reload once so the page actually shows the new version instead of
 // running old JS under a new worker. Reload-in-progress ref guards
 // against the rare double-fire some browsers do.
+//
+// A magic-link redirect lands on `origin/?code=...`; Supabase's PKCE flow
+// then asynchronously exchanges that single-use code for a session and
+// only strips it from the URL (via history.replaceState) once that
+// exchange finishes. Reloading while `code` is still in the URL would
+// either burn the code on a second exchange attempt or interrupt the first
+// one outright, so this waits for it to clear (or a timeout, in case the
+// exchange itself fails) before reloading.
+function hasPendingAuthRedirect() {
+  return /[?&]code=/.test(window.location.search) || /access_token=/.test(window.location.hash)
+}
+
 if ('serviceWorker' in navigator) {
   let reloaded = false
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloaded) return
     reloaded = true
-    window.location.reload()
+    if (!hasPendingAuthRedirect()) {
+      window.location.reload()
+      return
+    }
+    const start = Date.now()
+    const waitForAuthExchange = setInterval(() => {
+      if (!hasPendingAuthRedirect() || Date.now() - start > 8000) {
+        clearInterval(waitForAuthExchange)
+        window.location.reload()
+      }
+    }, 200)
   })
 }
 
