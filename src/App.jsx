@@ -175,6 +175,17 @@ const FESTIVAL_STAGES = {
     { id: "ballroom", name: "The Ballroom", color: "#FFB23D" },
     { id: "canopy", name: "The Canopy", color: "#5FD97A" },
   ],
+  // Real Rock in Rio 2026 stage names, per rockinrio.com/rio/pt-br/line-up/'s
+  // own stage headers (Palco Mundo, Palco Sunset, New Dance Order, Espaço
+  // Favela, Global Village, Supernova).
+  "rock-in-rio": [
+    { id: "mainstage", name: "Palco Mundo", color: "#3DF2E0" },
+    { id: "sunset", name: "Palco Sunset", color: "#FF3DA6" },
+    { id: "newdanceorder", name: "New Dance Order", color: "#9D6BFF" },
+    { id: "favela", name: "Espaço Favela", color: "#FFB23D" },
+    { id: "globalvillage", name: "Global Village", color: "#5FD97A" },
+    { id: "supernova", name: "Supernova", color: "#FF7A3D" },
+  ],
 };
 
 // Festival catalog — scoped to major, reliably-recurring festivals for now;
@@ -245,7 +256,7 @@ const FESTIVALS = [
   // the app stays US-focused overall, but these are too iconic/globally
   // recognized to leave out. Sourced the same way as the batch above (MFW's
   // Europe Top 50 + Rock in Rio's own real confirmed dates).
-  { id: "rock-in-rio", name: "Rock in Rio", location: "Rio de Janeiro, Brazil", dates: "Sep 4–13, 2026", noCamping: true },
+  { id: "rock-in-rio", name: "Rock in Rio", location: "Rio de Janeiro, Brazil", dates: "Sep 4–13, 2026", hasData: true, noCamping: true },
   { id: "reading-leeds", name: "Reading & Leeds Festival", location: "Reading, UK", dates: "Aug 27–30, 2026", hasData: true },
   { id: "sziget", name: "Sziget Festival", location: "Budapest, Hungary", dates: "Aug 10–15, 2027" },
   { id: "wacken", name: "Wacken Open Air", location: "Wacken, Germany", dates: "Jul 28–31, 2027" },
@@ -430,6 +441,11 @@ const FESTIVAL_DAYS = {
   // day above. Noon start matches the earliest slot used for the real
   // day/stage data now loaded (see festival_sets).
   "reading-leeds": consecutiveDays(2026, 7, 27, 4, 12 * 60),
+  // Rock in Rio 2026 is a biannual, two-weekend festival: Sep 4-7 (real
+  // Fri-Mon) + Sep 11-13 (real Fri-Sun), per rockinrio.com's own dates
+  // banner ("4, 5, 6, 7, 11, 12 E 13.SET 2026"). Noon start matches the
+  // earliest slot used for the real day/stage data now loaded.
+  "rock-in-rio": [...consecutiveDays(2026, 8, 4, 4, 12 * 60), ...consecutiveDays(2026, 8, 11, 3, 12 * 60, { suffix: "2" })],
 };
 
 // Flattened for fmtTime's lookup — day ids are only unique within a
