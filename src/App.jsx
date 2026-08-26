@@ -2911,20 +2911,25 @@ export default function FestivalOptimizer() {
             ) : (
               <>
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
-              <button
-                onClick={() => setLineupFlyerOpen(true)}
-                className="facet-card"
-                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, cursor: "pointer" }}
-              >
-                <img
-                  src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
-                  alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
-                  draggable={false}
-                  style={{ width: "100%", display: "block", maxHeight: 200, objectFit: "cover", objectPosition: "top", WebkitUserDrag: "none", userSelect: "none" }}
-                  onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
-                  onDragStart={(e) => e.preventDefault()}
-                />
-              </button>
+              <div style={{ marginBottom: 14 }}>
+                <button
+                  onClick={() => setLineupFlyerOpen(true)}
+                  className="facet-card"
+                  style={{ display: "block", width: "100%", padding: 0, cursor: "pointer" }}
+                >
+                  <img
+                    src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
+                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
+                    draggable={false}
+                    style={{ width: "100%", display: "block", maxHeight: 260, objectFit: "contain", background: "var(--bg)", WebkitUserDrag: "none", userSelect: "none" }}
+                    onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
+                    onDragStart={(e) => e.preventDefault()}
+                  />
+                </button>
+                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", textAlign: "center", margin: "6px 0 0" }}>
+                  Tap to see the full lineup, full size
+                </p>
+              </div>
             )}
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
