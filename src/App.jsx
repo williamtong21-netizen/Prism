@@ -170,7 +170,10 @@ const FESTIVAL_STAGES = {
   // Real Secret Dreams 2026 stage names (PG Stage, Woods Stage), read
   // directly off the festival's own official camping + grounds map
   // (secretdreamsfest.com/about-1-1) for its new Cardinal Center venue.
+  // Real 2026 stages per thedailyfrequency.com's set-time graphics --
+  // "Lucid Stage" was missing entirely (only PG/Woods existed).
   "secret-dreams": [
+    { id: "lucid", name: "Lucid Stage", color: "#FF3DA6" },
     { id: "pg", name: "PG Stage", color: "#3DF2E0" },
     { id: "woods", name: "Woods Stage", color: "#9D6BFF" },
   ],
@@ -583,11 +586,15 @@ const FESTIVAL_DAYS = {
   // Official dates are Fri–Sun Sep 4–6; Thursday Sep 3 is a separate
   // pre-party rather than part of the paid festival days proper. No
   // published set-time grid yet, so these are generic start markers.
+  // Start times corrected to match each day's real earliest set per
+  // thedailyfrequency.com's set-time graphics (Thu was off by an hour,
+  // Fri by an hour, Sun by an hour -- previously guessed rather than
+  // sourced from the actual schedule).
   "secret-dreams": [
-    { id: "thu", label: "Thu", date: "Sep 3", startMin: 19 * 60 },
-    { id: "fri", label: "Fri", date: "Sep 4", startMin: 14 * 60 },
+    { id: "thu", label: "Thu", date: "Sep 3", startMin: 18 * 60 },
+    { id: "fri", label: "Fri", date: "Sep 4", startMin: 13 * 60 },
     { id: "sat", label: "Sat", date: "Sep 5", startMin: 13 * 60 },
-    { id: "sun", label: "Sun", date: "Sep 6", startMin: 13 * 60 },
+    { id: "sun", label: "Sun", date: "Sep 6", startMin: 12 * 60 },
   ],
   // Reading & Leeds 2026 runs Aug 27-30; day one is arrival/campsite-opening
   // only (no acts play, per readingfestival.com/lineup only listing
