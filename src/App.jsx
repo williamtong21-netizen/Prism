@@ -1054,7 +1054,7 @@ export function fmtTime(offsetMin, dayId = "fri", festivalId = "bonnaroo") {
 export function matchColor(match) {
   if (match >= 85) return "#3DF2E0";
   if (match >= 60) return "#FFB23D";
-  return "#5B5470";
+  return "var(--text-dimmer)";
 }
 // Real-lineup festivals without personalized listening data use match:
 // null rather than a fabricated number — {match}% alone renders as a bare
@@ -1112,7 +1112,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
-export const voteBtnStyle = { background: "none", border: "none", color: "#5B5470", fontSize: 13, cursor: "pointer", padding: 4, lineHeight: 1 };
+export const voteBtnStyle = { background: "none", border: "none", color: "var(--text-dimmer)", fontSize: 13, cursor: "pointer", padding: 4, lineHeight: 1 };
 
 // ---------------------------------------------------------------------------
 // Icons (simple inline SVG, no external deps)
@@ -1132,7 +1132,7 @@ function PrismLogo({ size = 56 }) {
         </linearGradient>
       </defs>
       {/* incoming beam */}
-      <line x1="6" y1="50" x2="38" y2="50" stroke="#F5F0FF" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+      <line x1="6" y1="50" x2="38" y2="50" stroke="var(--text)" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
       {/* the prism */}
       <polygon points="50,22 74,64 26,64" fill="#171229" stroke="url(#prismBeamOut)" strokeWidth="3" strokeLinejoin="round" />
       {/* refracted rays */}
@@ -1176,6 +1176,78 @@ export function Icon({ name, active }) {
 // modal backdrops) or a centered flex column (these auth screens), so
 // scaling its own box doesn't disturb any fixed-position coordinate math.
 const AUTH_SCREEN_SHARED_CSS = `
+  /* Theme tokens — [data-theme] lives on the authenticated app's root div
+     (FestivalOptimizer's return) only; the pre-auth screens (Welcome,
+     SignIn, Onboarding) stay dark-only by design since there's no profile
+     yet to hold a preference. Accent colors (teal/purple/pink/amber) stay
+     literal hex everywhere — they carry brand/semantic meaning (a stat's
+     category, a stage color), not surface/text role, and hold up visually
+     on both grounds. */
+  [data-theme="dark"] {
+    --bg: #0F0B1A; --surface: #161225; --border: #2A2440;
+    --text: #F5F0FF; --text-dim: #8B85A3; --text-dimmer: #5B5470;
+  }
+  [data-theme="light"] {
+    --bg: #F6F3FC; --surface: #FFFFFF; --border: #E3DEF0;
+    --text: #1E1830; --text-dim: #6B6480; --text-dimmer: #8981A0;
+  }
+
+  /* "Cut crystal" facet treatment — one bevelled corner, a thin rotating
+     gem-edge, a slow shine sweep. Applied only to the highest-visibility
+     surfaces (Home's stat cards/festival rows, the two primary CTAs), not
+     the whole app -- see AUTH_SCREEN_SHARED_CSS's callers for where. */
+  .facet-card {
+    position: relative;
+    background:
+      linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015) 40%, rgba(255,255,255,0.03) 100%),
+      var(--surface);
+    border-radius: 14px;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .facet-card::before {
+    content: "";
+    position: absolute; inset: 0; padding: 1px;
+    border-radius: 14px;
+    background: conic-gradient(from 200deg at 30% 20%, rgba(61,242,224,0.55), rgba(157,107,255,0.45) 30%, rgba(255,61,166,0.35) 55%, rgba(157,107,255,0.25) 75%, rgba(61,242,224,0.55) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; z-index: 1;
+  }
+  .facet-card::after {
+    content: "";
+    position: absolute; top: -50%; left: -60%; width: 40%; height: 200%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.14) 45%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.14) 55%, transparent);
+    transform: rotate(8deg);
+    animation: facetShine 5s ease-in-out infinite;
+    animation-delay: var(--shine-delay, 0s);
+    pointer-events: none; z-index: 2;
+  }
+  [data-theme="light"] .facet-card::after {
+    background: linear-gradient(100deg, transparent, rgba(157,107,255,0.10) 45%, rgba(61,242,224,0.14) 50%, rgba(157,107,255,0.10) 55%, transparent);
+  }
+  @keyframes facetShine { 0%, 40% { left: -60%; } 60%, 100% { left: 140%; } }
+
+  .facet-cta {
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    background-size: 220% 100%;
+    animation: facetShift 6s ease-in-out infinite;
+    overflow: hidden;
+  }
+  @keyframes facetShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .facet-cta::after {
+    content: "";
+    position: absolute; top: -50%; left: -60%; width: 30%; height: 200%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.5) 50%, transparent);
+    transform: rotate(8deg);
+    animation: facetShine 3.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .facet-card::after, .facet-cta, .facet-cta::after { animation: none; }
+  }
+
   .frame { width: 100%; max-width: 430px; }
   /* transform:scale, not zoom — zoom's centering math with a flex-column
      parent is unreliable in Safari (confirmed: content rendered off-center
@@ -1223,7 +1295,7 @@ const WELCOME_FEATURES = [
 
 function WelcomeScreen({ onGetStarted }) {
   return (
-    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 10vh) 28px 24px", textAlign: "center" }}>
+    <div data-theme="dark" style={{ minHeight: "100svh", background: "var(--bg)", color: "var(--text)", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 10vh) 28px 24px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         ${AUTH_SCREEN_SHARED_CSS}
@@ -1241,19 +1313,19 @@ function WelcomeScreen({ onGetStarted }) {
           </div>
         </div>
 
-        <p style={{ fontSize: 14.5, color: "#F5F0FF", marginTop: 14, lineHeight: 1.5, fontWeight: 600 }}>
+        <p style={{ fontSize: 14.5, color: "var(--text)", marginTop: 14, lineHeight: 1.5, fontWeight: 600 }}>
           Your festival season, all in one place.
         </p>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 14, textAlign: "left" }}>
           {WELCOME_FEATURES.map((f) => (
             <div key={f.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: "rgba(61,242,224,0.08)", border: "1px solid #2A2440", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: "rgba(61,242,224,0.08)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name={f.icon} active />
               </div>
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>{f.title}</div>
-                <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "2px 0 0", lineHeight: 1.4 }}>{f.body}</p>
+                <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "2px 0 0", lineHeight: 1.4 }}>{f.body}</p>
               </div>
             </div>
           ))}
@@ -1261,12 +1333,13 @@ function WelcomeScreen({ onGetStarted }) {
 
         <button
           onClick={onGetStarted}
-          style={{ width: "100%", marginTop: 28, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "13px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+          className="facet-cta"
+          style={{ width: "100%", marginTop: 28, background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 55%, #FF3DA6)", border: "none", borderRadius: 10, padding: "13px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
         >
           Get started →
         </button>
-        <p style={{ fontSize: 11, color: "#5B5470", marginTop: 20 }}>
-          By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Privacy Policy</a>.
+        <p style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 20 }}>
+          By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)" }}>Privacy Policy</a>.
         </p>
       </div>
     </div>
@@ -1302,7 +1375,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
   }
 
   return (
-    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
+    <div data-theme="dark" style={{ minHeight: "100svh", background: "var(--bg)", color: "var(--text)", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         ${AUTH_SCREEN_SHARED_CSS}
@@ -1323,8 +1396,8 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
       {sent ? (
         <div style={{ marginTop: 28, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320 }}>
           <div style={{ fontSize: 17, fontWeight: 700 }}>You're almost in 📬</div>
-          <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 8, lineHeight: 1.5 }}>
-            We sent a code and a link to <span style={{ color: "#F5F0FF" }}>{email}</span> — go check your inbox! If Prism's on your home screen, type the 6-digit code below instead of tapping the link — the link opens your regular browser, which won't sign in the home-screen app.
+          <p style={{ fontSize: 13, color: "var(--text-dim)", marginTop: 8, lineHeight: 1.5 }}>
+            We sent a code and a link to <span style={{ color: "var(--text)" }}>{email}</span> — go check your inbox! If Prism's on your home screen, type the 6-digit code below instead of tapping the link — the link opens your regular browser, which won't sign in the home-screen app.
           </p>
           <form onSubmit={handleVerify} style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
             <input
@@ -1334,7 +1407,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
               aria-label="6-digit verification code"
               inputMode="numeric"
               autoComplete="one-time-code"
-              style={{ width: "100%", background: "#171229", border: "1px solid #3DF2E0", boxShadow: "0 0 0 3px rgba(61,242,224,0.12)", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
+              style={{ width: "100%", background: "#171229", border: "1px solid #3DF2E0", boxShadow: "0 0 0 3px rgba(61,242,224,0.12)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
             />
             <button
               type="submit"
@@ -1348,7 +1421,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} style={{ marginTop: 28, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontSize: 13, color: "#8B85A3", marginBottom: 4, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 4, lineHeight: 1.5 }}>
             Your crew, your schedule, your sets — one tap away. Drop your email and let's get you in 🎪
           </p>
           <input
@@ -1358,20 +1431,21 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            style={{ width: "100%", background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14 }}
+            style={{ width: "100%", background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14 }}
           />
           <button
             type="submit"
             disabled={submitting}
-            style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
+            className="facet-cta"
+            style={{ width: "100%", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 55%, #FF3DA6)", border: "none", borderRadius: 10, padding: "12px 14px", color: "#0F0B1A", fontWeight: 700, fontSize: 14, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}
           >
             {submitting ? "Sending…" : "Send my magic link →"}
           </button>
           {error && <div style={{ fontSize: 12.5, color: "#FF3DA6" }}>{error}</div>}
         </form>
       )}
-      <p style={{ fontSize: 11, color: "#5B5470", marginTop: 20 }}>
-        By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "#8B85A3" }}>Privacy Policy</a>.
+      <p style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 20 }}>
+        By continuing, you agree to Prism's <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)" }}>Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "var(--text-dim)" }}>Privacy Policy</a>.
       </p>
       </div>
     </div>
@@ -1402,7 +1476,7 @@ function OnboardingScreen({ email, onSubmit }) {
   }
 
   return (
-    <div style={{ minHeight: "100svh", background: "#0F0B1A", color: "#F5F0FF", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
+    <div data-theme="dark" style={{ minHeight: "100svh", background: "var(--bg)", color: "var(--text)", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "calc(env(safe-area-inset-top, 0px) + 15vh) 28px 24px", textAlign: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         ${AUTH_SCREEN_SHARED_CSS}
@@ -1412,31 +1486,31 @@ function OnboardingScreen({ email, onSubmit }) {
       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "1px", marginTop: 14 }}>
         Welcome to Prism
       </div>
-      <p style={{ fontSize: 13, color: "#8B85A3", marginTop: 6, marginLeft: "auto", marginRight: "auto", maxWidth: 300, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: "var(--text-dim)", marginTop: 6, marginLeft: "auto", marginRight: "auto", maxWidth: 300, lineHeight: 1.5 }}>
         One last thing before you're in — how should your crew see you?
       </p>
 
       <form onSubmit={handleSubmit} style={{ marginTop: 24, marginLeft: "auto", marginRight: "auto", width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
-        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
           Display name
           <input
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            style={{ width: "100%", marginTop: 6, background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+            style={{ width: "100%", marginTop: 6, background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
           />
         </label>
-        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+        <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
           Handle
-          <div style={{ display: "flex", alignItems: "center", marginTop: 6, background: "#171229", border: "1px solid #2A2440", borderRadius: 10, padding: "0 14px" }}>
-            <span style={{ color: "#5B5470", fontSize: 14 }}>@</span>
+          <div style={{ display: "flex", alignItems: "center", marginTop: 6, background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "0 14px" }}>
+            <span style={{ color: "var(--text-dimmer)", fontSize: 14 }}>@</span>
             <input
               required
               value={handle}
               onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
               placeholder="willrides"
-              style={{ flex: 1, background: "none", border: "none", padding: "12px 6px", color: "#F5F0FF", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+              style={{ flex: 1, background: "none", border: "none", padding: "12px 6px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
             />
           </div>
         </label>
@@ -1474,13 +1548,13 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 
   return (
     <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
-      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Join a crew</div>
-          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
-        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>
+        <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "6px 0 16px" }}>
           Enter the code someone shared with you.
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1493,7 +1567,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
             autoCorrect="off"
             autoComplete="off"
             spellCheck="false"
-            style={{ width: "100%", background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
+            style={{ width: "100%", background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
           />
           <button
             type="submit"
@@ -1515,26 +1589,26 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 function NewDmPickerSheet({ members, onClose, onPick, title = "New message", subtitle = "Anyone you share a crew with." }) {
   return (
     <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
-      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{title}</div>
-          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
-        <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>{subtitle}</p>
+        <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "6px 0 16px" }}>{subtitle}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {members.map((m) => (
             <button
               key={m.id}
               onClick={() => onPick(m.id)}
-              style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "transparent", cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", border: "1px solid var(--border)", borderRadius: 12, padding: "11px 12px", background: "transparent", cursor: "pointer" }}
             >
               <span style={{ width: 34, height: 34, borderRadius: "50%", background: colorForId(m.id, m.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {m.name[0].toUpperCase()}
               </span>
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>@{m.handle}</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>@{m.handle}</div>
               </div>
             </button>
           ))}
@@ -1551,6 +1625,12 @@ function NewDmPickerSheet({ members, onClose, onPick, title = "New message", sub
 export default function FestivalOptimizer() {
   const { session, profile, authLoading, magicLinkSent, authError, signInWithEmail, verifyCode, signOut, updateProfile, deleteAccount } = useAuth();
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => localStorage.getItem("prism:seenWelcome") === "1");
+  const [theme, setTheme] = useState(() => localStorage.getItem("prism:theme") || "dark");
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    localStorage.setItem("prism:theme", next);
+    setTheme(next);
+  }
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
@@ -2061,7 +2141,7 @@ export default function FestivalOptimizer() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: "radial-gradient(circle at 12% 18%, rgba(157,107,255,0.09), transparent 42%), radial-gradient(circle at 88% 82%, rgba(61,242,224,0.07), transparent 42%), #0F0B1A", color: "#F5F0FF", minHeight: "100%", display: "flex", justifyContent: "center" }}>
+    <div data-theme={theme} style={{ fontFamily: "'Inter', sans-serif", background: "radial-gradient(circle at 12% 18%, rgba(157,107,255,0.09), transparent 42%), radial-gradient(circle at 88% 82%, rgba(61,242,224,0.07), transparent 42%), var(--bg)", color: "var(--text)", minHeight: "100%", display: "flex", justifyContent: "center" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -2118,7 +2198,7 @@ export default function FestivalOptimizer() {
         button:not(.tab-btn):not(.sidebar-tab) { transition: transform .1s ease, opacity .1s ease, box-shadow .15s ease; }
         button:not(.tab-btn):not(.sidebar-tab):active:not(:disabled) { transform: scale(0.96); }
         @media (prefers-reduced-motion: reduce) { button { transition: none; } button:active { transform: none; } }
-        input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: #2A2440; }
+        input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--border); }
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%;
           background: #F5F0FF; cursor: pointer; border: 4px solid #0F0B1A; box-shadow: 0 0 0 2px #3DF2E0;
@@ -2144,7 +2224,7 @@ export default function FestivalOptimizer() {
         <div
           className="splash-fade"
           style={{
-            position: "fixed", inset: 0, zIndex: 50, background: "#0F0B1A",
+            position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             opacity: splashFading ? 0 : 1,
           }}
@@ -2183,17 +2263,17 @@ export default function FestivalOptimizer() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#3DF2E0", letterSpacing: "0.5px" }}>PRISM</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#5B5470" }}>now</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "var(--text-dimmer)" }}>now</span>
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.title}</div>
-            <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.body}</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.body}</div>
           </div>
         </div>
       )}
 
       <nav className="desktop-sidebar" style={{
         flexDirection: "column", width: 220, flexShrink: 0, gap: 2, padding: "28px 12px",
-        borderRight: "1px solid #2A2440", position: "sticky", top: 0, height: "100svh", alignSelf: "flex-start",
+        borderRight: "1px solid var(--border)", position: "sticky", top: 0, height: "100svh", alignSelf: "flex-start",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 10px", marginBottom: 24 }}>
           <PrismLogo size={26} />
@@ -2211,7 +2291,7 @@ export default function FestivalOptimizer() {
               style={{
                 display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
                 background: active ? "rgba(61,242,224,0.1)" : "none", border: "none", borderRadius: 10,
-                padding: "11px 12px", cursor: "pointer", color: active ? "#3DF2E0" : "#8B85A3",
+                padding: "11px 12px", cursor: "pointer", color: active ? "#3DF2E0" : "var(--text-dim)",
               }}
             >
               <Icon name={t.icon} active={active} />
@@ -2236,7 +2316,7 @@ export default function FestivalOptimizer() {
                   }}>
                     PRISM
                   </h1>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3", marginTop: 3 }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", marginTop: 3 }}>
                     Hey {profile.name}
                   </div>
                 </div>
@@ -2253,12 +2333,12 @@ export default function FestivalOptimizer() {
                 }}>
                   {FESTIVALS.find((f) => f.id === currentFestival)?.name.toUpperCase()}
                 </h1>
-                <svg viewBox="0 0 24 24" width="16" height="16" style={{ marginBottom: 4 }} stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                <svg viewBox="0 0 24 24" width="16" height="16" style={{ marginBottom: 4 }} stroke="var(--text-dim)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
               </button>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {view !== "home" && (
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3" }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)" }}>
                   {activeDays.find((d) => d.id === currentDay)?.label.toUpperCase()} · {activeDays.find((d) => d.id === currentDay)?.date.toUpperCase()}
                 </span>
               )}
@@ -2318,7 +2398,7 @@ export default function FestivalOptimizer() {
           </div>
 
           {view === "home" && (
-            <p style={{ color: "#8B85A3", margin: "6px 0 0", fontSize: 13.5 }}>
+            <p style={{ color: "var(--text-dim)", margin: "6px 0 0", fontSize: 13.5 }}>
               Your festivals — pick one to see the schedule, crew, and map.
             </p>
           )}
@@ -2326,7 +2406,7 @@ export default function FestivalOptimizer() {
           {view !== "home" && (
             <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-            <p style={{ color: "#8B85A3", margin: 0, fontSize: 13.5, flex: 1 }}>
+            <p style={{ color: "var(--text-dim)", margin: 0, fontSize: 13.5, flex: 1 }}>
               {view === "mine" && lineupSubview === "matches" && `${daySets.filter((s) => s.match >= threshold).length} sets match your taste at ${threshold}%+`}
               {view === "mine" && lineupSubview === "full" && "Every set, every stage"}
               {view === "mine" && lineupSubview === "discover" && "Browse artists outside your usual matches"}
@@ -2338,8 +2418,8 @@ export default function FestivalOptimizer() {
               onClick={() => setIsOnline((v) => !v)}
               style={{
                 fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, whiteSpace: "nowrap",
-                padding: "3px 8px", borderRadius: 20, border: `1px solid ${isOnline ? "#2A2440" : "#FFB23D"}`,
-                background: isOnline ? "transparent" : "rgba(255,178,61,0.1)", color: isOnline ? "#5B5470" : "#FFB23D", cursor: "pointer",
+                padding: "3px 8px", borderRadius: 20, border: `1px solid ${isOnline ? "var(--border)" : "#FFB23D"}`,
+                background: isOnline ? "transparent" : "rgba(255,178,61,0.1)", color: isOnline ? "var(--text-dimmer)" : "#FFB23D", cursor: "pointer",
               }}
             >
               {isOnline ? "Simulate offline" : "Go online"}
@@ -2365,9 +2445,9 @@ export default function FestivalOptimizer() {
                   style={{
                     flex: activeDays.length > 4 ? "0 0 64px" : 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textAlign: "center",
                     padding: "8px 4px", borderRadius: 9,
-                    border: `1px solid ${currentDay === d.id ? "#9D6BFF" : "#2A2440"}`,
+                    border: `1px solid ${currentDay === d.id ? "#9D6BFF" : "var(--border)"}`,
                     background: currentDay === d.id ? "rgba(157,107,255,0.14)" : "transparent",
-                    color: currentDay === d.id ? "#9D6BFF" : "#8B85A3", cursor: "pointer",
+                    color: currentDay === d.id ? "#9D6BFF" : "var(--text-dim)", cursor: "pointer",
                   }}
                 >
                   <div style={{ fontWeight: 700 }}>{d.label}</div>
@@ -2416,9 +2496,9 @@ export default function FestivalOptimizer() {
               return (
                 <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                   {stats.map((s, i) => (
-                    <div key={i} style={{ flex: 1, minWidth: 0, border: "1px solid #2A2440", borderRadius: 14, padding: "12px 8px", textAlign: "center", background: "#161225" }}>
-                      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 26, color: s.color, lineHeight: 1 }}>{s.value}</div>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#8B85A3", marginTop: 4, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{s.label}</div>
+                    <div key={i} className="facet-card" style={{ "--shine-delay": `${i * 1.2}s`, flex: 1, minWidth: 0, padding: "12px 8px", textAlign: "center" }}>
+                      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 26, color: s.color, lineHeight: 1, position: "relative", zIndex: 3 }}>{s.value}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", position: "relative", zIndex: 3 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -2426,17 +2506,17 @@ export default function FestivalOptimizer() {
             })()}
 
             {/* Must-haves checklist — collapsed by default, small footprint */}
-            <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "12px 16px", marginBottom: 16 }}>
+            <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", marginBottom: 16 }}>
               <button
                 onClick={() => setMustHavesOpen((v) => !v)}
                 style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", padding: 0 }}
               >
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>MUST-HAVES</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px" }}>MUST-HAVES</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: packedItems.length === MUST_HAVES.length ? "#3DF2E0" : "#5B5470" }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: packedItems.length === MUST_HAVES.length ? "#3DF2E0" : "var(--text-dimmer)" }}>
                     {packedItems.length}/{MUST_HAVES.length} packed
                   </span>
-                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: mustHavesOpen ? "rotate(180deg)" : "none", transition: "transform .15s ease" }}><path d="M6 9l6 6 6-6"/></svg>
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: mustHavesOpen ? "rotate(180deg)" : "none", transition: "transform .15s ease" }}><path d="M6 9l6 6 6-6"/></svg>
                 </div>
               </button>
               {mustHavesOpen && (
@@ -2460,7 +2540,7 @@ export default function FestivalOptimizer() {
                       }}>
                         {checked && <svg viewBox="0 0 24 24" width="12" height="12" stroke="#0F0B1A" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
                       </span>
-                      <span style={{ fontSize: 13.5, color: checked ? "#5B5470" : "#F5F0FF", textDecoration: checked ? "line-through" : "none" }}>{item.label}</span>
+                      <span style={{ fontSize: 13.5, color: checked ? "var(--text-dimmer)" : "var(--text)", textDecoration: checked ? "line-through" : "none" }}>{item.label}</span>
                     </button>
                   );
                 })}
@@ -2475,11 +2555,11 @@ export default function FestivalOptimizer() {
                 style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, border: "1px solid #FF3DA6", background: "rgba(255,61,166,0.08)", borderRadius: 12, padding: "12px", cursor: "pointer" }}
               >
                 <svg viewBox="0 0 24 24" width="17" height="17" stroke="#FF3DA6" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/><path d="M12 8v5M12 16.2v.1"/></svg>
-                <span style={{ fontSize: 12.5, color: "#F5F0FF", textAlign: "left" }}>Safety info</span>
+                <span style={{ fontSize: 12.5, color: "var(--text)", textAlign: "left" }}>Safety info</span>
               </button>
               <button
                 onClick={() => setProfileOpen(true)}
-                style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, border: "1px solid #2A2440", background: "#161225", borderRadius: 12, padding: "12px", cursor: "pointer" }}
+                style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, border: "1px solid var(--border)", background: "var(--surface)", borderRadius: 12, padding: "12px", cursor: "pointer" }}
               >
                 <span style={{
                   width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
@@ -2487,22 +2567,22 @@ export default function FestivalOptimizer() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10, color: "#0F0B1A",
                 }}>{profile.name[0]}</span>
-                <span style={{ fontSize: 12.5, color: "#F5F0FF", textAlign: "left" }}>Your profile</span>
+                <span style={{ fontSize: 12.5, color: "var(--text)", textAlign: "left" }}>Your profile</span>
               </button>
             </div>
 
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px", marginBottom: 10 }}>YOUR FESTIVALS</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px", marginBottom: 10 }}>YOUR FESTIVALS</div>
 
             <div style={{ position: "relative", marginBottom: 12 }}>
-              <svg viewBox="0 0 24 24" width="15" height="15" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
               <input
                 value={festivalSearch}
                 onChange={(e) => setFestivalSearch(e.target.value)}
                 placeholder="Search festivals or cities…"
                 aria-label="Search festivals or cities"
                 style={{
-                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "#F5F0FF",
-                  background: "#161225", border: "1px solid #2A2440", borderRadius: 12,
+                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                  background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
                   padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                 }}
               />
@@ -2510,7 +2590,7 @@ export default function FestivalOptimizer() {
                 <button
                   onClick={() => setFestivalSearch("")}
                   aria-label="Clear search"
-                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#5B5470", fontSize: 16, cursor: "pointer", padding: 4 }}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-dimmer)", fontSize: 16, cursor: "pointer", padding: 4 }}
                 >
                   ×
                 </button>
@@ -2525,9 +2605,9 @@ export default function FestivalOptimizer() {
                   style={{
                     flexShrink: 0,
                     fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, textTransform: "uppercase", whiteSpace: "nowrap",
-                    padding: "7px 12px", borderRadius: 20, border: "1px solid " + (festivalRegionFilter === r ? "#3DF2E0" : "#2A2440"),
+                    padding: "7px 12px", borderRadius: 20, border: "1px solid " + (festivalRegionFilter === r ? "#3DF2E0" : "var(--border)"),
                     background: festivalRegionFilter === r ? "rgba(61,242,224,0.12)" : "transparent",
-                    color: festivalRegionFilter === r ? "#3DF2E0" : "#8B85A3", cursor: "pointer",
+                    color: festivalRegionFilter === r ? "#3DF2E0" : "var(--text-dim)", cursor: "pointer",
                   }}
                 >
                   {r}
@@ -2551,8 +2631,8 @@ export default function FestivalOptimizer() {
                   });
                 if (filtered.length === 0) {
                   return (
-                    <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
-                      <div style={{ fontSize: 13.5, color: "#8B85A3" }}>
+                    <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
+                      <div style={{ fontSize: 13.5, color: "var(--text-dim)" }}>
                         {q ? `No festivals match "${festivalSearch}"` : `No ${festivalRegionFilter} festivals yet`}
                       </div>
                     </div>
@@ -2571,12 +2651,12 @@ export default function FestivalOptimizer() {
                       return (
                         <div
                           key={f.id}
-                          className="tab-btn"
+                          className="tab-btn facet-card"
                           style={{
-                            color: "#F5F0FF",
-                            border: `1px solid ${isActive ? "#3DF2E0" : "#2A2440"}`,
-                            background: isActive ? "rgba(61,242,224,0.08)" : "#161225",
-                            borderRadius: 12, padding: "10px 14px",
+                            "--shine-delay": `${(f.id.length % 5) * 0.9}s`,
+                            color: "var(--text)",
+                            outline: isActive ? "1px solid #3DF2E0" : "none",
+                            padding: "10px 14px",
                             display: "flex", alignItems: "center", gap: 4,
                           }}
                         >
@@ -2591,34 +2671,34 @@ export default function FestivalOptimizer() {
                             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goToFestival(); } }}
                             role="button"
                             tabIndex={0}
-                            style={{ flex: 1, minWidth: 0, textAlign: "left", cursor: "pointer" }}
+                            style={{ flex: 1, minWidth: 0, textAlign: "left", cursor: "pointer", position: "relative", zIndex: 3 }}
                           >
                             <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
                               {f.name}
                               {f.hasData && <Icon name="verified" />}
                             </div>
-                            <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.location} · {f.dates}</div>
+                            <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
                           <button
                             onClick={() => toggleAttending(f.id)}
                             aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
                             aria-pressed={isAttending}
-                            style={{ background: "none", border: "none", padding: 10, margin: "-10px 0", cursor: "pointer", display: "flex", lineHeight: 0, flexShrink: 0 }}
+                            style={{ background: "none", border: "none", padding: 10, margin: "-10px 0", cursor: "pointer", display: "flex", lineHeight: 0, flexShrink: 0, position: "relative", zIndex: 3 }}
                           >
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "var(--text-dimmer)"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
                           </button>
                           <div
                             onClick={goToFestival}
                             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goToFestival(); } }}
                             role="button"
                             tabIndex={0}
-                            style={{ cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center" }}
+                            style={{ cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", position: "relative", zIndex: 3 }}
                           >
                             {isActive ? (
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Last viewed</span>
                             ) : (
-                              <svg viewBox="0 0 24 24" width="16" height="16" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                              <svg viewBox="0 0 24 24" width="16" height="16" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
                             )}
                           </div>
                         </div>
@@ -2629,12 +2709,12 @@ export default function FestivalOptimizer() {
                         onClick={() => setFestivalsExpanded((v) => !v)}
                         style={{
                           textAlign: "center", cursor: "pointer", background: "none", border: "none",
-                          fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#8B85A3",
+                          fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dim)",
                           padding: "8px 6px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         }}
                       >
                         {festivalsExpanded ? "Show fewer" : `Show ${hiddenCount} more`}
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: festivalsExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--text-dim)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: festivalsExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
                       </button>
                     )}
                   </>
@@ -2655,9 +2735,9 @@ export default function FestivalOptimizer() {
                   style={{
                     flex: 1,
                     fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, textTransform: "uppercase",
-                    padding: "8px 6px", borderRadius: 7, border: "1px solid " + (lineupSubview === sv ? "#3DF2E0" : "#2A2440"),
+                    padding: "8px 6px", borderRadius: 7, border: "1px solid " + (lineupSubview === sv ? "#3DF2E0" : "var(--border)"),
                     background: lineupSubview === sv ? "rgba(61,242,224,0.12)" : "transparent",
-                    color: lineupSubview === sv ? "#3DF2E0" : "#8B85A3", cursor: "pointer",
+                    color: lineupSubview === sv ? "#3DF2E0" : "var(--text-dim)", cursor: "pointer",
                   }}
                 >
                   {sv === "matches" ? "% Match" : sv === "full" ? "Full Lineup" : sv === "discover" ? "Discover" : "My Schedule"}
@@ -2666,8 +2746,8 @@ export default function FestivalOptimizer() {
             </div>
 
             {lineupSubview === "matches" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
-                <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", whiteSpace: "nowrap" }}>MATCH</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
+                <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap" }}>MATCH</label>
                 <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ flex: 1 }} />
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, width: 34 }}>{threshold}%</span>
                 {conflicts.size > 0 && (
@@ -2685,7 +2765,7 @@ export default function FestivalOptimizer() {
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
               <button
                 onClick={() => setLineupFlyerOpen(true)}
-                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
               >
                 <img
                   src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
@@ -2702,25 +2782,25 @@ export default function FestivalOptimizer() {
               {activeStages.map((s) => (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, display: "inline-block" }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>{s.name}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>{s.name}</span>
                 </div>
               ))}
             </div>
 
             {lineupSubview === "schedule" && visibleSets.length === 0 ? (
-              <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 14, color: "#8B85A3" }}>Nothing on your schedule for this day yet.</div>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#5B5470", marginTop: 6 }}>
+              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 14, color: "var(--text-dim)" }}>Nothing on your schedule for this day yet.</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>
                   Tap any set in Full Lineup or % Match to add it.
                 </div>
               </div>
             ) : (
-            <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
-                <div style={{ width: 60, flexShrink: 0, background: "#151024", borderRight: "1px solid #2A2440" }}>
+                <div style={{ width: 60, flexShrink: 0, background: "#151024", borderRight: "1px solid var(--border)" }}>
                   <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                     {Array.from({ length: Math.floor(timelineEnd / 60) + 1 }).map((_, i) => (
-                      <div key={i} style={{ position: "absolute", top: i * 60 * PX_PER_MIN, right: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
+                      <div key={i} style={{ position: "absolute", top: i * 60 * PX_PER_MIN, right: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
                         {fmtTime(i * 60, currentDay, currentFestival)}
                       </div>
                     ))}
@@ -2728,7 +2808,7 @@ export default function FestivalOptimizer() {
                 </div>
                 <div style={{ display: "flex", flex: 1, minWidth: 0, overflowX: "auto" }}>
                   {activeStages.map((stage) => (
-                    <div key={stage.id} style={{ flex: "1 0 110px", borderRight: "1px solid #2A2440" }}>
+                    <div key={stage.id} style={{ flex: "1 0 110px", borderRight: "1px solid var(--border)" }}>
                       <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                         {visibleSets.filter((s) => s.stage === stage.id).map((s) => {
                           const dimmed = lineupSubview === "full" && s.match != null && s.match < threshold;
@@ -2738,8 +2818,8 @@ export default function FestivalOptimizer() {
                           return (
                             <div key={s.id} className="set-card" onClick={() => setSelected(s)} style={{
                               position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
-                              borderRadius: 7, padding: "6px 7px", background: dimmed ? "#161225" : "#1E1832",
-                              border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "#2A2440" : matchColor(s.match)}`,
+                              borderRadius: 7, padding: "6px 7px", background: dimmed ? "var(--surface)" : "#1E1832",
+                              border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match)}`,
                               opacity: dimmed ? 0.35 : 1, overflow: "hidden",
                             }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -2774,12 +2854,12 @@ export default function FestivalOptimizer() {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
                   fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, marginBottom: 12,
-                  padding: "9px 13px", borderRadius: 10, border: "1px solid #2A2440",
-                  background: "#161225", color: "#8B85A3", cursor: "pointer",
+                  padding: "9px 13px", borderRadius: 10, border: "1px solid var(--border)",
+                  background: "var(--surface)", color: "var(--text-dim)", cursor: "pointer",
                 }}
               >
                 <span>My crews ({crews.length})</span>
-                <span style={{ color: "#5B5470" }}>Manage →</span>
+                <span style={{ color: "var(--text-dimmer)" }}>Manage →</span>
               </button>
             )}
             {festivalCrews.length > 0 && (
@@ -2792,9 +2872,9 @@ export default function FestivalOptimizer() {
                     style={{
                       flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
                       padding: "7px 13px", borderRadius: 20,
-                      border: `1px solid ${activeCrewId === c.id ? "#3DF2E0" : "#2A2440"}`,
+                      border: `1px solid ${activeCrewId === c.id ? "#3DF2E0" : "var(--border)"}`,
                       background: activeCrewId === c.id ? "rgba(61,242,224,0.12)" : "transparent",
-                      color: activeCrewId === c.id ? "#3DF2E0" : "#8B85A3", cursor: "pointer",
+                      color: activeCrewId === c.id ? "#3DF2E0" : "var(--text-dim)", cursor: "pointer",
                     }}
                   >
                     {c.name}
@@ -2806,7 +2886,7 @@ export default function FestivalOptimizer() {
                   style={{
                     flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
                     padding: "7px 13px", borderRadius: 20, border: "1px dashed #3A3552",
-                    background: "transparent", color: "#5B5470", cursor: "pointer",
+                    background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                   }}
                 >
                   + New crew
@@ -2817,7 +2897,7 @@ export default function FestivalOptimizer() {
                   style={{
                     flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
                     padding: "7px 13px", borderRadius: 20, border: "1px dashed #3A3552",
-                    background: "transparent", color: "#5B5470", cursor: "pointer",
+                    background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                   }}
                 >
                   Join with a code
@@ -2832,8 +2912,8 @@ export default function FestivalOptimizer() {
             )}
 
             {!activeCrew ? (
-              <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 14, color: "#8B85A3", marginBottom: 12 }}>
+              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 14, color: "var(--text-dim)", marginBottom: 12 }}>
                   No crew yet for {FESTIVALS.find((f) => f.id === currentFestival)?.name}.
                 </div>
                 <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -2850,7 +2930,7 @@ export default function FestivalOptimizer() {
                     onClick={() => setJoinCrewOpen(true)}
                     style={{
                       fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "10px 18px", borderRadius: 10,
-                      border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer",
+                      border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer",
                     }}
                   >
                     Join with a code
@@ -2867,7 +2947,7 @@ export default function FestivalOptimizer() {
                         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px", flexShrink: 0 }}>YOU'RE THE LEADER</span>
                       )}
                     </div>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
                       {activeCrew.members.length + 1} members · {crewPersistent ? "persists after this festival" : "this festival only"}
                     </div>
                   </div>
@@ -2901,7 +2981,7 @@ export default function FestivalOptimizer() {
                             <span style={{ position: "absolute", bottom: -3, right: -3, fontSize: 12, background: "#171229", borderRadius: "50%", lineHeight: 1, padding: 1 }}>👑</span>
                           )}
                         </span>
-                        <span style={{ fontSize: 11, color: "#F5F0FF", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                        <span style={{ fontSize: 11, color: "var(--text)", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
                       </button>
                     ))}
                   </div>
@@ -2909,8 +2989,8 @@ export default function FestivalOptimizer() {
 
                 {openMemberCard && (
                   <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setOpenMemberCard(null)}>
-                    <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-                      <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+                    <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+                      <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ width: 48, height: 48, borderRadius: "50%", background: memberAvatarBg(openMemberCard.id, activeCrew, openMemberCard.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {openMemberCard.name[0].toUpperCase()}
@@ -2922,19 +3002,19 @@ export default function FestivalOptimizer() {
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px" }}>LEADER</span>
                             )}
                           </div>
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{openMemberCard.handle}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dimmer)" }}>@{openMemberCard.handle}</div>
                           {spotifyMatchWith(openMemberCard.id) !== null && (
                             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#3DF2E0", marginTop: 3 }}>
                               🎧 {spotifyMatchWith(openMemberCard.id)}% music match
                             </div>
                           )}
                         </div>
-                        <button onClick={() => setOpenMemberCard(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                        <button onClick={() => setOpenMemberCard(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
                       <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                         <button
                           onClick={() => { setOpenMemberCard(null); openRealThread(openMemberCard.id); }}
-                          style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, background: "none", border: "1px solid #2A2440", borderRadius: 10, padding: "11px", color: "#8B85A3", cursor: "pointer" }}
+                          style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, background: "none", border: "1px solid var(--border)", borderRadius: 10, padding: "11px", color: "var(--text-dim)", cursor: "pointer" }}
                         >
                           Message
                         </button>
@@ -2978,14 +3058,14 @@ export default function FestivalOptimizer() {
               return (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>OFFICIAL FESTIVAL MAP</span>
-                    {mapInfo && !failed && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{mapInfo.year}</span>}
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px" }}>OFFICIAL FESTIVAL MAP</span>
+                    {mapInfo && !failed && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)" }}>{mapInfo.year}</span>}
                   </div>
                   {mapInfo && !failed ? (
                     <>
                       <button
                         onClick={() => setOfficialMapOpen(true)}
-                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
                       >
                         <img
                           src={mapInfo.src}
@@ -3016,9 +3096,9 @@ export default function FestivalOptimizer() {
                       )}
                     </>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed #2A2440", borderRadius: 14, background: "#151024" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed var(--border)", borderRadius: 14, background: "#151024" }}>
                       <Icon name="map" active={false} />
-                      <span style={{ fontSize: 12.5, color: "#5B5470", textAlign: "center", maxWidth: 220 }}>
+                      <span style={{ fontSize: 12.5, color: "var(--text-dimmer)", textAlign: "center", maxWidth: 220 }}>
                         {festivalName}'s official map isn't available yet — check back closer to the festival.
                       </span>
                     </div>
@@ -3030,12 +3110,12 @@ export default function FestivalOptimizer() {
             {FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival] && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", letterSpacing: "0.3px" }}>CAMPING MAP</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].year}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px" }}>CAMPING MAP</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)" }}>{FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].year}</span>
                 </div>
                 <button
                   onClick={() => setCampingMapOpen(true)}
-                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
                 >
                   <img
                     src={FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].src}
@@ -3059,7 +3139,7 @@ export default function FestivalOptimizer() {
             onClick={() => setCampingMapOpen(false)}
           >
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
-              <button onClick={() => setCampingMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
+              <button onClick={() => setCampingMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
             </div>
             <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain" }} onClick={(e) => e.stopPropagation()}>
               <img
@@ -3110,14 +3190,14 @@ export default function FestivalOptimizer() {
                         padding: "8px 12px", borderRadius: 20, flexShrink: 0,
                         border: `1px solid ${pinPlacing === type ? info.color : "rgba(255,255,255,0.2)"}`,
                         background: pinPlacing === type ? `${info.color}26` : "rgba(255,255,255,0.08)",
-                        color: pinPlacing === type ? info.color : "#F5F0FF", cursor: "pointer",
+                        color: pinPlacing === type ? info.color : "var(--text)", cursor: "pointer",
                       }}
                     >
                       {info.emoji} {pinPlacing === type ? "Tap the map…" : info.label}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
+                <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
               </div>
 
               {pinActionError && (
@@ -3139,7 +3219,7 @@ export default function FestivalOptimizer() {
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
                         position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
-                        width: 36, height: 36, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "#5B5470",
+                        width: 36, height: 36, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "var(--text-dimmer)",
                         border: "3px solid #0F0B1A", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
                         display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, cursor: "pointer",
                       }}
@@ -3153,7 +3233,7 @@ export default function FestivalOptimizer() {
                       onClick={(e) => { e.stopPropagation(); setOpenMapPin(p); }}
                       style={{
                         position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)",
-                        width: 38, height: 38, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "#5B5470",
+                        width: 38, height: 38, borderRadius: "50%", background: PIN_TYPES[p.pin_type]?.color || "var(--text-dimmer)",
                         border: "3px solid #F5F0FF", boxShadow: "0 2px 6px rgba(0,0,0,0.7)",
                         display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, cursor: "pointer",
                       }}
@@ -3169,13 +3249,13 @@ export default function FestivalOptimizer() {
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     position: "absolute", left: 14, right: 14, bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-                    background: "#171229", border: "1px solid #2A2440", borderRadius: 14, padding: "14px 16px",
+                    background: "#171229", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{
                       width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                      background: PIN_TYPES[openMapPin.pin_type]?.color || "#5B5470",
+                      background: PIN_TYPES[openMapPin.pin_type]?.color || "var(--text-dimmer)",
                       border: openMapPin.profile_id === profile?.id ? "2px solid #F5F0FF" : "2px solid #0F0B1A",
                       display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13,
                     }}>
@@ -3185,9 +3265,9 @@ export default function FestivalOptimizer() {
                       <div style={{ fontSize: 13.5, fontWeight: 700 }}>
                         {PIN_TYPES[openMapPin.pin_type]?.label || "Pin"} · {openMapPin.profile_id === profile?.id ? "You" : openMapPin.profiles?.name || "Crew member"}
                       </div>
-                      {openMapPin.note && <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 1 }}>{openMapPin.note}</div>}
+                      {openMapPin.note && <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 1 }}>{openMapPin.note}</div>}
                     </div>
-                    <button onClick={() => setOpenMapPin(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>×</button>
+                    <button onClick={() => setOpenMapPin(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 18, cursor: "pointer", flexShrink: 0 }}>×</button>
                   </div>
                   {openMapPin.profile_id === profile?.id && (
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -3201,7 +3281,7 @@ export default function FestivalOptimizer() {
                             setOpenMapPin(null);
                           }
                         }}
-                        style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: "#F5F0FF", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                        style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: "var(--text)", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", outline: "none" }}
                       />
                       <button
                         onClick={() => { deleteCampPin(openMapPin.id, currentFestival); setOpenMapPin(null); }}
@@ -3223,7 +3303,7 @@ export default function FestivalOptimizer() {
             onClick={() => setLineupFlyerOpen(false)}
           >
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
-              <button onClick={() => setLineupFlyerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#F5F0FF", fontSize: 26, cursor: "pointer" }}>×</button>
+              <button onClick={() => setLineupFlyerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text)", fontSize: 26, cursor: "pointer" }}>×</button>
             </div>
             <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
               <img
@@ -3248,19 +3328,19 @@ export default function FestivalOptimizer() {
         {/* Detail sheet */}
         {selected && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: "0.5px" }}>{selected.artist}</span>
                     {ARTIST_VERIFICATION[selected.id] === "verified" && <Icon name="verified" />}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3", marginTop: 2 }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
                     {activeStages.find((st) => st.id === selected.stage)?.name} · {fmtTime(selected.start, selected.day, selected.festival)}–{fmtTime(selected.end, selected.day, selected.festival)} · {selected.genre}
                   </div>
                 </div>
-                <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(selected.match), border: `1px solid ${matchColor(selected.match)}`, borderRadius: 6, padding: "3px 9px" }}>{selected.match == null ? "No match data" : `${selected.match}% match`}</span>
@@ -3273,9 +3353,9 @@ export default function FestivalOptimizer() {
                 onClick={() => toggleSchedulePick(selected.id)}
                 style={{
                   width: "100%", marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, padding: "11px", borderRadius: 10, cursor: "pointer",
-                  border: `1px solid ${schedulePickedIds.has(selected.id) ? "#9D6BFF" : "#2A2440"}`,
+                  border: `1px solid ${schedulePickedIds.has(selected.id) ? "#9D6BFF" : "var(--border)"}`,
                   background: schedulePickedIds.has(selected.id) ? "rgba(157,107,255,0.12)" : "transparent",
-                  color: schedulePickedIds.has(selected.id) ? "#9D6BFF" : "#8B85A3",
+                  color: schedulePickedIds.has(selected.id) ? "#9D6BFF" : "var(--text-dim)",
                 }}
               >
                 {schedulePickedIds.has(selected.id) ? "✓ On your schedule" : "+ Add to my schedule"}
@@ -3288,7 +3368,7 @@ export default function FestivalOptimizer() {
               {selected.sounds_like ? (
                 <p style={{ marginTop: 12, fontSize: 14, color: "#C9C3E0", lineHeight: 1.5 }}>{selected.sounds_like}</p>
               ) : (
-                <p style={{ marginTop: 12, fontSize: 14, color: "#5B5470", lineHeight: 1.5 }}>New to your library — no direct match yet.</p>
+                <p style={{ marginTop: 12, fontSize: 14, color: "var(--text-dimmer)", lineHeight: 1.5 }}>New to your library — no direct match yet.</p>
               )}
               {ARTIST_VERIFICATION[selected.id] === "verified" && ARTIST_EXCLUSIVES[selected.id] && (
                 <div style={{ marginTop: 14, border: "1px solid #FFB23D", borderRadius: 12, padding: "12px 14px", background: "rgba(255,178,61,0.08)" }}>
@@ -3301,22 +3381,22 @@ export default function FestivalOptimizer() {
                   {selected.match >= ARTIST_EXCLUSIVES[selected.id].unlockAt ? (
                     <p style={{ margin: 0, fontSize: 13, color: "#FFD9A0", lineHeight: 1.5 }}>{ARTIST_EXCLUSIVES[selected.id].text}</p>
                   ) : (
-                    <p style={{ margin: 0, fontSize: 12.5, color: "#8B85A3", lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: 12.5, color: "var(--text-dim)", lineHeight: 1.5 }}>
                       Unlocks at {ARTIST_EXCLUSIVES[selected.id].unlockAt}% match — you're at {selected.match}%.
                     </p>
                   )}
                 </div>
               )}
               {ARTIST_VERIFICATION[selected.id] === "pending" && (
-                <div style={{ marginTop: 14, border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px" }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#8B85A3" }}>
+                <div style={{ marginTop: 14, border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px" }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dim)" }}>
                     Claim under review — exclusive content unlocks once {selected.artist}'s team is verified.
                   </span>
                 </div>
               )}
               {ARTIST_VERIFICATION[selected.id] === "unclaimed" && (
-                <div style={{ marginTop: 14, border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 12.5, color: "#8B85A3" }}>Is this {selected.artist} or their team?</span>
+                <div style={{ marginTop: 14, border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ fontSize: 12.5, color: "var(--text-dim)" }}>Is this {selected.artist} or their team?</span>
                   <button
                     onClick={() => { setClaimTarget(selected); setSelected(null); }}
                     style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, whiteSpace: "nowrap", background: "none", border: "1px solid #9D6BFF", borderRadius: 20, padding: "5px 11px", color: "#9D6BFF", cursor: "pointer" }}
@@ -3332,17 +3412,17 @@ export default function FestivalOptimizer() {
         {/* Invite sheet */}
         {inviteOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setInviteOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Invite to {activeCrew?.name}</div>
-                <button onClick={() => setInviteOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setInviteOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
-              <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px" }}>
+              <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "6px 0 16px" }}>
                 Anyone with this code can join and see the crew — they choose their own taste-sharing later.
               </p>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "12px 14px", marginBottom: 14, opacity: isOnline ? 1 : 0.5 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, opacity: isOnline ? 1 : 0.5 }}>
                 <span style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px", color: "#3DF2E0" }}>{activeCrew?.code}</span>
                 <button
                   disabled={!isOnline}
@@ -3353,7 +3433,7 @@ export default function FestivalOptimizer() {
                 </button>
               </div>
 
-              <button disabled={!isOnline} style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: isOnline ? "#F5F0FF" : "#5B5470", cursor: isOnline ? "pointer" : "not-allowed", marginBottom: 6 }}>
+              <button disabled={!isOnline} style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: isOnline ? "var(--text)" : "var(--text-dimmer)", cursor: isOnline ? "pointer" : "not-allowed", marginBottom: 6 }}>
                 Share invite link
               </button>
               {!isOnline && (
@@ -3361,10 +3441,10 @@ export default function FestivalOptimizer() {
               )}
               {isOnline && <div style={{ marginBottom: 16 }} />}
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderTop: "1px solid #2A2440" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderTop: "1px solid var(--border)" }}>
                 <div>
                   <div style={{ fontSize: 13 }}>Keep this crew after the festival</div>
-                  <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>Off starts it fresh for next time</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 2 }}>Off starts it fresh for next time</div>
                 </div>
                 <button
                   onClick={() => setCrewPersistent((v) => !v)}
@@ -3373,20 +3453,20 @@ export default function FestivalOptimizer() {
                   aria-label="Keep this crew after the festival"
                   style={{
                     width: 42, height: 24, borderRadius: 12, border: "none", cursor: "pointer", position: "relative", flexShrink: 0,
-                    background: crewPersistent ? "#3DF2E0" : "#2A2440",
+                    background: crewPersistent ? "#3DF2E0" : "var(--border)",
                   }}
                 >
                   <span style={{ position: "absolute", top: 2, left: crewPersistent ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#0F0B1A", transition: "left .15s ease" }} />
                 </button>
               </div>
 
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>PENDING</div>
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>PENDING</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {PENDING_INVITES.map((inv) => (
                     <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                       <span>{inv.label}</span>
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: inv.status === "pending" ? "#5B5470" : "#3DF2E0" }}>{inv.status}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: inv.status === "pending" ? "var(--text-dimmer)" : "#3DF2E0" }}>{inv.status}</span>
                     </div>
                   ))}
                 </div>
@@ -3396,7 +3476,7 @@ export default function FestivalOptimizer() {
                 <div style={{ marginTop: 14, fontSize: 12, color: "#FF3DA6" }}>{crewActionError}</div>
               )}
 
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
                 {activeCrew?.created_by === profile?.id ? (
                   <button
                     disabled={crewActionPending}
@@ -3409,7 +3489,7 @@ export default function FestivalOptimizer() {
                   <button
                     disabled={crewActionPending}
                     onClick={() => handleLeaveCrew(activeCrew.id)}
-                    style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1 }}
+                    style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: crewActionPending ? "default" : "pointer", opacity: crewActionPending ? 0.6 : 1 }}
                   >
                     Leave crew
                   </button>
@@ -3427,8 +3507,8 @@ export default function FestivalOptimizer() {
         {/* My Crews — every crew you're in, across every festival, with rename */}
         {myCrewsOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -3439,12 +3519,12 @@ export default function FestivalOptimizer() {
                   >
                     +
                   </button>
-                  <button onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                  <button onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
                 {crews.map((c) => (
-                  <div key={c.id} style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "12px 14px" }}>
+                  <div key={c.id} style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px" }}>
                     {editingCrewId === c.id ? (
                       <div style={{ display: "flex", gap: 8 }}>
                         <input
@@ -3453,7 +3533,7 @@ export default function FestivalOptimizer() {
                           value={crewNameDraft}
                           onChange={(e) => setCrewNameDraft(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") saveCrewRename(c.id); if (e.key === "Escape") setEditingCrewId(null); }}
-                          style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 14, color: "#F5F0FF", background: "#0F0B1A", border: "1px solid #3DF2E0", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                          style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 14, color: "var(--text)", background: "var(--bg)", border: "1px solid #3DF2E0", borderRadius: 8, padding: "8px 10px", outline: "none" }}
                         />
                         <button onClick={() => saveCrewRename(c.id)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "0 12px", borderRadius: 8, border: "none", background: "#3DF2E0", color: "#0F0B1A", cursor: "pointer" }}>Save</button>
                       </div>
@@ -3466,7 +3546,7 @@ export default function FestivalOptimizer() {
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#FFB23D", border: "1px solid #FFB23D", borderRadius: 10, padding: "1px 6px", flexShrink: 0 }}>LEADER</span>
                             )}
                           </div>
-                          <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>
+                          <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 2 }}>
                             {c.members.length + 1} members · {c.persistent ? "persists everywhere" : FESTIVALS.find((f) => f.id === c.festival)?.name || c.festival}
                           </div>
                         </div>
@@ -3474,7 +3554,7 @@ export default function FestivalOptimizer() {
                           <button
                             onClick={() => { setEditingCrewId(c.id); setCrewNameDraft(c.name); }}
                             aria-label={`Rename ${c.name}`}
-                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "5px 11px", color: "#8B85A3", cursor: "pointer" }}
+                            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid var(--border)", borderRadius: 20, padding: "5px 11px", color: "var(--text-dim)", cursor: "pointer" }}
                           >
                             Rename
                           </button>
@@ -3496,14 +3576,14 @@ export default function FestivalOptimizer() {
 
         {createCrewOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setCreateCrewOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Create a crew</div>
-                <button onClick={() => setCreateCrewOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setCreateCrewOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
 
-              <label style={{ display: "block", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3" }}>
+              <label style={{ display: "block", marginTop: 18, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
                 Crew name
                 <input
                   autoFocus
@@ -3512,7 +3592,7 @@ export default function FestivalOptimizer() {
                   onKeyDown={(e) => { if (e.key === "Enter") submitNewCrew(); }}
                   placeholder="Crew name"
                   aria-label="New crew name"
-                  style={{ width: "100%", marginTop: 6, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontSize: 15 }}
+                  style={{ width: "100%", marginTop: 6, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 15 }}
                 />
               </label>
 
@@ -3523,8 +3603,8 @@ export default function FestivalOptimizer() {
                 disabled={!newCrewName.trim() || creatingCrew}
                 style={{
                   width: "100%", marginTop: 18, borderRadius: 12, padding: "13px", border: "none", fontSize: 14, fontWeight: 700, cursor: !newCrewName.trim() || creatingCrew ? "default" : "pointer",
-                  background: !newCrewName.trim() ? "#2A2440" : "linear-gradient(90deg, #3DF2E0, #9D6BFF)",
-                  color: !newCrewName.trim() ? "#5B5470" : "#0F0B1A",
+                  background: !newCrewName.trim() ? "var(--border)" : "linear-gradient(90deg, #3DF2E0, #9D6BFF)",
+                  color: !newCrewName.trim() ? "var(--text-dimmer)" : "#0F0B1A",
                   opacity: creatingCrew ? 0.7 : 1,
                 }}
               >
@@ -3537,8 +3617,8 @@ export default function FestivalOptimizer() {
         {/* Profile sheet */}
         {profileOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 48, height: 48, borderRadius: "50%", background: (editingProfile ? editColor : profile.color) || "linear-gradient(135deg, #3DF2E0, #9D6BFF)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, color: "#0F0B1A", flexShrink: 0 }}>
@@ -3552,16 +3632,16 @@ export default function FestivalOptimizer() {
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Display name"
                         aria-label="Display name"
-                        style={{ width: "100%", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "6px 10px", color: "#F5F0FF", fontSize: 14 }}
+                        style={{ width: "100%", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 10px", color: "var(--text)", fontSize: 14 }}
                       />
-                      <div style={{ display: "flex", alignItems: "center", background: "#0F0B1A", border: "1px solid #2A2440", borderRadius: 8, padding: "0 10px" }}>
-                        <span style={{ color: "#5B5470", fontSize: 13 }}>@</span>
+                      <div style={{ display: "flex", alignItems: "center", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "0 10px" }}>
+                        <span style={{ color: "var(--text-dimmer)", fontSize: 13 }}>@</span>
                         <input
                           value={editHandle}
                           onChange={(e) => setEditHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                           placeholder="handle"
                           aria-label="Handle"
-                          style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "#F5F0FF", fontSize: 14 }}
+                          style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "var(--text)", fontSize: 14 }}
                         />
                       </div>
                       <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
@@ -3587,17 +3667,17 @@ export default function FestivalOptimizer() {
                   ) : (
                     <>
                       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{profile.name}</div>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#5B5470" }}>@{profile.handle}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dimmer)" }}>@{profile.handle}</div>
                       <div style={{ marginTop: 4 }}><TierBadge username="you" /></div>
                     </>
                   )}
                 </div>
                 {!editingProfile && (
-                  <button onClick={startEditingProfile} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", color: "#8B85A3", cursor: "pointer", flexShrink: 0 }}>
+                  <button onClick={startEditingProfile} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", color: "var(--text-dim)", cursor: "pointer", flexShrink: 0 }}>
                     Edit
                   </button>
                 )}
-                <button onClick={() => setProfileOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setProfileOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
               {editingProfile && (
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -3610,7 +3690,7 @@ export default function FestivalOptimizer() {
                   </button>
                   <button
                     onClick={() => setEditingProfile(false)}
-                    style={{ flex: 1, background: "none", border: "1px solid #2A2440", borderRadius: 8, padding: "8px", color: "#8B85A3", fontSize: 12.5, cursor: "pointer" }}
+                    style={{ flex: 1, background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "8px", color: "var(--text-dim)", fontSize: 12.5, cursor: "pointer" }}
                   >
                     Cancel
                   </button>
@@ -3621,26 +3701,26 @@ export default function FestivalOptimizer() {
               )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-                <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
+                <div style={{ flex: 1, border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{effectiveSets.filter((s) => s.festival === currentFestival && s.match >= threshold).length}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>MATCHED SETS</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)" }}>MATCHED SETS</div>
                 </div>
-                <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
+                <div style={{ flex: 1, border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{schedulePickedIds.size}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>MY SCHEDULE</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)" }}>MY SCHEDULE</div>
                 </div>
-                <div style={{ flex: 1, border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
+                <div style={{ flex: 1, border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", textAlign: "center" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20 }}>{crews.length}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470" }}>CREWS</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)" }}>CREWS</div>
                 </div>
               </div>
 
               <div style={{ marginTop: 18 }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>CONNECTED ACCOUNTS</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>CONNECTED ACCOUNTS</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>Spotify</div>
-                    <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>
+                    <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>
                       {spotify.connection
                         ? spotify.connection.top_genre
                           ? `Top genre: ${spotify.connection.top_genre.replace(/\b\w/g, (ch) => ch.toUpperCase())}`
@@ -3655,7 +3735,7 @@ export default function FestivalOptimizer() {
                   <button
                     onClick={spotify.connection ? spotify.disconnect : spotify.connect}
                     disabled={spotify.loading}
-                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: `1px solid ${spotify.connection ? "#2A2440" : "#3DF2E0"}`, borderRadius: 20, padding: "3px 9px", color: spotify.connection ? "#8B85A3" : "#3DF2E0", cursor: spotify.loading ? "default" : "pointer" }}
+                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: `1px solid ${spotify.connection ? "var(--border)" : "#3DF2E0"}`, borderRadius: 20, padding: "3px 9px", color: spotify.connection ? "var(--text-dim)" : "#3DF2E0", cursor: spotify.loading ? "default" : "pointer" }}
                   >
                     {spotify.connection ? "Disconnect" : "Connect"}
                   </button>
@@ -3664,28 +3744,28 @@ export default function FestivalOptimizer() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>Soundcloud</div>
-                    <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>Not available yet</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>Not available yet</div>
                   </div>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470", border: "1px solid #2A2440", borderRadius: 20, padding: "3px 9px" }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", border: "1px solid var(--border)", borderRadius: 20, padding: "3px 9px" }}>
                     Coming soon
                   </span>
                 </div>
               </div>
 
               <div style={{ marginTop: 18 }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>YOUR CREWS</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>YOUR CREWS</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {crews.map((c) => (
                     <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
-                        <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {FESTIVALS.find((f) => f.id === c.festival)?.name} · {c.persistent ? "Persists after this festival" : "This festival only"}
                         </div>
                       </div>
                       <button
                         onClick={() => { setProfileOpen(false); setCurrentFestival(c.festival); setActiveCrewId(c.id); setView("crew"); }}
-                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", color: "#8B85A3", cursor: "pointer" }}
+                        style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", color: "var(--text-dim)", cursor: "pointer" }}
                       >
                         Manage
                       </button>
@@ -3694,16 +3774,23 @@ export default function FestivalOptimizer() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>SETTINGS</div>
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>SETTINGS</div>
                 <button
                   onClick={togglePushEnabled}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", background: "none", border: "none", cursor: "pointer" }}
                 >
-                  <span style={{ fontSize: 13, color: "#F5F0FF" }}>Push notifications</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: pushEnabled ? "#3DF2E0" : "#5B5470" }}>{pushEnabled ? "On" : "Off"}</span>
+                  <span style={{ fontSize: 13, color: "var(--text)" }}>Push notifications</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: pushEnabled ? "#3DF2E0" : "var(--text-dimmer)" }}>{pushEnabled ? "On" : "Off"}</span>
                 </button>
                 {pushError && <div style={{ fontSize: 11.5, color: "#FF3DA6", padding: "0 0 8px" }}>{pushError}</div>}
+                <button
+                  onClick={toggleTheme}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  <span style={{ fontSize: 13, color: "var(--text)" }}>Appearance</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#9D6BFF" }}>{theme === "dark" ? "Dark" : "Light"}</span>
+                </button>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
                   <span style={{ fontSize: 13 }}>Camp pin visible to crew</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#3DF2E0" }}>On</span>
@@ -3714,13 +3801,13 @@ export default function FestivalOptimizer() {
                 Sign out
               </button>
 
-              <button onClick={() => setDeleteAccountOpen(true)} style={{ width: "100%", marginTop: 10, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "10px", borderRadius: 10, border: "1px solid #2A2440", background: "transparent", color: "#5B5470", cursor: "pointer" }}>
+              <button onClick={() => setDeleteAccountOpen(true)} style={{ width: "100%", marginTop: 10, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "10px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dimmer)", cursor: "pointer" }}>
                 Delete account
               </button>
 
               <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16 }}>
-                <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#5B5470" }}>Privacy Policy</a>
-                <a href="/terms.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#5B5470" }}>Terms of Service</a>
+                <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--text-dimmer)" }}>Privacy Policy</a>
+                <a href="/terms.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--text-dimmer)" }}>Terms of Service</a>
               </div>
             </div>
           </div>
@@ -3732,10 +3819,10 @@ export default function FestivalOptimizer() {
           return (
             <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { if (!deletingAccount) setDeleteAccountOpen(false); }}>
               <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
-                <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px", color: "#FF3DA6" }}>Delete account</div>
-                  <button onClick={() => setDeleteAccountOpen(false)} disabled={deletingAccount} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: deletingAccount ? "default" : "pointer" }}>×</button>
+                  <button onClick={() => setDeleteAccountOpen(false)} disabled={deletingAccount} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: deletingAccount ? "default" : "pointer" }}>×</button>
                 </div>
 
                 <p style={{ marginTop: 14, fontSize: 13.5, color: "#C9C3E0", lineHeight: 1.5 }}>
@@ -3763,7 +3850,7 @@ export default function FestivalOptimizer() {
                 <button
                   onClick={() => setDeleteAccountOpen(false)}
                   disabled={deletingAccount}
-                  style={{ width: "100%", marginTop: 10, borderRadius: 12, padding: "13px", border: "1px solid #2A2440", fontSize: 13, background: "transparent", color: "#8B85A3", cursor: deletingAccount ? "default" : "pointer" }}
+                  style={{ width: "100%", marginTop: 10, borderRadius: 12, padding: "13px", border: "1px solid var(--border)", fontSize: 13, background: "transparent", color: "var(--text-dim)", cursor: deletingAccount ? "default" : "pointer" }}
                 >
                   Cancel
                 </button>
@@ -3775,13 +3862,13 @@ export default function FestivalOptimizer() {
         {/* Artist claim sheet */}
         {claimTarget && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setClaimTarget(null)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>Claim {claimTarget.artist}</div>
-                <button onClick={() => setClaimTarget(null)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setClaimTarget(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
-              <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "6px 0 16px", lineHeight: 1.5 }}>
                 Verification protects fans from impersonation and unlocks posting and exclusive content for the real artist or their management.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
@@ -3790,16 +3877,16 @@ export default function FestivalOptimizer() {
                   { label: "Linked official socials", hint: "cross-checked against verified accounts elsewhere" },
                   { label: "Government or business ID", hint: "for the person submitting the claim" },
                 ].map((f) => (
-                  <div key={f.label} style={{ border: "1px solid #2A2440", borderRadius: 10, padding: "10px 12px" }}>
+                  <div key={f.label} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px" }}>
                     <div style={{ fontSize: 13 }}>{f.label}</div>
-                    <div style={{ fontSize: 11, color: "#5B5470", marginTop: 2 }}>{f.hint}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 2 }}>{f.hint}</div>
                   </div>
                 ))}
               </div>
               <button style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "12px", borderRadius: 10, border: "1px solid #9D6BFF", background: "rgba(157,107,255,0.12)", color: "#9D6BFF", cursor: "pointer" }}>
                 Submit for review
               </button>
-              <p style={{ fontSize: 11, color: "#5B5470", margin: "10px 0 0", textAlign: "center" }}>Most claims are reviewed within a few days.</p>
+              <p style={{ fontSize: 11, color: "var(--text-dimmer)", margin: "10px 0 0", textAlign: "center" }}>Most claims are reviewed within a few days.</p>
             </div>
           </div>
         )}
@@ -3807,25 +3894,25 @@ export default function FestivalOptimizer() {
         {/* Festival picker */}
         {festivalPickerOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Your festivals</div>
-                <button onClick={() => setFestivalPickerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setFestivalPickerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
-              <p style={{ fontSize: 12.5, color: "#8B85A3", margin: "6px 0 16px", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12.5, color: "var(--text-dim)", margin: "6px 0 16px", lineHeight: 1.5 }}>
                 Starting with the major recurring festivals — full schedules, crews, and maps are only loaded for the ones we've built real data for so far.
               </p>
 
               <div style={{ position: "relative", marginBottom: 14 }}>
-                <svg viewBox="0 0 24 24" width="15" height="15" stroke="#5B5470" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
                 <input
                   value={festivalSearch}
                   onChange={(e) => setFestivalSearch(e.target.value)}
                   placeholder="Search festivals or cities…"
                   style={{
-                    width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "#F5F0FF",
-                    background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12,
+                    width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                    background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12,
                     padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                   }}
                 />
@@ -3833,7 +3920,7 @@ export default function FestivalOptimizer() {
                   <button
                     onClick={() => setFestivalSearch("")}
                     aria-label="Clear search"
-                    style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#5B5470", fontSize: 16, cursor: "pointer", padding: 4 }}
+                    style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-dimmer)", fontSize: 16, cursor: "pointer", padding: 4 }}
                   >
                     ×
                   </button>
@@ -3855,14 +3942,14 @@ export default function FestivalOptimizer() {
                     const requested = requestedFestivalIds.has(f.id);
                     const isAttending = attendingIds.has(f.id);
                     return (
-                      <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "#2A2440"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
+                      <div key={f.id} style={{ border: `1px solid ${f.hasData ? "#3DF2E0" : "var(--border)"}`, borderRadius: 12, padding: "12px 14px", background: f.hasData ? "rgba(61,242,224,0.08)" : "transparent" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
                               {f.name}
                               {f.hasData && <Icon name="verified" />}
                             </div>
-                            <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
+                            <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 2 }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
@@ -3872,7 +3959,7 @@ export default function FestivalOptimizer() {
                             aria-pressed={isAttending}
                             style={{ background: "none", border: "none", padding: 10, margin: -10, cursor: "pointer", display: "flex", lineHeight: 0 }}
                           >
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "var(--text-dimmer)"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
                           </button>
                           {f.hasData ? (
                             f.id === currentFestival ? (
@@ -3894,9 +3981,9 @@ export default function FestivalOptimizer() {
                               disabled={requested}
                               style={{
                                 fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, whiteSpace: "nowrap", padding: "5px 10px", borderRadius: 20, flexShrink: 0,
-                                border: `1px solid ${requested ? "#2A2440" : "#9D6BFF"}`,
+                                border: `1px solid ${requested ? "var(--border)" : "#9D6BFF"}`,
                                 background: requested ? "transparent" : "rgba(157,107,255,0.12)",
-                                color: requested ? "#5B5470" : "#9D6BFF", cursor: requested ? "default" : "pointer",
+                                color: requested ? "var(--text-dimmer)" : "#9D6BFF", cursor: requested ? "default" : "pointer",
                               }}
                             >
                               {requested ? "Requested" : "Request data"}
@@ -3912,8 +3999,8 @@ export default function FestivalOptimizer() {
                     const filtered = FESTIVALS.filter((f) => f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q)).sort(byDateSoonestFirst);
                     if (filtered.length === 0) {
                       return (
-                        <div style={{ border: "1px solid #2A2440", borderRadius: 12, padding: "20px 14px", textAlign: "center" }}>
-                          <div style={{ fontSize: 13, color: "#8B85A3" }}>No festivals match "{festivalSearch}"</div>
+                        <div style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "20px 14px", textAlign: "center" }}>
+                          <div style={{ fontSize: 13, color: "var(--text-dim)" }}>No festivals match "{festivalSearch}"</div>
                         </div>
                       );
                     }
@@ -3930,9 +4017,9 @@ export default function FestivalOptimizer() {
                     <>
                       {recents.length > 0 && (
                         <>
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3", letterSpacing: "0.3px" }}>RECENTLY VIEWED</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", letterSpacing: "0.3px" }}>RECENTLY VIEWED</div>
                           {recents.map(renderRow)}
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3", letterSpacing: "0.3px", marginTop: 4 }}>ALL FESTIVALS</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", letterSpacing: "0.3px", marginTop: 4 }}>ALL FESTIVALS</div>
                         </>
                       )}
                       {visible.map(renderRow)}
@@ -3941,19 +4028,19 @@ export default function FestivalOptimizer() {
                           onClick={() => setPickerExpanded((v) => !v)}
                           style={{
                             textAlign: "center", cursor: "pointer", background: "none", border: "none",
-                            fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "#8B85A3",
+                            fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dim)",
                             padding: "8px 6px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                           }}
                         >
                           {pickerExpanded ? "Show fewer" : `Show ${hiddenCount} more`}
-                          <svg viewBox="0 0 24 24" width="12" height="12" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: pickerExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
+                          <svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--text-dim)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: pickerExpanded ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6"/></svg>
                         </button>
                       )}
                     </>
                   );
                 })()}
               </div>
-              <p style={{ fontSize: 11, color: "#5B5470", margin: "14px 0 0", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 11, color: "var(--text-dimmer)", margin: "14px 0 0", lineHeight: 1.5 }}>
                 Requesting a festival tells us where to prioritize building real schedule data next — it doesn't switch your view yet.
               </p>
             </div>
@@ -3963,17 +4050,17 @@ export default function FestivalOptimizer() {
         {/* Notifications inbox */}
         {notificationsOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Notifications</div>
-                <button onClick={() => setNotificationsOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setNotificationsOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 6 }}>
                 <div>
                   <div style={{ fontSize: 13 }}>Push notifications</div>
-                  <div style={{ fontSize: 11, color: "#5B5470", marginTop: 1 }}>{pushEnabled ? "On — you'll see banners when things happen" : "Off — still logged here, just no banners"}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 1 }}>{pushEnabled ? "On — you'll see banners when things happen" : "Off — still logged here, just no banners"}</div>
                 </div>
                 <button
                   onClick={togglePushEnabled}
@@ -3982,7 +4069,7 @@ export default function FestivalOptimizer() {
                   aria-label="Push notifications"
                   style={{
                     width: 42, height: 24, borderRadius: 12, border: "none", cursor: "pointer", position: "relative", flexShrink: 0,
-                    background: pushEnabled ? "#3DF2E0" : "#2A2440",
+                    background: pushEnabled ? "#3DF2E0" : "var(--border)",
                   }}
                 >
                   <span style={{ position: "absolute", top: 2, left: pushEnabled ? 20 : 2, width: 20, height: 20, borderRadius: "50%", background: "#0F0B1A", transition: "left .15s ease" }} />
@@ -3994,14 +4081,14 @@ export default function FestivalOptimizer() {
                 onClick={simulateNotification}
                 style={{
                   width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "10px", borderRadius: 10, marginTop: 8, marginBottom: 16,
-                  border: "1px dashed #3A3552", background: "transparent", color: "#5B5470", cursor: "pointer",
+                  border: "1px dashed #3A3552", background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                 }}
               >
                 Simulate a notification
               </button>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {notifications.length === 0 && <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center" }}>Nothing yet.</p>}
+                {notifications.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center" }}>Nothing yet.</p>}
                 {notifications.map((n) => {
                   const iconName = n.type === "dm" ? "messages" : n.type === "set" ? "schedule" : n.type === "community" ? "community" : "verified";
                   const color = n.type === "dm" ? "#9D6BFF" : n.type === "set" ? "#3DF2E0" : n.type === "community" ? "#5FD97A" : "#FFB23D";
@@ -4011,7 +4098,7 @@ export default function FestivalOptimizer() {
                       onClick={() => openNotification(n)}
                       style={{
                         display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left",
-                        border: `1px solid ${n.read ? "#2A2440" : color}`, borderRadius: 12, padding: "11px 12px",
+                        border: `1px solid ${n.read ? "var(--border)" : color}`, borderRadius: 12, padding: "11px 12px",
                         background: n.read ? "transparent" : `${color}14`, cursor: "pointer",
                       }}
                     >
@@ -4023,8 +4110,8 @@ export default function FestivalOptimizer() {
                           <span style={{ fontSize: 13, fontWeight: 700 }}>{n.title}</span>
                           {!n.read && <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />}
                         </div>
-                        <div style={{ fontSize: 12, color: "#8B85A3", marginTop: 2 }}>{n.body}</div>
-                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", marginTop: 4 }}>{relativeTime(n.created_at)}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>{n.body}</div>
+                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)", marginTop: 4 }}>{relativeTime(n.created_at)}</div>
                       </div>
                     </button>
                   );
@@ -4037,8 +4124,8 @@ export default function FestivalOptimizer() {
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveRealThreadId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #2A2440", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               {!activeRealThreadId ? (
                 <>
@@ -4053,7 +4140,7 @@ export default function FestivalOptimizer() {
                           + New
                         </button>
                       )}
-                      <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                      <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16, flex: 1, minHeight: 0, overflowY: "auto" }}>
@@ -4063,7 +4150,7 @@ export default function FestivalOptimizer() {
                         onClick={() => setActiveRealThreadId(t.id)}
                         style={{
                           display: "flex", alignItems: "center", gap: 10, textAlign: "left",
-                          border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px",
+                          border: "1px solid var(--border)", borderRadius: 12, padding: "11px 12px",
                           background: "transparent", cursor: "pointer",
                         }}
                       >
@@ -4073,16 +4160,16 @@ export default function FestivalOptimizer() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ fontSize: 13.5, fontWeight: 700 }}>{t.other.name}</span>
                           {t.lastMessage && (
-                            <div style={{ fontSize: 12, color: "#8B85A3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                            <div style={{ fontSize: 12, color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
                               {t.lastMessage.from === "you" ? "You: " : ""}{t.lastMessage.text}
                             </div>
                           )}
                         </div>
-                        {t.lastMessage && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>{relativeTime(t.lastMessage.created_at)}</span>}
+                        {t.lastMessage && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)", flexShrink: 0 }}>{relativeTime(t.lastMessage.created_at)}</span>}
                       </button>
                     ))}
                     {realThreads.filter((t) => t.other).length === 0 && (
-                      <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center", marginTop: 20 }}>
+                      <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center", marginTop: 20 }}>
                         No messages yet — tap "+ New" to message someone you share a crew with.
                       </p>
                     )}
@@ -4095,28 +4182,28 @@ export default function FestivalOptimizer() {
                   return (
                     <>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <button onClick={() => setActiveRealThreadId(null)} aria-label="Back to inbox" style={{ background: "none", border: "none", color: "#8B85A3", cursor: "pointer", padding: 0, display: "flex" }}>
-                          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#8B85A3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                        <button onClick={() => setActiveRealThreadId(null)} aria-label="Back to inbox" style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", padding: 0, display: "flex" }}>
+                          <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--text-dim)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
                         </button>
                         <span style={{ width: 28, height: 28, borderRadius: "50%", background: colorForId(t.other.id, t.other.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {t.other.name[0].toUpperCase()}
                         </span>
                         <span style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.other.name}</span>
                         <div style={{ position: "relative" }}>
-                          <button onClick={() => setDmMenuOpen((v) => !v)} aria-label="Thread options" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>⋯</button>
+                          <button onClick={() => setDmMenuOpen((v) => !v)} aria-label="Thread options" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>⋯</button>
                           {dmMenuOpen && (
                             <>
                               <div style={{ position: "fixed", inset: 0, zIndex: 29 }} onClick={() => setDmMenuOpen(false)} />
-                              <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                              <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
                                 <button
                                   onClick={() => { setDmMenuOpen(false); setReportTarget({ id: t.other.id, name: t.other.name }); }}
-                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "#F5F0FF", cursor: "pointer" }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "var(--text)", cursor: "pointer" }}
                                 >
                                   Report {t.other.name}
                                 </button>
                                 <button
                                   onClick={() => { setDmMenuOpen(false); handleBlockUser(t.other.id, t.other.name); }}
-                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "#FF3DA6", cursor: "pointer", borderTop: "1px solid #2A2440" }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "#FF3DA6", cursor: "pointer", borderTop: "1px solid var(--border)" }}
                                 >
                                   Block {t.other.name}
                                 </button>
@@ -4124,19 +4211,19 @@ export default function FestivalOptimizer() {
                             </>
                           )}
                         </div>
-                        <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                        <button onClick={() => setMessagesOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
                       </div>
                       {blockError && <div style={{ fontSize: 12, color: "#FF3DA6", marginTop: 8 }}>{blockError}</div>}
 
                       <div ref={messagesScrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: 16 }}>
                       <div ref={messagesListRef} style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 160 }}>
-                        {t.messages.length === 0 && <p style={{ fontSize: 13, color: "#5B5470", textAlign: "center" }}>Say hi.</p>}
+                        {t.messages.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center" }}>Say hi.</p>}
                         {t.messages.map((m) => (
                           <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
                             <div style={{
                               maxWidth: "78%", borderRadius: 14, padding: "8px 12px",
                               background: m.from === "you" ? "rgba(61,242,224,0.14)" : "#1E1832",
-                              border: `1px solid ${m.from === "you" ? "#3DF2E0" : "#2A2440"}`,
+                              border: `1px solid ${m.from === "you" ? "#3DF2E0" : "var(--border)"}`,
                             }}>
                               {m.attachment_path && (
                                 m.attachment_type?.startsWith("image/") ? (
@@ -4154,24 +4241,24 @@ export default function FestivalOptimizer() {
                                     rel="noreferrer"
                                     style={{
                                       display: "flex", alignItems: "center", gap: 8, textDecoration: "none",
-                                      background: "rgba(0,0,0,0.18)", border: "1px solid #2A2440", borderRadius: 10,
+                                      background: "rgba(0,0,0,0.18)", border: "1px solid var(--border)", borderRadius: 10,
                                       padding: "8px 10px", marginBottom: m.text ? 6 : 0,
                                     }}
                                   >
                                     <span style={{ fontSize: 16 }}>📄</span>
-                                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
+                                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "var(--text)" }}>
                                       {m.attachment_name || "File"}
                                     </span>
                                     {m.attachment_size != null && (
-                                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", flexShrink: 0 }}>
+                                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)", flexShrink: 0 }}>
                                         {formatFileSize(m.attachment_size)}
                                       </span>
                                     )}
                                   </a>
                                 )
                               )}
-                              {m.text && <div style={{ fontSize: 13.5, color: "#F5F0FF", lineHeight: 1.4 }}>{m.text}</div>}
-                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 3, textAlign: m.from === "you" ? "right" : "left" }}>{relativeTime(m.created_at)}</div>
+                              {m.text && <div style={{ fontSize: 13.5, color: "var(--text)", lineHeight: 1.4 }}>{m.text}</div>}
+                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", marginTop: 3, textAlign: m.from === "you" ? "right" : "left" }}>{relativeTime(m.created_at)}</div>
                             </div>
                           </div>
                         ))}
@@ -4185,16 +4272,16 @@ export default function FestivalOptimizer() {
                       {pendingAttachments.length > 0 && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
                           {pendingAttachments.map(({ id, file }) => (
-                            <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, background: "#1A1428", border: "1px solid #2A2440", borderRadius: 10, padding: "8px 10px" }}>
+                            <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 10px" }}>
                               <span style={{ fontSize: 16 }}>{file.type.startsWith("image/") ? "🖼️" : "📄"}</span>
-                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "#F5F0FF" }}>
+                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "var(--text)" }}>
                                 {file.name}
                               </span>
-                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470" }}>{formatFileSize(file.size)}</span>
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)" }}>{formatFileSize(file.size)}</span>
                               <button
                                 onClick={() => setPendingAttachments((prev) => prev.filter((entry) => entry.id !== id))}
                                 aria-label="Remove attachment"
-                                style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
+                                style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
                               >
                                 ×
                               </button>
@@ -4217,7 +4304,7 @@ export default function FestivalOptimizer() {
                           aria-label="Attach a file"
                           style={{
                             flexShrink: 0, width: 38, height: 38, borderRadius: "50%", fontSize: 16,
-                            border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer",
+                            border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer",
                           }}
                         >
                           📎
@@ -4229,8 +4316,8 @@ export default function FestivalOptimizer() {
                           placeholder={`Message ${t.other.name}…`}
                           aria-label={`Message ${t.other.name}`}
                           style={{
-                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#F5F0FF",
-                            background: "#1A1428", border: "1px solid #2A2440", borderRadius: 20,
+                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
+                            background: "#1A1428", border: "1px solid var(--border)", borderRadius: 20,
                             padding: "10px 14px", outline: "none",
                           }}
                         />
@@ -4282,22 +4369,22 @@ export default function FestivalOptimizer() {
         {reportTarget && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 27, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={closeReportSheet}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px", color: "#FF3DA6" }}>Report {reportTarget.name}</div>
-                <button onClick={closeReportSheet} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={closeReportSheet} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
 
               {reportSubmitted ? (
                 <div style={{ marginTop: 20, textAlign: "center" }}>
                   <div style={{ fontSize: 14, color: "#5FD97A", fontWeight: 700 }}>Report sent</div>
-                  <p style={{ fontSize: 12.5, color: "#8B85A3", marginTop: 8 }}>Thanks — our team will review it. You can also block {reportTarget.name} from a DM thread's ⋯ menu.</p>
-                  <button onClick={closeReportSheet} style={{ marginTop: 16, width: "100%", background: "#2A2440", border: "none", borderRadius: 10, padding: "12px 14px", color: "#F5F0FF", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
+                  <p style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 8 }}>Thanks — our team will review it. You can also block {reportTarget.name} from a DM thread's ⋯ menu.</p>
+                  <button onClick={closeReportSheet} style={{ marginTop: 16, width: "100%", background: "var(--border)", border: "none", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
                 </div>
               ) : (
                 <>
                   <div style={{ marginTop: 18 }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>REASON</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>REASON</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {REPORT_REASONS.map((r) => (
                         <button
@@ -4305,9 +4392,9 @@ export default function FestivalOptimizer() {
                           onClick={() => setReportReason(r)}
                           style={{
                             textAlign: "left", padding: "11px 12px", borderRadius: 12, cursor: "pointer",
-                            border: `1px solid ${reportReason === r ? "#FF3DA6" : "#2A2440"}`,
+                            border: `1px solid ${reportReason === r ? "#FF3DA6" : "var(--border)"}`,
                             background: reportReason === r ? "rgba(255,61,166,0.12)" : "transparent",
-                            color: reportReason === r ? "#FF3DA6" : "#F5F0FF", fontSize: 13.5,
+                            color: reportReason === r ? "#FF3DA6" : "var(--text)", fontSize: 13.5,
                           }}
                         >
                           {r}
@@ -4317,14 +4404,14 @@ export default function FestivalOptimizer() {
                   </div>
 
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>DETAILS (OPTIONAL)</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>DETAILS (OPTIONAL)</div>
                     <textarea
                       value={reportDetails}
                       onChange={(e) => setReportDetails(e.target.value)}
                       placeholder="Anything else that would help us understand what happened"
                       aria-label="Report details"
                       rows={3}
-                      style={{ width: "100%", background: "#1A1428", border: "1px solid #2A2440", borderRadius: 12, padding: "10px 12px", color: "#F5F0FF", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
+                      style={{ width: "100%", background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", color: "var(--text)", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
                     />
                   </div>
 
@@ -4335,8 +4422,8 @@ export default function FestivalOptimizer() {
                     disabled={!reportReason || reportSubmitting}
                     style={{
                       width: "100%", marginTop: 16, borderRadius: 12, padding: "13px", border: "none", fontSize: 14, fontWeight: 700, cursor: !reportReason || reportSubmitting ? "default" : "pointer",
-                      background: !reportReason ? "#2A2440" : "linear-gradient(90deg, #FF3DA6, #9D6BFF)",
-                      color: !reportReason ? "#5B5470" : "#0F0B1A",
+                      background: !reportReason ? "var(--border)" : "linear-gradient(90deg, #FF3DA6, #9D6BFF)",
+                      color: !reportReason ? "var(--text-dimmer)" : "#0F0B1A",
                       opacity: reportSubmitting ? 0.7 : 1,
                     }}
                   >
@@ -4352,14 +4439,14 @@ export default function FestivalOptimizer() {
         {safetyOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "#2A2440", margin: "0 auto 16px" }} />
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Icon name="safety" active={true} />
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px", color: "#FF3DA6" }}>Safety</div>
                 </div>
-                <button onClick={() => setSafetyOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#8B85A3", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setSafetyOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
 
               <a href="tel:911" style={{ display: "block", textDecoration: "none", marginTop: 16, textAlign: "center", fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, fontWeight: 700, padding: "13px", borderRadius: 12, background: "#FF3DA6", color: "#0F0B1A" }}>
@@ -4367,21 +4454,21 @@ export default function FestivalOptimizer() {
               </a>
 
               <div style={{ marginTop: 18 }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>ON-SITE MEDICAL</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>ON-SITE MEDICAL</div>
                 {(SAFETY_INFO.medicalByFestival[currentFestival] || SAFETY_INFO.medicalFallback).map((m) => (
                   <div key={m.name} style={{ padding: "8px 0", borderBottom: "1px solid #201A33" }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
-                    <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1 }}>{m.note}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>{m.note}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: 18 }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>LOST OR SEPARATED FROM YOUR CREW</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>LOST OR SEPARATED FROM YOUR CREW</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {SAFETY_INFO.lostProtocol.map((step, i) => (
                     <div key={i} style={{ display: "flex", gap: 8, fontSize: 12.5, color: "#C9C3E0", lineHeight: 1.5 }}>
-                      <span style={{ color: "#5B5470" }}>{i + 1}.</span>
+                      <span style={{ color: "var(--text-dimmer)" }}>{i + 1}.</span>
                       <span>{step}</span>
                     </div>
                   ))}
@@ -4391,43 +4478,43 @@ export default function FestivalOptimizer() {
                   disabled={notifiedCrew}
                   style={{
                     width: "100%", marginTop: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10,
-                    border: `1px solid ${notifiedCrew ? "#2A2440" : "#3DF2E0"}`,
+                    border: `1px solid ${notifiedCrew ? "var(--border)" : "#3DF2E0"}`,
                     background: notifiedCrew ? "transparent" : "rgba(61,242,224,0.12)",
-                    color: notifiedCrew ? "#5B5470" : "#3DF2E0", cursor: notifiedCrew ? "default" : "pointer",
+                    color: notifiedCrew ? "var(--text-dimmer)" : "#3DF2E0", cursor: notifiedCrew ? "default" : "pointer",
                   }}
                 >
                   {notifiedCrew ? "Crew notified you need help" : "Alert my crew — I need help"}
                 </button>
               </div>
 
-              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>CRISIS SUPPORT</div>
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>CRISIS SUPPORT</div>
                 {SAFETY_INFO.resources.slice(1).map((r) => (
                   <div key={r.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
                     <div>
                       <div style={{ fontSize: 13 }}>{r.label}</div>
-                      <div style={{ fontSize: 11, color: "#5B5470", marginTop: 1 }}>{r.note}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 1 }}>{r.note}</div>
                     </div>
                     {r.tel && (
-                      <a href={`tel:${r.tel}`} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, textDecoration: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", color: "#8B85A3" }}>Call</a>
+                      <a href={`tel:${r.tel}`} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, textDecoration: "none", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", color: "var(--text-dim)" }}>Call</a>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8B85A3", marginBottom: 8 }}>COMMUNITY SAFETY</div>
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>COMMUNITY SAFETY</div>
                 <button
                   onClick={() => { setSafetyOpen(false); setReportPickerOpen(true); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "transparent", color: "#F5F0FF", fontSize: 13, cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", border: "1px solid var(--border)", borderRadius: 12, padding: "11px 12px", background: "transparent", color: "var(--text)", fontSize: 13, cursor: "pointer" }}
                 >
                   Report someone
-                  <span style={{ color: "#5B5470" }}>›</span>
+                  <span style={{ color: "var(--text-dimmer)" }}>›</span>
                 </button>
 
                 {blockedIds.size > 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470", marginBottom: 6 }}>BLOCKED ({blockedIds.size})</div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", marginBottom: 6 }}>BLOCKED ({blockedIds.size})</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {[...blockedIds].map((id) => {
                         const m = allCrewMembers.find((x) => x.id === id);
@@ -4439,7 +4526,7 @@ export default function FestivalOptimizer() {
                                 const result = await unblockUser(id);
                                 if (result?.error) setBlockError(result.error.message || "Couldn't unblock — try again.");
                               }}
-                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, border: "1px solid #2A2440", borderRadius: 20, padding: "4px 10px", background: "transparent", color: "#8B85A3", cursor: "pointer" }}
+                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}
                             >
                               Unblock
                             </button>
@@ -4456,7 +4543,7 @@ export default function FestivalOptimizer() {
 
         {/* Bottom tab bar — mobile/installed app only; browser-desktop uses the sidebar instead */}
         <div className="mobile-bottom-nav-wrap" style={{ position: "fixed", bottom: 0, left: 0, right: 0, justifyContent: "center", zIndex: 10 }}>
-          <div className="frame" style={{ display: "flex", background: "#151024", borderTop: "1px solid #2A2440", padding: "10px 6px calc(10px + env(safe-area-inset-bottom))" }}>
+          <div className="frame" style={{ display: "flex", background: "#151024", borderTop: "1px solid var(--border)", padding: "10px 6px calc(10px + env(safe-area-inset-bottom))" }}>
             {TABS.map((t) => {
               const active = view === t.id;
               return (
