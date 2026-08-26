@@ -1144,7 +1144,7 @@ function PrismLogo({ size = 56 }) {
 }
 
 export function Icon({ name, active }) {
-  const c = active ? "#3DF2E0" : "#6C6786";
+  const c = active ? "#3DF2E0" : "var(--text-dimmer)";
   const s = { width: 22, height: 22, stroke: c, fill: "none", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
   if (name === "schedule") return <svg viewBox="0 0 24 24" style={s}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>;
   if (name === "lineup") return <svg viewBox="0 0 24 24" style={s}><path d="M4 19V9M12 19V4M20 19v12"/></svg>;
@@ -1407,7 +1407,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
               aria-label="6-digit verification code"
               inputMode="numeric"
               autoComplete="one-time-code"
-              style={{ width: "100%", background: "#171229", border: "1px solid #3DF2E0", boxShadow: "0 0 0 3px rgba(61,242,224,0.12)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
+              style={{ width: "100%", background: "var(--surface)", border: "1px solid #3DF2E0", boxShadow: "0 0 0 3px rgba(61,242,224,0.12)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 18, textAlign: "center", letterSpacing: "4px", fontFamily: "'IBM Plex Mono', monospace" }}
             />
             <button
               type="submit"
@@ -1431,7 +1431,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            style={{ width: "100%", background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14 }}
+            style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14 }}
           />
           <button
             type="submit"
@@ -1498,12 +1498,12 @@ function OnboardingScreen({ email, onSubmit }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            style={{ width: "100%", marginTop: 6, background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+            style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
           />
         </label>
         <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
           Handle
-          <div style={{ display: "flex", alignItems: "center", marginTop: 6, background: "#171229", border: "1px solid var(--border)", borderRadius: 10, padding: "0 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "0 14px" }}>
             <span style={{ color: "var(--text-dimmer)", fontSize: 14 }}>@</span>
             <input
               required
@@ -1548,7 +1548,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 
   return (
     <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
-      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Join a crew</div>
@@ -1567,7 +1567,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
             autoCorrect="off"
             autoComplete="off"
             spellCheck="false"
-            style={{ width: "100%", background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
+            style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", color: "#3DF2E0", fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px" }}
           />
           <button
             type="submit"
@@ -1589,7 +1589,7 @@ function JoinCrewSheet({ onClose, onSubmit }) {
 function NewDmPickerSheet({ members, onClose, onPick, title = "New message", subtitle = "Anyone you share a crew with." }) {
   return (
     <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 26, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={onClose}>
-      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
+      <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "70dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{title}</div>
@@ -2116,7 +2116,7 @@ export default function FestivalOptimizer() {
   // "mine" is now the single Lineup destination; lineupSubview picks the lens.
 
   if (authLoading) {
-    return <div style={{ minHeight: "100svh", background: "#0F0B1A" }} />;
+    return <div data-theme={theme} style={{ minHeight: "100svh", background: "var(--bg)" }} />;
   }
   if (!session || !profile) {
     if (!hasSeenWelcome) {
@@ -2252,7 +2252,7 @@ export default function FestivalOptimizer() {
             position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: "50%", transform: toastLeaving ? "translate(-50%, -12px)" : "translate(-50%, 0)",
             opacity: toastLeaving ? 0 : 1, transition: "transform .3s ease, opacity .3s ease",
             zIndex: 60, width: "calc(100% - 28px)", maxWidth: 402,
-            background: "#1A1428", border: "1px solid #3DF2E0", borderRadius: 14,
+            background: "var(--surface)", border: "1px solid #3DF2E0", borderRadius: 14,
             padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10,
             boxShadow: "0 10px 30px rgba(0,0,0,0.4)", cursor: "pointer",
           }}
@@ -2534,7 +2534,7 @@ export default function FestivalOptimizer() {
                     >
                       <span style={{
                         width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                        border: `1.5px solid ${checked ? "#3DF2E0" : "#3A3552"}`,
+                        border: `1.5px solid ${checked ? "#3DF2E0" : "var(--border)"}`,
                         background: checked ? "#3DF2E0" : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
@@ -2746,7 +2746,7 @@ export default function FestivalOptimizer() {
             </div>
 
             {lineupSubview === "matches" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
                 <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap" }}>MATCH</label>
                 <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ flex: 1 }} />
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, width: 34 }}>{threshold}%</span>
@@ -2765,7 +2765,7 @@ export default function FestivalOptimizer() {
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
               <button
                 onClick={() => setLineupFlyerOpen(true)}
-                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
               >
                 <img
                   src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
@@ -2797,7 +2797,7 @@ export default function FestivalOptimizer() {
             ) : (
             <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
-                <div style={{ width: 60, flexShrink: 0, background: "#151024", borderRight: "1px solid var(--border)" }}>
+                <div style={{ width: 60, flexShrink: 0, background: "var(--surface)", borderRight: "1px solid var(--border)" }}>
                   <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
                     {Array.from({ length: Math.floor(timelineEnd / 60) + 1 }).map((_, i) => (
                       <div key={i} style={{ position: "absolute", top: i * 60 * PX_PER_MIN, right: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
@@ -2818,7 +2818,7 @@ export default function FestivalOptimizer() {
                           return (
                             <div key={s.id} className="set-card" onClick={() => setSelected(s)} style={{
                               position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
-                              borderRadius: 7, padding: "6px 7px", background: dimmed ? "var(--surface)" : "#1E1832",
+                              borderRadius: 7, padding: "6px 7px", background: dimmed ? "var(--surface)" : "var(--surface)",
                               border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match)}`,
                               opacity: dimmed ? 0.35 : 1, overflow: "hidden",
                             }}>
@@ -2885,7 +2885,7 @@ export default function FestivalOptimizer() {
                   className="tab-btn"
                   style={{
                     flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
-                    padding: "7px 13px", borderRadius: 20, border: "1px dashed #3A3552",
+                    padding: "7px 13px", borderRadius: 20, border: "1px dashed var(--border)",
                     background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                   }}
                 >
@@ -2896,7 +2896,7 @@ export default function FestivalOptimizer() {
                   className="tab-btn"
                   style={{
                     flex: "0 0 auto", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, whiteSpace: "nowrap",
-                    padding: "7px 13px", borderRadius: 20, border: "1px dashed #3A3552",
+                    padding: "7px 13px", borderRadius: 20, border: "1px dashed var(--border)",
                     background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                   }}
                 >
@@ -2978,7 +2978,7 @@ export default function FestivalOptimizer() {
                         <span style={{ position: "relative", width: 44, height: 44, borderRadius: "50%", background: memberAvatarBg(m.id, activeCrew, m.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {m.name[0].toUpperCase()}
                           {m.id === activeCrew.created_by && (
-                            <span style={{ position: "absolute", bottom: -3, right: -3, fontSize: 12, background: "#171229", borderRadius: "50%", lineHeight: 1, padding: 1 }}>👑</span>
+                            <span style={{ position: "absolute", bottom: -3, right: -3, fontSize: 12, background: "var(--surface)", borderRadius: "50%", lineHeight: 1, padding: 1 }}>👑</span>
                           )}
                         </span>
                         <span style={{ fontSize: 11, color: "var(--text)", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
@@ -2989,7 +2989,7 @@ export default function FestivalOptimizer() {
 
                 {openMemberCard && (
                   <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setOpenMemberCard(null)}>
-                    <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+                    <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
                       <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ width: 48, height: 48, borderRadius: "50%", background: memberAvatarBg(openMemberCard.id, activeCrew, openMemberCard.color), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -3065,7 +3065,7 @@ export default function FestivalOptimizer() {
                     <>
                       <button
                         onClick={() => setOfficialMapOpen(true)}
-                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
                       >
                         <img
                           src={mapInfo.src}
@@ -3096,7 +3096,7 @@ export default function FestivalOptimizer() {
                       )}
                     </>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed var(--border)", borderRadius: 14, background: "#151024" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: 160, border: "1px dashed var(--border)", borderRadius: 14, background: "var(--surface)" }}>
                       <Icon name="map" active={false} />
                       <span style={{ fontSize: 12.5, color: "var(--text-dimmer)", textAlign: "center", maxWidth: 220 }}>
                         {festivalName}'s official map isn't available yet — check back closer to the festival.
@@ -3115,7 +3115,7 @@ export default function FestivalOptimizer() {
                 </div>
                 <button
                   onClick={() => setCampingMapOpen(true)}
-                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "#151024", cursor: "pointer" }}
+                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
                 >
                   <img
                     src={FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].src}
@@ -3249,7 +3249,7 @@ export default function FestivalOptimizer() {
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     position: "absolute", left: 14, right: 14, bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-                    background: "#171229", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px",
+                    background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -3328,7 +3328,7 @@ export default function FestivalOptimizer() {
         {/* Detail sheet */}
         {selected && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
@@ -3366,7 +3366,7 @@ export default function FestivalOptimizer() {
                 </div>
               )}
               {selected.sounds_like ? (
-                <p style={{ marginTop: 12, fontSize: 14, color: "#C9C3E0", lineHeight: 1.5 }}>{selected.sounds_like}</p>
+                <p style={{ marginTop: 12, fontSize: 14, color: "var(--text-dim)", lineHeight: 1.5 }}>{selected.sounds_like}</p>
               ) : (
                 <p style={{ marginTop: 12, fontSize: 14, color: "var(--text-dimmer)", lineHeight: 1.5 }}>New to your library — no direct match yet.</p>
               )}
@@ -3412,7 +3412,7 @@ export default function FestivalOptimizer() {
         {/* Invite sheet */}
         {inviteOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setInviteOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Invite to {activeCrew?.name}</div>
@@ -3422,7 +3422,7 @@ export default function FestivalOptimizer() {
                 Anyone with this code can join and see the crew — they choose their own taste-sharing later.
               </p>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, opacity: isOnline ? 1 : 0.5 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, opacity: isOnline ? 1 : 0.5 }}>
                 <span style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px", color: "#3DF2E0" }}>{activeCrew?.code}</span>
                 <button
                   disabled={!isOnline}
@@ -3507,7 +3507,7 @@ export default function FestivalOptimizer() {
         {/* My Crews — every crew you're in, across every festival, with rename */}
         {myCrewsOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => { setMyCrewsOpen(false); setEditingCrewId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>My crews</div>
@@ -3576,7 +3576,7 @@ export default function FestivalOptimizer() {
 
         {createCrewOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setCreateCrewOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Create a crew</div>
@@ -3592,7 +3592,7 @@ export default function FestivalOptimizer() {
                   onKeyDown={(e) => { if (e.key === "Enter") submitNewCrew(); }}
                   placeholder="Crew name"
                   aria-label="New crew name"
-                  style={{ width: "100%", marginTop: 6, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 15 }}
+                  style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 15 }}
                 />
               </label>
 
@@ -3617,7 +3617,7 @@ export default function FestivalOptimizer() {
         {/* Profile sheet */}
         {profileOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setProfileOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -3655,8 +3655,8 @@ export default function FestivalOptimizer() {
                               height: 24,
                               borderRadius: "50%",
                               background: c,
-                              border: editColor === c ? "2px solid #F5F0FF" : "2px solid transparent",
-                              boxShadow: editColor === c ? "0 0 0 2px #171229" : "none",
+                              border: editColor === c ? "2px solid var(--text)" : "2px solid transparent",
+                              boxShadow: editColor === c ? "0 0 0 2px var(--surface)" : "none",
                               cursor: "pointer",
                               padding: 0,
                             }}
@@ -3717,7 +3717,7 @@ export default function FestivalOptimizer() {
 
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>CONNECTED ACCOUNTS</div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>Spotify</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>
@@ -3741,7 +3741,7 @@ export default function FestivalOptimizer() {
                   </button>
                 </div>
                 {spotify.error && <div style={{ fontSize: 11.5, color: "#FF3DA6", marginTop: 6 }}>{spotify.error}</div>}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>Soundcloud</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>Not available yet</div>
@@ -3756,7 +3756,7 @@ export default function FestivalOptimizer() {
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>YOUR CREWS</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {crews.map((c) => (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #201A33" }}>
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
                         <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -3818,14 +3818,14 @@ export default function FestivalOptimizer() {
           const leadingCrews = crews.filter((c) => c.created_by === profile?.id);
           return (
             <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { if (!deletingAccount) setDeleteAccountOpen(false); }}>
-              <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
+              <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "80dvh", overflowY: "auto" }}>
                 <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px", color: "#FF3DA6" }}>Delete account</div>
                   <button onClick={() => setDeleteAccountOpen(false)} disabled={deletingAccount} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: deletingAccount ? "default" : "pointer" }}>×</button>
                 </div>
 
-                <p style={{ marginTop: 14, fontSize: 13.5, color: "#C9C3E0", lineHeight: 1.5 }}>
+                <p style={{ marginTop: 14, fontSize: 13.5, color: "var(--text-dim)", lineHeight: 1.5 }}>
                   This permanently deletes your profile, crew memberships, direct messages, camp pins, packing lists, Spotify connection, and everything else tied to your account. This can't be undone.
                 </p>
 
@@ -3862,7 +3862,7 @@ export default function FestivalOptimizer() {
         {/* Artist claim sheet */}
         {claimTarget && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setClaimTarget(null)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>Claim {claimTarget.artist}</div>
@@ -3894,7 +3894,7 @@ export default function FestivalOptimizer() {
         {/* Festival picker */}
         {festivalPickerOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setFestivalPickerOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Your festivals</div>
@@ -3912,7 +3912,7 @@ export default function FestivalOptimizer() {
                   placeholder="Search festivals or cities…"
                   style={{
                     width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
-                    background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12,
+                    background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
                     padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                   }}
                 />
@@ -4050,7 +4050,7 @@ export default function FestivalOptimizer() {
         {/* Notifications inbox */}
         {notificationsOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setNotificationsOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "82dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 24, letterSpacing: "0.5px" }}>Notifications</div>
@@ -4081,7 +4081,7 @@ export default function FestivalOptimizer() {
                 onClick={simulateNotification}
                 style={{
                   width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "10px", borderRadius: 10, marginTop: 8, marginBottom: 16,
-                  border: "1px dashed #3A3552", background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
+                  border: "1px dashed var(--border)", background: "transparent", color: "var(--text-dimmer)", cursor: "pointer",
                 }}
               >
                 Simulate a notification
@@ -4124,7 +4124,7 @@ export default function FestivalOptimizer() {
         {/* Messages — inbox list, or an open thread */}
         {messagesOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => { setMessagesOpen(false); setActiveRealThreadId(null); }}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               {!activeRealThreadId ? (
@@ -4194,7 +4194,7 @@ export default function FestivalOptimizer() {
                           {dmMenuOpen && (
                             <>
                               <div style={{ position: "fixed", inset: 0, zIndex: 29 }} onClick={() => setDmMenuOpen(false)} />
-                              <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                              <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
                                 <button
                                   onClick={() => { setDmMenuOpen(false); setReportTarget({ id: t.other.id, name: t.other.name }); }}
                                   style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "var(--text)", cursor: "pointer" }}
@@ -4222,7 +4222,7 @@ export default function FestivalOptimizer() {
                           <div key={m.id} style={{ display: "flex", justifyContent: m.from === "you" ? "flex-end" : "flex-start" }}>
                             <div style={{
                               maxWidth: "78%", borderRadius: 14, padding: "8px 12px",
-                              background: m.from === "you" ? "rgba(61,242,224,0.14)" : "#1E1832",
+                              background: m.from === "you" ? "rgba(61,242,224,0.14)" : "var(--surface)",
                               border: `1px solid ${m.from === "you" ? "#3DF2E0" : "var(--border)"}`,
                             }}>
                               {m.attachment_path && (
@@ -4272,7 +4272,7 @@ export default function FestivalOptimizer() {
                       {pendingAttachments.length > 0 && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
                           {pendingAttachments.map(({ id, file }) => (
-                            <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, background: "#1A1428", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 10px" }}>
+                            <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 10px" }}>
                               <span style={{ fontSize: 16 }}>{file.type.startsWith("image/") ? "🖼️" : "📄"}</span>
                               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, color: "var(--text)" }}>
                                 {file.name}
@@ -4317,7 +4317,7 @@ export default function FestivalOptimizer() {
                           aria-label={`Message ${t.other.name}`}
                           style={{
                             flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
-                            background: "#1A1428", border: "1px solid var(--border)", borderRadius: 20,
+                            background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20,
                             padding: "10px 14px", outline: "none",
                           }}
                         />
@@ -4368,7 +4368,7 @@ export default function FestivalOptimizer() {
             or from Safety > Report someone. */}
         {reportTarget && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 27, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={closeReportSheet}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px", color: "#FF3DA6" }}>Report {reportTarget.name}</div>
@@ -4411,7 +4411,7 @@ export default function FestivalOptimizer() {
                       placeholder="Anything else that would help us understand what happened"
                       aria-label="Report details"
                       rows={3}
-                      style={{ width: "100%", background: "#1A1428", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", color: "var(--text)", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
+                      style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", color: "var(--text)", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
                     />
                   </div>
 
@@ -4438,7 +4438,7 @@ export default function FestivalOptimizer() {
         {/* Safety sheet — reachable from any tab via the header */}
         {safetyOpen && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 25, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)" }} onClick={() => setSafetyOpen(false)}>
-            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "#171229", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
+            <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -4456,7 +4456,7 @@ export default function FestivalOptimizer() {
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>ON-SITE MEDICAL</div>
                 {(SAFETY_INFO.medicalByFestival[currentFestival] || SAFETY_INFO.medicalFallback).map((m) => (
-                  <div key={m.name} style={{ padding: "8px 0", borderBottom: "1px solid #201A33" }}>
+                  <div key={m.name} style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700 }}>{m.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 1 }}>{m.note}</div>
                   </div>
@@ -4467,7 +4467,7 @@ export default function FestivalOptimizer() {
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", marginBottom: 8 }}>LOST OR SEPARATED FROM YOUR CREW</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {SAFETY_INFO.lostProtocol.map((step, i) => (
-                    <div key={i} style={{ display: "flex", gap: 8, fontSize: 12.5, color: "#C9C3E0", lineHeight: 1.5 }}>
+                    <div key={i} style={{ display: "flex", gap: 8, fontSize: 12.5, color: "var(--text-dim)", lineHeight: 1.5 }}>
                       <span style={{ color: "var(--text-dimmer)" }}>{i + 1}.</span>
                       <span>{step}</span>
                     </div>
@@ -4543,13 +4543,13 @@ export default function FestivalOptimizer() {
 
         {/* Bottom tab bar — mobile/installed app only; browser-desktop uses the sidebar instead */}
         <div className="mobile-bottom-nav-wrap" style={{ position: "fixed", bottom: 0, left: 0, right: 0, justifyContent: "center", zIndex: 10 }}>
-          <div className="frame" style={{ display: "flex", background: "#151024", borderTop: "1px solid var(--border)", padding: "10px 6px calc(10px + env(safe-area-inset-bottom))" }}>
+          <div className="frame" style={{ display: "flex", background: "var(--surface)", borderTop: "1px solid var(--border)", padding: "10px 6px calc(10px + env(safe-area-inset-bottom))" }}>
             {TABS.map((t) => {
               const active = view === t.id;
               return (
                 <button key={t.id} onClick={() => setView(t.id)} className="tab-btn" style={{ flex: 1, background: "none", border: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "4px 0" }}>
                   <Icon name={t.icon} active={active} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: active ? "#3DF2E0" : "#6C6786" }}>{t.label}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: active ? "#3DF2E0" : "var(--text-dimmer)" }}>{t.label}</span>
                 </button>
               );
             })}
