@@ -1787,6 +1787,42 @@ function NewDmPickerSheet({ members, onClose, onPick, title = "New message", sub
   );
 }
 
+// Renders 1+ overlapping circular avatars from useArtistPhotos()'s result --
+// a real Spotify photo when there's a confident match, else an initials
+// placeholder in the same hash-based color as crew avatars. Shared by every
+// spot an artist appears (detail sheet, checklist rows, picked-sets list,
+// DiscoverDeck, CrewCompare) so a "B2B" set's two avatars look the same
+// everywhere.
+function ArtistAvatar({ photos, fallbackName, size = 40 }) {
+  const list = photos && photos.length > 0 ? photos : [{ name: fallbackName, image: null }];
+  return (
+    <div style={{ display: "flex", flexShrink: 0 }}>
+      {list.map((p, i) =>
+        p.image ? (
+          <img
+            key={i}
+            src={p.image}
+            alt=""
+            style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -size * 0.3 : 0, position: "relative", zIndex: 10 - i }}
+          />
+        ) : (
+          <span
+            key={i}
+            style={{ width: size, height: size, borderRadius: "50%", background: colorForId(p.name), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: size * 0.33, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -size * 0.3 : 0, position: "relative", zIndex: 10 - i }}
+          >
+            {artistInitials(p.name)}
+          </span>
+        )
+      )}
+    </div>
+  );
+}
+
+export function ArtistAvatarFor({ artist, size = 40 }) {
+  const photos = useArtistPhotos(artist);
+  return <ArtistAvatar photos={photos} fallbackName={artist} size={size} />;
+}
+
 // ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
@@ -3007,17 +3043,20 @@ export default function FestivalOptimizer() {
                         role="button" tabIndex={0}
                         onClick={() => setSelected(s)}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelected(s); }}
-                        style={{ position: "relative", zIndex: 3, flex: 1, minWidth: 0, cursor: "pointer" }}
+                        style={{ position: "relative", zIndex: 3, flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</span>
-                          {ARTIST_POSTS.some((a) => a.artistOf === s.id) && (
-                            <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
+                        <ArtistAvatarFor artist={s.artist} size={32} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</span>
+                            {ARTIST_POSTS.some((a) => a.artistOf === s.id) && (
+                              <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
+                            )}
+                          </div>
+                          {crewAlsoIn > 0 && (
+                            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#9D6BFF", marginTop: 2 }}>👥 {crewAlsoIn} crew too</div>
                           )}
                         </div>
-                        {crewAlsoIn > 0 && (
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#9D6BFF", marginTop: 2 }}>👥 {crewAlsoIn} crew too</div>
-                        )}
                       </div>
                       <button
                         onClick={() => toggleSchedulePick(s.id)}
@@ -3596,10 +3635,13 @@ export default function FestivalOptimizer() {
                         onClick={() => { setPickedSetsOpen(false); setSelected(s); }}
                         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}
                       >
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</div>
-                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", marginTop: 2 }}>
-                            {days.find((d) => d.id === s.day)?.label} · {activeStages.find((st) => st.id === s.stage)?.name}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                          <ArtistAvatarFor artist={s.artist} size={32} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</div>
+                            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", marginTop: 2 }}>
+                              {days.find((d) => d.id === s.day)?.label} · {activeStages.find((st) => st.id === s.stage)?.name}
+                            </div>
                           </div>
                         </div>
                         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 10 }}>
@@ -3621,25 +3663,7 @@ export default function FestivalOptimizer() {
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
-                  <div style={{ display: "flex", flexShrink: 0 }}>
-                    {(selectedPhotos.length > 0 ? selectedPhotos : [{ name: selected.artist, image: null }]).map((p, i) =>
-                      p.image ? (
-                        <img
-                          key={i}
-                          src={p.image}
-                          alt=""
-                          style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: 10 - i }}
-                        />
-                      ) : (
-                        <span
-                          key={i}
-                          style={{ width: 52, height: 52, borderRadius: "50%", background: colorForId(p.name), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: 10 - i }}
-                        >
-                          {artistInitials(p.name)}
-                        </span>
-                      )
-                    )}
-                  </div>
+                  <ArtistAvatar photos={selectedPhotos} fallbackName={selected.artist} size={52} />
                   <div style={{ minWidth: 0, marginLeft: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: "0.5px" }}>{selected.artist}</span>

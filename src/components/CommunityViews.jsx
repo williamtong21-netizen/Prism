@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, FESTIVAL_POSTS } from "../App.jsx";
+import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, FESTIVAL_POSTS, ArtistAvatarFor } from "../App.jsx";
 
 // Split out of App.jsx (lazy-loaded from the Lineup/Crew/Community tabs) so
 // a first-time visitor's initial sign-in load doesn't have to fetch this
@@ -41,12 +41,15 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, onSelect, currentDay, cur
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)" }}>
           {stages.find((st) => st.id === current.stage)?.name} · {fmtTime(current.start, current.day, current.festival)} · {current.genre}
         </span>
-        <button
-          onClick={() => onSelect && onSelect(current)}
-          style={{ display: "block", background: "none", border: "none", padding: 0, cursor: onSelect ? "pointer" : "default", textAlign: "left", fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.5px", margin: "8px 0 6px", color: "var(--text)" }}
-        >
-          {current.artist}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 6px" }}>
+          <ArtistAvatarFor artist={current.artist} size={44} />
+          <button
+            onClick={() => onSelect && onSelect(current)}
+            style={{ display: "block", background: "none", border: "none", padding: 0, cursor: onSelect ? "pointer" : "default", textAlign: "left", fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.5px", color: "var(--text)" }}
+          >
+            {current.artist}
+          </button>
+        </div>
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(current.match), border: `1px solid ${matchColor(current.match)}`, borderRadius: 6, padding: "3px 9px" }}>
           {current.match}% match
         </span>
@@ -105,8 +108,13 @@ export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect,
             {rows.map((s) => (
               <tr key={s.id} onClick={() => onSelect(s)} style={{ cursor: "pointer" }}>
                 <td style={{ padding: "9px 12px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 700 }}>{s.artist}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", marginTop: 2 }}>{fmtTime(s.start, s.day, s.festival)}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <ArtistAvatarFor artist={s.artist} size={24} />
+                    <div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700 }}>{s.artist}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", marginTop: 2 }}>{fmtTime(s.start, s.day, s.festival)}</div>
+                    </div>
+                  </div>
                 </td>
                 <td style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(s.match) }}>{matchLabel(s.match)}</span>
