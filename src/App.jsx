@@ -2825,12 +2825,12 @@ export default function FestivalOptimizer() {
             </div>
 
             {lineupSubview === "matches" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
-                <label htmlFor="threshold" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap" }}>MATCH</label>
-                <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ flex: 1 }} />
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, width: 34 }}>{threshold}%</span>
+              <div className="facet-card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", marginBottom: 14 }}>
+                <label htmlFor="threshold" style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap" }}>MATCH</label>
+                <input id="threshold" type="range" min="0" max="100" step="5" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} style={{ position: "relative", zIndex: 3, flex: 1 }} />
+                <span style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, width: 34 }}>{threshold}%</span>
                 {conflicts.size > 0 && (
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#FF3DA6", whiteSpace: "nowrap" }}>⚠ {conflicts.size}</span>
+                  <span style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#FF3DA6", whiteSpace: "nowrap" }}>⚠ {conflicts.size}</span>
                 )}
               </div>
             )}
@@ -2844,7 +2844,8 @@ export default function FestivalOptimizer() {
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
               <button
                 onClick={() => setLineupFlyerOpen(true)}
-                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
+                className="facet-card"
+                style={{ display: "block", width: "100%", padding: 0, marginBottom: 14, cursor: "pointer" }}
               >
                 <img
                   src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
@@ -2867,9 +2868,9 @@ export default function FestivalOptimizer() {
             </div>
 
             {lineupSubview === "schedule" && visibleSets.length === 0 ? (
-              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 14, color: "var(--text-dim)" }}>Nothing on your schedule for this day yet.</div>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>
+              <div className="facet-card" style={{ padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)" }}>Nothing on your schedule for this day yet.</div>
+                <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>
                   Tap any set in Full Lineup or % Match to add it.
                 </div>
               </div>
@@ -2930,15 +2931,15 @@ export default function FestivalOptimizer() {
             {crews.length > 0 && (
               <button
                 onClick={() => setMyCrewsOpen(true)}
+                className="facet-card"
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
                   fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, marginBottom: 12,
-                  padding: "9px 13px", borderRadius: 10, border: "1px solid var(--border)",
-                  background: "var(--surface)", color: "var(--text-dim)", cursor: "pointer",
+                  padding: "9px 13px", color: "var(--text-dim)", cursor: "pointer",
                 }}
               >
-                <span>My crews ({crews.length})</span>
-                <span style={{ color: "var(--text-dimmer)" }}>Manage →</span>
+                <span style={{ position: "relative", zIndex: 3 }}>My crews ({crews.length})</span>
+                <span style={{ position: "relative", zIndex: 3, color: "var(--text-dimmer)" }}>Manage →</span>
               </button>
             )}
             {festivalCrews.length > 0 && (
@@ -2991,11 +2992,11 @@ export default function FestivalOptimizer() {
             )}
 
             {!activeCrew ? (
-              <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 14, color: "var(--text-dim)", marginBottom: 12 }}>
+              <div className="facet-card" style={{ padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)", marginBottom: 12 }}>
                   No crew yet for {FESTIVALS.find((f) => f.id === currentFestival)?.name}.
                 </div>
-                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                <div style={{ position: "relative", zIndex: 3, display: "flex", gap: 8, justifyContent: "center" }}>
                   <button
                     onClick={openCreateCrew}
                     style={{
@@ -3144,7 +3145,8 @@ export default function FestivalOptimizer() {
                     <>
                       <button
                         onClick={() => setOfficialMapOpen(true)}
-                        style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
+                        className="facet-card"
+                        style={{ display: "block", width: "100%", padding: 0, cursor: "pointer" }}
                       >
                         <img
                           src={mapInfo.src}
@@ -3194,7 +3196,8 @@ export default function FestivalOptimizer() {
                 </div>
                 <button
                   onClick={() => setCampingMapOpen(true)}
-                  style={{ display: "block", width: "100%", padding: 0, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface)", cursor: "pointer" }}
+                  className="facet-card"
+                  style={{ display: "block", width: "100%", padding: 0, cursor: "pointer" }}
                 >
                   <img
                     src={FESTIVAL_CAMPGROUND_MAP_IMAGES[currentFestival].src}

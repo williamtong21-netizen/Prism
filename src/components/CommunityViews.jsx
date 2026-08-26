@@ -18,9 +18,9 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
 
   if (!current) {
     return (
-      <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
-        <div style={{ fontSize: 14, color: "#8B85A3" }}>That's everyone in your discover range.</div>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470", marginTop: 6 }}>
+      <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
+        <div style={{ fontSize: 14, color: "var(--text-dim)" }}>That's everyone in your discover range.</div>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginTop: 6 }}>
           {pickedIds.size} sets on your schedule so far
         </div>
       </div>
@@ -29,16 +29,16 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
 
   return (
     <div>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470", marginBottom: 10 }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginBottom: 10 }}>
         {remaining.length} left to discover
       </div>
       <div
         style={{
           border: `1px solid ${matchColor(current.match)}`, borderRadius: 16, padding: "22px 20px",
-          background: "#1A1428",
+          background: "var(--surface)",
         }}
       >
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3" }}>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)" }}>
           {stages.find((st) => st.id === current.stage)?.name} · {fmtTime(current.start, current.day, current.festival)} · {current.genre}
         </span>
         <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.5px", margin: "8px 0 6px" }}>
@@ -47,7 +47,7 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(current.match), border: `1px solid ${matchColor(current.match)}`, borderRadius: 6, padding: "3px 9px" }}>
           {current.match}% match
         </span>
-        <p style={{ marginTop: 14, fontSize: 13.5, color: "#C9C3E0", lineHeight: 1.5, minHeight: 40 }}>
+        <p style={{ marginTop: 14, fontSize: 13.5, color: "var(--text-dim)", lineHeight: 1.5, minHeight: 40 }}>
           {current.sounds_like || "New territory — not close to anything in your library yet."}
         </p>
       </div>
@@ -57,7 +57,7 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
           onClick={() => setSkipped((prev) => [...prev, current.id])}
           style={{
             flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "13px", borderRadius: 12,
-            border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer",
+            border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer",
           }}
         >
           Skip
@@ -79,18 +79,18 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
 export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect, currentDay, currentFestival, crewPicks }) {
   const rows = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && (s.match >= 50 || (crewPicks[s.id] || []).length > 0)).sort((a, b) => a.start - b.start);
   return (
-    <div style={{ border: "1px solid #2A2440", borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
+    <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 420 }}>
           <thead>
-            <tr style={{ background: "#151024" }}>
-              <th style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8B85A3", borderBottom: "1px solid #2A2440" }}>SET</th>
-              <th style={{ textAlign: "center", padding: "10px 8px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, borderBottom: "1px solid #2A2440" }}>You</th>
+            <tr style={{ background: "var(--surface)" }}>
+              <th style={{ textAlign: "left", padding: "10px 12px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", borderBottom: "1px solid var(--border)" }}>SET</th>
+              <th style={{ textAlign: "center", padding: "10px 8px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, borderBottom: "1px solid var(--border)" }}>You</th>
               {friends.map((f) => (
-                <th key={f.id} style={{ textAlign: "center", padding: "8px", borderBottom: "1px solid #2A2440" }}>
+                <th key={f.id} style={{ textAlign: "center", padding: "8px", borderBottom: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                     <span style={{ width: 20, height: 20, borderRadius: "50%", background: f.color, color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{f.initial}</span>
-                    <button onClick={() => onToggleSharing(f.id)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, background: "none", border: "1px solid #2A2440", borderRadius: 20, padding: "2px 6px", color: sharing[f.id] ? "#3DF2E0" : "#5B5470", cursor: "pointer" }}>
+                    <button onClick={() => onToggleSharing(f.id)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 8.5, background: "none", border: "1px solid var(--border)", borderRadius: 20, padding: "2px 6px", color: sharing[f.id] ? "#3DF2E0" : "var(--text-dimmer)", cursor: "pointer" }}>
                       {sharing[f.id] ? "On" : "Off"}
                     </button>
                   </div>
@@ -101,20 +101,20 @@ export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect,
           <tbody>
             {rows.map((s) => (
               <tr key={s.id} onClick={() => onSelect(s)} style={{ cursor: "pointer" }}>
-                <td style={{ padding: "9px 12px", borderBottom: "1px solid #201A33" }}>
+                <td style={{ padding: "9px 12px", borderBottom: "1px solid var(--border)" }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700 }}>{s.artist}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#5B5470", marginTop: 2 }}>{fmtTime(s.start, s.day, s.festival)}</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", marginTop: 2 }}>{fmtTime(s.start, s.day, s.festival)}</div>
                 </td>
-                <td style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid #201A33" }}>
+                <td style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: matchColor(s.match) }}>{matchLabel(s.match)}</span>
                 </td>
                 {friends.map((f) => {
                   const picked = (crewPicks[s.id] || []).includes(f.id);
                   return (
-                    <td key={f.id} style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid #201A33" }}>
-                      {!sharing[f.id] ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3A3552" }}>hidden</span>
+                    <td key={f.id} style={{ textAlign: "center", padding: "9px", borderBottom: "1px solid var(--border)" }}>
+                      {!sharing[f.id] ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)" }}>hidden</span>
                         : picked ? <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#3DF2E0" }}>✓ on schedule</span>
-                        : <span style={{ color: "#3A3552", fontSize: 12 }}>—</span>}
+                        : <span style={{ color: "var(--text-dimmer)", fontSize: 12 }}>—</span>}
                     </td>
                   );
                 })}
@@ -123,7 +123,7 @@ export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect,
           </tbody>
         </table>
       </div>
-      <p style={{ margin: 0, padding: "9px 12px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#5B5470", borderTop: "1px solid #2A2440" }}>
+      <p style={{ margin: 0, padding: "9px 12px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "var(--text-dimmer)", borderTop: "1px solid var(--border)" }}>
         "Hidden" = sharing off for this crew. Still a member, matches just aren't visible.
       </p>
     </div>
@@ -210,29 +210,29 @@ export function Community({ isOnline, onQueue, currentFestival }) {
     const p = allPosts.find((post) => post.id === openPost) || openPost;
     const v = (votes[p.id] ?? p.votes) + (pendingVotes[p.id] || 0);
     return (
-      <div style={{ border: "1px solid #2A2440", borderRadius: 14, padding: "16px 16px" }}>
-        <button onClick={() => setOpenPost(null)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8B85A3", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12 }}>← back</button>
+      <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "16px 16px" }}>
+        <button onClick={() => setOpenPost(null)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12 }}>← back</button>
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: FLAIRS[p.flair].color, border: `1px solid ${FLAIRS[p.flair].color}`, borderRadius: 5, padding: "2px 7px" }}>{FLAIRS[p.flair].label}</span>
         <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 700, margin: "10px 0 4px" }}>{p.title}</h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5B5470", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginBottom: 12 }}>
           <span>u/{p.author}</span>
           <TierBadge username={p.author} />
           <span>· {p.time} · {v} upvotes{pendingVotes[p.id] ? " · queued" : ""}</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {p.comments.length === 0 && <p style={{ fontSize: 13, color: "#5B5470" }}>No comments yet — be the first to reply.</p>}
+          {p.comments.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)" }}>No comments yet — be the first to reply.</p>}
           {p.comments.map((c) => {
             const cv = (votes[c.id] ?? c.votes) + (pendingVotes[c.id] || 0);
             return (
-              <div key={c.id} style={{ borderLeft: "2px solid #2A2440", paddingLeft: 11 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>
+              <div key={c.id} style={{ borderLeft: "2px solid var(--border)", paddingLeft: 11 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
                   <span>u/{c.author}</span>
                   <TierBadge username={c.author} />
                 </div>
-                <p style={{ fontSize: 13, color: "#F5F0FF", margin: "3px 0 6px", lineHeight: 1.5 }}>{c.text}</p>
+                <p style={{ fontSize: 13, color: "var(--text)", margin: "3px 0 6px", lineHeight: 1.5 }}>{c.text}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <button onClick={() => vote(c.id, c.votes, 1)} aria-label="Upvote" style={voteBtnStyle}>▲</button>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: pendingVotes[c.id] ? "#FFB23D" : "#8B85A3" }}>{cv}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: pendingVotes[c.id] ? "#FFB23D" : "var(--text-dim)" }}>{cv}</span>
                   <button onClick={() => vote(c.id, c.votes, -1)} aria-label="Downvote" style={voteBtnStyle}>▼</button>
                 </div>
               </div>
@@ -240,15 +240,15 @@ export function Community({ isOnline, onQueue, currentFestival }) {
           })}
         </div>
 
-        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #2A2440" }}>
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
           <textarea
             value={replyText}
             onChange={(e) => { setReplyText(e.target.value); if (replyError) setReplyError(""); }}
             placeholder="Add a reply…"
             rows={2}
             style={{
-              width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#F5F0FF",
-              background: "#1A1428", border: `1px solid ${replyError ? "#FF3DA6" : "#2A2440"}`, borderRadius: 10,
+              width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
+              background: "var(--surface)", border: `1px solid ${replyError ? "#FF3DA6" : "var(--border)"}`, borderRadius: 10,
               padding: "9px 11px", resize: "none", outline: "none",
             }}
           />
@@ -271,7 +271,7 @@ export function Community({ isOnline, onQueue, currentFestival }) {
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12, alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {["hot", "new", "top"].map((s) => (
-            <button key={s} onClick={() => setSort(s)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", padding: "5px 10px", borderRadius: 6, border: "1px solid " + (sort === s ? "#3DF2E0" : "#2A2440"), background: sort === s ? "rgba(61,242,224,0.1)" : "transparent", color: sort === s ? "#3DF2E0" : "#8B85A3", cursor: "pointer" }}>{s}</button>
+            <button key={s} onClick={() => setSort(s)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", padding: "5px 10px", borderRadius: 6, border: "1px solid " + (sort === s ? "#3DF2E0" : "var(--border)"), background: sort === s ? "rgba(61,242,224,0.1)" : "transparent", color: sort === s ? "#3DF2E0" : "var(--text-dim)", cursor: "pointer" }}>{s}</button>
           ))}
         </div>
         <button
@@ -283,18 +283,18 @@ export function Community({ isOnline, onQueue, currentFestival }) {
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         {Object.entries(FLAIRS).map(([key, f]) => (
-          <button key={key} onClick={() => setFlairFilter(flairFilter === key ? null : key)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, padding: "4px 9px", borderRadius: 20, border: `1px solid ${flairFilter === key ? f.color : "#2A2440"}`, background: flairFilter === key ? `${f.color}1A` : "transparent", color: flairFilter === key ? f.color : "#8B85A3", cursor: "pointer" }}>{f.label}</button>
+          <button key={key} onClick={() => setFlairFilter(flairFilter === key ? null : key)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, padding: "4px 9px", borderRadius: 20, border: `1px solid ${flairFilter === key ? f.color : "var(--border)"}`, background: flairFilter === key ? `${f.color}1A` : "transparent", color: flairFilter === key ? f.color : "var(--text-dim)", cursor: "pointer" }}>{f.label}</button>
         ))}
       </div>
 
       {composeOpen && (
-        <div style={{ border: "1px solid #3DF2E0", borderRadius: 12, padding: "12px 14px", marginBottom: 14, background: "#1A1428" }}>
+        <div style={{ border: "1px solid #3DF2E0", borderRadius: 12, padding: "12px 14px", marginBottom: 14, background: "var(--surface)" }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
             {Object.entries(FLAIRS).map(([key, f]) => (
               <button
                 key={key}
                 onClick={() => setComposeFlair(key)}
-                style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, padding: "3px 8px", borderRadius: 20, border: `1px solid ${composeFlair === key ? f.color : "#2A2440"}`, background: composeFlair === key ? `${f.color}1A` : "transparent", color: composeFlair === key ? f.color : "#8B85A3", cursor: "pointer" }}
+                style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, padding: "3px 8px", borderRadius: 20, border: `1px solid ${composeFlair === key ? f.color : "var(--border)"}`, background: composeFlair === key ? `${f.color}1A` : "transparent", color: composeFlair === key ? f.color : "var(--text-dim)", cursor: "pointer" }}
               >
                 {f.label}
               </button>
@@ -306,15 +306,15 @@ export function Community({ isOnline, onQueue, currentFestival }) {
             placeholder="What's going on at the festival?"
             rows={2}
             style={{
-              width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#F5F0FF",
-              background: "#151024", border: `1px solid ${composeError ? "#FF3DA6" : "#2A2440"}`, borderRadius: 10,
+              width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
+              background: "var(--surface)", border: `1px solid ${composeError ? "#FF3DA6" : "var(--border)"}`, borderRadius: 10,
               padding: "9px 11px", resize: "none", outline: "none",
             }}
           />
           {composeError && <p style={{ fontSize: 11, color: "#FF3DA6", margin: "5px 0 0" }}>{composeError}</p>}
           {!isOnline && <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0" }}>Offline — this will post once you're back online.</p>}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
-            <button onClick={() => { setComposeOpen(false); setComposeError(""); }} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 12px", borderRadius: 8, border: "1px solid #2A2440", background: "transparent", color: "#8B85A3", cursor: "pointer" }}>Cancel</button>
+            <button onClick={() => { setComposeOpen(false); setComposeError(""); }} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}>Cancel</button>
             <button onClick={submitPost} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 14px", borderRadius: 8, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer" }}>
               {isOnline ? "Post" : "Queue post"}
             </button>
@@ -337,19 +337,19 @@ export function Community({ isOnline, onQueue, currentFestival }) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {sorted.map((p) => {
+        {sorted.map((p, i) => {
           const v = (votes[p.id] ?? p.votes) + (pendingVotes[p.id] || 0);
           return (
-            <div key={p.id} style={{ display: "flex", gap: 10, border: "1px solid #2A2440", borderRadius: 12, padding: "11px 12px", background: "#161225" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 26 }}>
+            <div key={p.id} className="facet-card" style={{ "--shine-delay": `${(i % 5) * 1.1}s`, display: "flex", gap: 10, padding: "11px 12px" }}>
+              <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 26 }}>
                 <button onClick={() => vote(p.id, p.votes, 1)} aria-label="Upvote" style={voteBtnStyle}>▲</button>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: pendingVotes[p.id] ? "#FFB23D" : "#F5F0FF" }}>{v}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: pendingVotes[p.id] ? "#FFB23D" : "var(--text)" }}>{v}</span>
                 <button onClick={() => vote(p.id, p.votes, -1)} aria-label="Downvote" style={voteBtnStyle}>▼</button>
               </div>
-              <div style={{ flex: 1, cursor: "pointer" }} onClick={() => setOpenPost(p.id)}>
+              <div style={{ position: "relative", zIndex: 3, flex: 1, cursor: "pointer" }} onClick={() => setOpenPost(p.id)}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: FLAIRS[p.flair].color, border: `1px solid ${FLAIRS[p.flair].color}`, borderRadius: 5, padding: "1px 6px" }}>{FLAIRS[p.flair].label}</span>
                 <div style={{ fontSize: 13.5, fontWeight: 700, margin: "6px 0 5px", lineHeight: 1.35 }}>{p.title}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#5B5470" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
                   <span>u/{p.author}</span>
                   <TierBadge username={p.author} />
                   <span>· {p.time} · {p.comments.length} comments</span>
