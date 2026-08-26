@@ -6,7 +6,7 @@ import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FLAIRS,
 // code before they're even signed in -- these three are only ever rendered
 // once a festival + view are selected inside the main app.
 
-export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestival, stages }) {
+export function DiscoverDeck({ sets, pickedIds, onAdd, onSelect, currentDay, currentFestival, stages }) {
   // The discover range is deliberately mid-tier: high enough to be a
   // plausible fit, low enough that it's not already on your schedule.
   const deck = sets.filter((s) => s.festival === currentFestival && s.day === currentDay && s.match >= 40 && s.match < 80 && !pickedIds.has(s.id)).sort((a, b) => b.match - a.match);
@@ -41,9 +41,12 @@ export function DiscoverDeck({ sets, pickedIds, onAdd, currentDay, currentFestiv
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)" }}>
           {stages.find((st) => st.id === current.stage)?.name} · {fmtTime(current.start, current.day, current.festival)} · {current.genre}
         </span>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.5px", margin: "8px 0 6px" }}>
+        <button
+          onClick={() => onSelect && onSelect(current)}
+          style={{ display: "block", background: "none", border: "none", padding: 0, cursor: onSelect ? "pointer" : "default", textAlign: "left", fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.5px", margin: "8px 0 6px", color: "var(--text)" }}
+        >
           {current.artist}
-        </div>
+        </button>
         <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(current.match), border: `1px solid ${matchColor(current.match)}`, borderRadius: 6, padding: "3px 9px" }}>
           {current.match}% match
         </span>

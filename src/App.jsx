@@ -91,9 +91,17 @@ const FESTIVAL_STAGES = {
     { id: "mainstage", name: "Mainstage", color: "#3DF2E0" },
     { id: "freedom", name: "Freedom", color: "#9D6BFF" },
   ],
+  // Real 2026 stage names (lostlandsfestival.com/looking-forward,
+  // borninstockholm.com's 2026 guide) -- "Mainstage" was a wrong
+  // placeholder; the real main stage is "Prehistoric Paradox". Press
+  // coverage says 5 stages total for 2026 but only names 4 -- the 5th
+  // isn't identified in any source found, so it's left off rather than
+  // invented.
   "lost-lands": [
-    { id: "crater", name: "Crater", color: "#3DF2E0" },
-    { id: "ll-mainstage", name: "Mainstage", color: "#FF3DA6" },
+    { id: "prehistoric-paradox", name: "Prehistoric Paradox", color: "#FF3DA6" },
+    { id: "crater", name: "The Crater", color: "#3DF2E0" },
+    { id: "wompy-woods", name: "Wompy Woods", color: "#9D6BFF" },
+    { id: "subsidia", name: "Subsidia Stage", color: "#FFB23D" },
   ],
   // Real Ultra Miami 2026 stages, per Ultra's official 2026 site map
   // (ultramusicfestival.com/site-map) — Main Stage, Worldwide Stage, the two
@@ -1130,6 +1138,18 @@ export function fmtTime(offsetMin, dayId = "fri", festivalId = "bonnaroo") {
   return `${hh}:${m.toString().padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`;
 }
 
+// No real per-artist Spotify/SoundCloud profile URLs exist in the data --
+// these are search links, not guaranteed direct profile links, and are
+// labeled as such everywhere they're shown rather than implied to be an
+// exact match.
+export function artistSearchLinks(artist) {
+  const q = encodeURIComponent(artist);
+  return {
+    spotify: `https://open.spotify.com/search/${q}`,
+    soundcloud: `https://soundcloud.com/search/sounds?q=${q}`,
+  };
+}
+
 export function matchColor(match) {
   if (match >= 85) return "#3DF2E0";
   if (match >= 60) return "#FFB23D";
@@ -1325,6 +1345,49 @@ const AUTH_SCREEN_SHARED_CSS = `
   }
   @media (prefers-reduced-motion: reduce) {
     .facet-card::after, .facet-cta, .facet-cta::after { animation: none; }
+  }
+
+  /* Compact facet treatment for the schedule grid's small set tiles --
+     same bevel/gem-edge/shine mechanism as .facet-card, scaled down to
+     fit a ~100px tile. .facet-mini-picked (added alongside .facet-mini
+     on a set the user has actually picked) overrides the shine to a
+     brighter, faster purple sweep -- same specificity as the light-theme
+     override below it, so source order (it comes after) decides the tie,
+     letting it win in both themes without needing a separate light variant. */
+  .facet-mini {
+    position: relative;
+    border-radius: 7px;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .facet-mini::before {
+    content: "";
+    position: absolute; inset: 0; padding: 1px;
+    border-radius: 7px;
+    background: conic-gradient(from 200deg at 30% 20%, rgba(61,242,224,0.5), rgba(157,107,255,0.4) 30%, rgba(255,61,166,0.32) 55%, rgba(157,107,255,0.22) 75%, rgba(61,242,224,0.5) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; z-index: 1;
+  }
+  .facet-mini::after {
+    content: "";
+    position: absolute; top: -50%; left: -60%; width: 55%; height: 200%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.12) 55%, transparent);
+    transform: rotate(8deg);
+    animation: facetShine 5s ease-in-out infinite;
+    animation-delay: var(--shine-delay, 0s);
+    pointer-events: none; z-index: 2;
+  }
+  [data-theme="light"] .facet-mini::after {
+    background: linear-gradient(100deg, transparent, rgba(157,107,255,0.08) 45%, rgba(61,242,224,0.12) 50%, rgba(157,107,255,0.08) 55%, transparent);
+  }
+  .facet-mini-picked::after {
+    background: linear-gradient(100deg, transparent, rgba(157,107,255,0.3) 45%, rgba(157,107,255,0.55) 50%, rgba(157,107,255,0.3) 55%, transparent);
+    animation-duration: 2.6s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .facet-mini::after { animation: none; }
   }
 
   .frame { width: 100%; max-width: 430px; }
@@ -1712,6 +1775,7 @@ export default function FestivalOptimizer() {
   }
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
+  const [pickedSetsOpen, setPickedSetsOpen] = useState(false);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
   const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
   const spotify = useSpotify(profile?.id);
@@ -2569,13 +2633,18 @@ export default function FestivalOptimizer() {
                   color: "#3DF2E0",
                   label: daysUntil != null ? `day${daysUntil === 1 ? "" : "s"} to ${countdownFestival.name}` : "no upcoming date",
                 },
-                { value: pickedCount, color: "#9D6BFF", label: `set${pickedCount === 1 ? "" : "s"} picked` },
+                { value: pickedCount, color: "#9D6BFF", label: `set${pickedCount === 1 ? "" : "s"} picked`, onClick: pickedCount > 0 ? () => setPickedSetsOpen(true) : null },
                 { value: crewCount, color: "#FF3DA6", label: crewCount === 1 ? "crew" : "crews" },
               ];
               return (
                 <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                   {stats.map((s, i) => (
-                    <div key={i} className="facet-card" style={{ "--shine-delay": `${i * 1.2}s`, flex: 1, minWidth: 0, padding: "12px 8px", textAlign: "center" }}>
+                    <div
+                      key={i}
+                      className="facet-card"
+                      onClick={s.onClick || undefined}
+                      style={{ "--shine-delay": `${i * 1.2}s`, flex: 1, minWidth: 0, padding: "12px 8px", textAlign: "center", cursor: s.onClick ? "pointer" : "default" }}
+                    >
                       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 26, color: s.color, lineHeight: 1, position: "relative", zIndex: 3 }}>{s.value}</div>
                       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", position: "relative", zIndex: 3 }}>{s.label}</div>
                     </div>
@@ -2837,7 +2906,7 @@ export default function FestivalOptimizer() {
 
             {lineupSubview === "discover" ? (
               <Suspense fallback={null}>
-                <DiscoverDeck sets={effectiveSets} pickedIds={schedulePickedIds} onAdd={toggleSchedulePick} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
+                <DiscoverDeck sets={effectiveSets} pickedIds={schedulePickedIds} onAdd={toggleSchedulePick} onSelect={setSelected} currentDay={currentDay} currentFestival={currentFestival} stages={activeStages} />
               </Suspense>
             ) : (
               <>
@@ -2890,25 +2959,32 @@ export default function FestivalOptimizer() {
                   {activeStages.map((stage) => (
                     <div key={stage.id} style={{ flex: "1 0 110px", borderRight: "1px solid var(--border)" }}>
                       <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
-                        {visibleSets.filter((s) => s.stage === stage.id).map((s) => {
+                        {visibleSets.filter((s) => s.stage === stage.id).map((s, i) => {
                           const dimmed = lineupSubview === "full" && s.match != null && s.match < threshold;
                           const isConflict = conflicts.has(s.id);
                           const isPicked = schedulePickedIds.has(s.id);
                           const crewAlsoIn = schedulePickCrewOverlap[s.id]?.length || 0;
                           return (
-                            <div key={s.id} className="set-card" onClick={() => setSelected(s)} style={{
-                              position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
-                              borderRadius: 7, padding: "6px 7px", background: dimmed ? "var(--surface)" : "var(--surface)",
-                              border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match)}`,
-                              opacity: dimmed ? 0.35 : 1, overflow: "hidden",
-                            }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <div
+                              key={s.id}
+                              className={`set-card facet-mini${isPicked ? " facet-mini-picked" : ""}`}
+                              onClick={() => setSelected(s)}
+                              style={{
+                                "--shine-delay": `${(i % 6) * 0.8}s`,
+                                position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
+                                padding: "6px 7px", background: "var(--surface)",
+                                border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match)}`,
+                                boxShadow: isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
+                                opacity: dimmed ? 0.35 : 1,
+                              }}
+                            >
+                              <div style={{ position: "relative", zIndex: 3, display: "flex", alignItems: "center", gap: 4 }}>
                                 <div style={{ fontWeight: 700, fontSize: 11.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.artist}</div>
                                 {ARTIST_POSTS.some((a) => a.artistOf === s.id) && (
                                   <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
                                 )}
                               </div>
-                              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
+                              <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
                                 {crewAlsoIn ? `👥 ${crewAlsoIn} crew too` : matchLabel(s.match)}
                               </div>
                             </div>
@@ -3407,6 +3483,49 @@ export default function FestivalOptimizer() {
           </div>
         )}
 
+        {/* Picked-sets sheet — reachable from Home's "sets picked" stat */}
+        {pickedSetsOpen && (() => {
+          const days = FESTIVAL_DAYS[currentFestival] || [];
+          const dayOrder = Object.fromEntries(days.map((d, i) => [d.id, i]));
+          const picked = effectiveSets
+            .filter((s) => s.festival === currentFestival && schedulePickedIds.has(s.id))
+            .sort((a, b) => (dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99) || a.start - b.start);
+          return (
+            <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 22, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setPickedSetsOpen(false)}>
+              <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "78dvh", overflowY: "auto" }}>
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>Your schedule</span>
+                  <button onClick={() => setPickedSetsOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
+                </div>
+                {picked.length === 0 ? (
+                  <p style={{ fontSize: 13, color: "var(--text-dim)" }}>Nothing picked yet.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {picked.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => { setPickedSetsOpen(false); setSelected(s); }}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dim)", marginTop: 2 }}>
+                            {days.find((d) => d.id === s.day)?.label} · {activeStages.find((st) => st.id === s.stage)?.name}
+                          </div>
+                        </div>
+                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 10 }}>
+                          {fmtTime(s.start, s.day, s.festival)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Detail sheet */}
         {selected && (
           <div className="sheet-backdrop" style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setSelected(null)}>
@@ -3423,6 +3542,27 @@ export default function FestivalOptimizer() {
                   </div>
                 </div>
                 <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
+              </div>
+              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                {(() => {
+                  const links = artistSearchLinks(selected.artist);
+                  return (
+                    <>
+                      <a
+                        href={links.spotify} target="_blank" rel="noreferrer"
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, textDecoration: "none", padding: "9px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-dim)" }}
+                      >
+                        🎧 Find on Spotify
+                      </a>
+                      <a
+                        href={links.soundcloud} target="_blank" rel="noreferrer"
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, textDecoration: "none", padding: "9px", borderRadius: 8, border: "1px solid var(--border)", color: "var(--text-dim)" }}
+                      >
+                        ☁ Find on SoundCloud
+                      </a>
+                    </>
+                  );
+                })()}
               </div>
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: matchColor(selected.match), border: `1px solid ${matchColor(selected.match)}`, borderRadius: 6, padding: "3px 9px" }}>{selected.match == null ? "No match data" : `${selected.match}% match`}</span>
@@ -3487,6 +3627,33 @@ export default function FestivalOptimizer() {
                   </button>
                 </div>
               )}
+              {(() => {
+                const otherSets = effectiveSets
+                  .filter((s) => s.artist === selected.artist && s.festival === selected.festival && s.id !== selected.id)
+                  .sort((a, b) => a.day === b.day ? a.start - b.start : a.day.localeCompare(b.day));
+                if (otherSets.length === 0) return null;
+                return (
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", letterSpacing: "0.3px", marginBottom: 8 }}>
+                      ALSO PLAYING AT THIS FESTIVAL
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {otherSets.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => setSelected(s)}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", cursor: "pointer", textAlign: "left" }}
+                        >
+                          <span style={{ fontSize: 12.5, color: "var(--text)" }}>{activeStages.find((st) => st.id === s.stage)?.name}</span>
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
+                            {(FESTIVAL_DAYS[s.festival] || []).find((d) => d.id === s.day)?.label} · {fmtTime(s.start, s.day, s.festival)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
