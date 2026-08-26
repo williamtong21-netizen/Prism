@@ -2567,23 +2567,32 @@ export default function FestivalOptimizer() {
                     {visible.map((f) => {
                       const isActive = f.id === currentFestival;
                       const isAttending = attendingIds.has(f.id);
+                      const goToFestival = () => { setCurrentFestival(f.id); setView("mine"); };
                       return (
                         <div
                           key={f.id}
-                          onClick={() => { setCurrentFestival(f.id); setView("mine"); }}
-                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentFestival(f.id); setView("mine"); } }}
-                          role="button"
-                          tabIndex={0}
                           className="tab-btn"
                           style={{
-                            textAlign: "left", cursor: "pointer", color: "#F5F0FF",
+                            color: "#F5F0FF",
                             border: `1px solid ${isActive ? "#3DF2E0" : "#2A2440"}`,
                             background: isActive ? "rgba(61,242,224,0.08)" : "#161225",
                             borderRadius: 12, padding: "10px 14px",
-                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                            display: "flex", alignItems: "center", gap: 4,
                           }}
                         >
-                          <div style={{ minWidth: 0 }}>
+                          {/* Separate clickable region from the star below (not a
+                              parent wrapping it) -- nesting the star inside a
+                              row-wide click/keydown handler relied on
+                              stopPropagation alone, which some touch browsers
+                              don't honor consistently for a button nested inside
+                              a non-native (role="button") clickable element. */}
+                          <div
+                            onClick={goToFestival}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goToFestival(); } }}
+                            role="button"
+                            tabIndex={0}
+                            style={{ flex: 1, minWidth: 0, textAlign: "left", cursor: "pointer" }}
+                          >
                             <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
                               {f.name}
                               {f.hasData && <Icon name="verified" />}
@@ -2591,15 +2600,21 @@ export default function FestivalOptimizer() {
                             <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); toggleAttending(f.id); }}
-                              aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
-                              aria-pressed={isAttending}
-                              style={{ background: "none", border: "none", padding: 4, cursor: "pointer", display: "flex", lineHeight: 0 }}
-                            >
-                              <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
-                            </button>
+                          <button
+                            onClick={() => toggleAttending(f.id)}
+                            aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
+                            aria-pressed={isAttending}
+                            style={{ background: "none", border: "none", padding: 10, margin: "-10px 0", cursor: "pointer", display: "flex", lineHeight: 0, flexShrink: 0 }}
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                          </button>
+                          <div
+                            onClick={goToFestival}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goToFestival(); } }}
+                            role="button"
+                            tabIndex={0}
+                            style={{ cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center" }}
+                          >
                             {isActive ? (
                               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: "#3DF2E0", whiteSpace: "nowrap" }}>Last viewed</span>
                             ) : (
@@ -3850,12 +3865,12 @@ export default function FestivalOptimizer() {
                             <div style={{ fontSize: 11.5, color: "#5B5470", marginTop: 2 }}>{f.location} · {f.dates}</div>
                             {f.note && <div style={{ fontSize: 10, color: "#FFB23D", marginTop: 2, lineHeight: 1.4 }}>{f.note}</div>}
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
                           <button
                             onClick={() => toggleAttending(f.id)}
                             aria-label={isAttending ? `Remove ${f.name} from attending` : `Mark ${f.name} as attending`}
                             aria-pressed={isAttending}
-                            style={{ background: "none", border: "none", padding: 4, cursor: "pointer", display: "flex", lineHeight: 0 }}
+                            style={{ background: "none", border: "none", padding: 10, margin: -10, cursor: "pointer", display: "flex", lineHeight: 0 }}
                           >
                             <svg viewBox="0 0 24 24" width="18" height="18" stroke={isAttending ? "#FFB23D" : "#5B5470"} fill={isAttending ? "#FFB23D" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
                           </button>
