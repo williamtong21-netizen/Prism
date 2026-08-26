@@ -674,6 +674,11 @@ const FESTIVAL_MAP_IMAGES = {
 const FESTIVAL_LINEUP_IMAGES = {
   "edc-mexico": { src: "/festival-lineups/edc-mexico.jpg", year: 2026 },
   acl: { src: "/festival-lineups/acl.webp", year: 2026 },
+  // Lost Lands' own official lineup graphics (lostlandsfestival.com/lineup)
+  // only ever break the bill down by day, never by stage or set time --
+  // same situation as Camp Flog Gnaw below. The real poster (all 5 days,
+  // Wed-Sun) is shown as-is; see 040_lost_lands_remove_bad_sets.sql for why
+  // festival_sets is intentionally empty here rather than fabricated.
   "lost-lands": { src: "/festival-lineups/lost-lands.jpg", year: 2026 },
   "edc-orlando": { src: "/festival-lineups/edc-orlando.jpg", year: 2026 },
   "secret-dreams": { src: "/festival-lineups/secret-dreams.jpg", year: 2026 },
