@@ -277,25 +277,78 @@ const FESTIVALS = [
   // null for it, which correctly keeps it out of getDefaultFestival()'s
   // "soonest upcoming" pick without needing a separate status field.
   { id: "bonnaroo", name: "Bonnaroo", location: "Manchester, TN", dates: "On hiatus for 2027 — organizers say The Farm needs to recover after storm damage", hasData: true },
-  { id: "coachella", name: "Coachella", location: "Indio, CA", dates: "Apr 9–11 & 16–18, 2027", hasData: true },
-  { id: "edc-vegas", name: "EDC Las Vegas", location: "Las Vegas, NV", dates: "May 14–16 & 21–23, 2027", hasData: true, noCamping: true, note: "First year expanding to two weekends." },
-  { id: "electric-forest", name: "Electric Forest", location: "Rothbury, MI", dates: "Jun 24–27, 2027", hasData: true, note: "Widely reported but not yet confirmed on the festival's own site." },
-  { id: "governors-ball", name: "Governors Ball", location: "New York, NY", dates: "2027 dates not yet announced", hasData: true, noCamping: true },
-  { id: "lollapalooza", name: "Lollapalooza", location: "Chicago, IL", dates: "2027 dates not yet announced", hasData: true, noCamping: true },
-  { id: "outside-lands", name: "Outside Lands", location: "San Francisco, CA", dates: "Aug 6–8, 2027", hasData: true, noCamping: true },
+  // Corrected from a wrong "Apr 9-11 & 16-18, 2027" placeholder -- the
+  // festival_sets data (Sabrina Carpenter/Justin Bieber/Karol G headliners,
+  // Anyma's "Aeden" debut) is the real, already-announced 2026 lineup, not
+  // an invented 2027 one. 2026's dates were Apr 10-12 & 17-19 -- already
+  // passed as of this writing, kept as the last confirmed real edition
+  // (same pattern as edc-mexico below).
+  { id: "coachella", name: "Coachella", location: "Indio, CA", dates: "Apr 10–12 & 17–19, 2026", hasData: true },
+  // Corrected from a wrong "May 14-16 & 21-23, 2027" placeholder (that IS
+  // the real announced 2027 format/dates, but 2027's actual lineup hasn't
+  // been announced) -- the festival_sets data is really the 2026 edition's
+  // real Friday night (Fisher/Porter Robinson/Charlotte de Witte/
+  // Underworld/Meduza), already passed. See 041_edc_vegas_fix_days.sql for
+  // the 3 artists that were on the wrong day/stage or unverifiable and got
+  // corrected/removed.
+  { id: "edc-vegas", name: "EDC Las Vegas", location: "Las Vegas, NV", dates: "May 15–17, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "Jun 24-27, 2027" placeholder -- the
+  // festival_sets data (Thursday pre-party: Excision, Ganja White Night,
+  // Disco Lines, etc.) is the real, already-happened Jun 25-28, 2026
+  // edition's real Thursday, confirmed artist-for-artist against Clashfinder.
+  { id: "electric-forest", name: "Electric Forest", location: "Rothbury, MI", dates: "Jun 25–28, 2026", hasData: true },
+  // Corrected from a wrong "2027 dates not yet announced" placeholder that
+  // contradicted its own hasData:true -- the festival_sets data (Stray
+  // Kids/Wet Leg/Ravyn Lenae, Verizon/Snapchat/Grove stages) is the real,
+  // already-happened Saturday, Jun 6, 2026, verified against NYSMusic's Day
+  // 2 recap.
+  { id: "governors-ball", name: "Governors Ball", location: "New York, NY", dates: "Jun 5–7, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "2027 dates not yet announced" placeholder that
+  // contradicted its own hasData:true -- the festival_sets data (JENNIE/
+  // Olivia Dean/Perry's Stage electronic acts) is the real, already-
+  // announced 2026 edition. Real 2026 dates: Jul 30-Aug 2; our single "sat"
+  // day is Aug 1, already passed as of this writing.
+  { id: "lollapalooza", name: "Lollapalooza", location: "Chicago, IL", dates: "Jul 30–Aug 2, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "Aug 6-8, 2027" placeholder -- the
+  // festival_sets data (The Strokes/The xx closing, Lands End/Sutro/Twin
+  // Peaks stages) is the real, already-happened Saturday, Aug 8, 2026,
+  // verified against SFist's Day Two recap.
+  { id: "outside-lands", name: "Outside Lands", location: "San Francisco, CA", dates: "Aug 7–9, 2026", hasData: true, noCamping: true },
   { id: "acl", name: "Austin City Limits", location: "Austin, TX", dates: "Oct 2–4 & 9–11, 2026", hasData: true, noCamping: true },
-  { id: "tomorrowland", name: "Tomorrowland", location: "Boom, Belgium", dates: "Jul 17–19 & 24–26, 2027", hasData: true },
+  // Corrected from a wrong "2027" placeholder -- the festival_sets data
+  // (Vintage Culture through Martin Garrix closing, Mainstage/Freedom) is
+  // the real, already-happened Weekend 1 Friday, Jul 17, 2026, verified
+  // set-by-set against 1001Tracklists/Beatportal.
+  { id: "tomorrowland", name: "Tomorrowland", location: "Boom, Belgium", dates: "Jul 17–19 & 24–26, 2026", hasData: true },
   { id: "lost-lands", name: "Lost Lands", location: "Thornville, OH", dates: "Sep 18–20, 2026", hasData: true },
-  { id: "ultra-miami", name: "Ultra Miami", location: "Miami, FL", dates: "Mar 26–28, 2027", hasData: true, noCamping: true },
-  { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 9–11, 2027", hasData: true, noCamping: true },
-  { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 20–27, 2027", hasData: true, noCamping: true },
+  // Corrected from a wrong "2027" placeholder -- the festival_sets data
+  // (Illenium/Bzrp Main Stage, Vini Vici/Armin van Buuren b2b Marlon
+  // Hoffstadt Worldwide Stage) is the real, already-happened Friday, Mar
+  // 27, 2026, verified against Local10/Miami New Times set-time coverage.
+  { id: "ultra-miami", name: "Ultra Miami", location: "Miami, FL", dates: "Mar 27–29, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "2027" placeholder -- the festival_sets data
+  // (Subtronics/Oliver Heldens Main Stage, Miss Monique/Adam Beyer
+  // Resistance stage) is the real, already-happened Friday, Jul 10, 2026,
+  // verified against croatiaunscripted.com/Cultr set-time coverage.
+  { id: "ultra-europe", name: "Ultra Europe", location: "Split, Croatia", dates: "Jul 10–12, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "Mar 20-27, 2027" placeholder -- the
+  // festival_sets Orbyz-stage data is the real, already-happened 2026
+  // edition (Orbyz debuted at TW2026, confirmed via EDM Identity/DJ Mag).
+  { id: "tomorrowland-winter", name: "Tomorrowland Winter", location: "Alpe d'Huez, France", dates: "Mar 21–28, 2026", hasData: true, noCamping: true },
   { id: "edc-orlando", name: "EDC Orlando", location: "Orlando, FL", dates: "Nov 6–8, 2026", hasData: true, noCamping: true },
   // Real confirmed dates (the official 2026 poster) are Feb 20-22, 2026 --
   // already passed as of today, unlike this app's other 2027-dated
   // festivals. Corrected from a wrong "Feb 19-21, 2027" placeholder.
   { id: "edc-mexico", name: "EDC Mexico", location: "Mexico City, Mexico", dates: "Feb 20–22, 2026", hasData: true, noCamping: true },
-  { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 12–14, 2027", hasData: true, noCamping: true },
-  { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 17–18, 2027", hasData: true, noCamping: true },
+  // Corrected from a wrong "Mar 12-14, 2027" placeholder -- the
+  // festival_sets data (Lorde/Tyler Fri, Sabrina Carpenter/Interpol Sun) is
+  // the real, already-happened Mar 13-15, 2026 edition.
+  { id: "lollapalooza-argentina", name: "Lollapalooza Argentina", location: "Buenos Aires, Argentina", dates: "Mar 13–15, 2026", hasData: true, noCamping: true },
+  // Corrected from a wrong "Jul 17-18, 2027" placeholder -- the
+  // festival_sets data (Young Miko, Zara Larsson, Pitbull closing) is the
+  // real, already-happened Jul 18-19, 2026 edition (single-day "sat" tag =
+  // Jul 18).
+  { id: "lollapalooza-berlin", name: "Lollapalooza Berlin", location: "Berlin, Germany", dates: "Jul 18–19, 2026", hasData: true, noCamping: true },
   { id: "secret-dreams", name: "Secret Dreams", location: "Marengo, OH", dates: "Sep 3–6, 2026", hasData: true },
   // Newly added -- real festivals with confirmed dates, but no lineup/map
   // data built out yet (see the `hasData: false` "Request data" flow in the
@@ -427,49 +480,60 @@ const FESTIVAL_DAYS = {
   ],
   // Electric Forest is Thu–Sun; only Thursday has any published lineup
   // data so far (see festival_sets), but the other three days are real and
-  // shown anyway -- same pattern as Bonnaroo's lightest day below.
-  "electric-forest": consecutiveDays(2027, 5, 24, 4, 18 * 60 + 30),
-  // "Dates not yet announced" (see FESTIVALS) -- no fixed date to expand
-  // against, so this stays a single placeholder day rather than a guess.
+  // shown anyway -- same pattern as Bonnaroo's lightest day below. Real
+  // 2026 dates (previously mislabeled 2027): Jun 25-28.
+  "electric-forest": consecutiveDays(2026, 5, 25, 4, 18 * 60 + 30),
+  // Real, already-happened Saturday, Jun 6, 2026 (see FESTIVALS -- the
+  // "dates not yet announced" placeholder there was stale/wrong given this
+  // real data already existed). Only the one confirmed day is modeled.
   "governors-ball": [
     { id: "sat", label: "Sat", date: "Jun 6", startMin: 12 * 60 },
   ],
+  // Real, already-happened Saturday, Aug 1, 2026 (see FESTIVALS -- same
+  // stale "dates not yet announced" issue as Governors Ball above).
   lollapalooza: [
     { id: "sat", label: "Sat", date: "Aug 1", startMin: 12 * 60 },
   ],
-  "outside-lands": consecutiveDays(2027, 7, 6, 3, 15 * 60),
+  // Real 2026 dates (previously mislabeled 2027): Aug 7-9.
+  "outside-lands": consecutiveDays(2026, 7, 7, 3, 15 * 60),
   // Two weekends (see FESTIVALS) -- second weekend reuses the same
   // weekday ids with a "2" suffix, same convention as Coachella above.
   // Noon start covers the real full-day lineup now loaded (see
   // festival_sets) -- the previous 6pm marker only reflected the 3
   // headliner-adjacent sets originally on file.
   acl: [...consecutiveDays(2026, 9, 2, 3, 12 * 60), ...consecutiveDays(2026, 9, 9, 3, 12 * 60, { suffix: "2" })],
-  "edc-vegas": [...consecutiveDays(2027, 4, 14, 3, 21 * 60), ...consecutiveDays(2027, 4, 21, 3, 21 * 60, { suffix: "2" })],
-  // Tomorrowland 2027's confirmed dates (Jul 17–19 & 24–26) actually land
-  // on Sat–Mon, not the usual Fri–Sun -- firstId keeps the existing
-  // festival_sets rows (tagged day_id "fri"/"fri2") pointing at the right
-  // day even though its real label is "Sat", rather than needing a data
-  // migration just because the calendar shifted this year.
+  // The festival_sets data is the real, already-happened single-weekend
+  // 2026 edition (Fri May 15 - Sun May 17), not 2027's new two-weekend
+  // Dusk/Dawn format (whose lineup isn't announced yet) -- see
+  // 041_edc_vegas_fix_days.sql.
+  "edc-vegas": consecutiveDays(2026, 4, 15, 3, 21 * 60),
+  // The festival_sets data (Vintage Culture...Martin Garrix closing) is the
+  // real, already-happened Weekend 1 Friday, Jul 17, 2026 -- previously
+  // mislabeled 2027. firstId kept as a no-op safety net in case a future
+  // year's calendar shifts the first day off Friday again.
   tomorrowland: [
-    ...consecutiveDays(2027, 6, 17, 3, 14 * 60, { firstId: "fri" }),
-    ...consecutiveDays(2027, 6, 24, 3, 14 * 60, { firstId: "fri", suffix: "2" }),
+    ...consecutiveDays(2026, 6, 17, 3, 14 * 60, { firstId: "fri" }),
+    ...consecutiveDays(2026, 6, 24, 3, 14 * 60, { firstId: "fri", suffix: "2" }),
   ],
   "lost-lands": consecutiveDays(2026, 8, 18, 3, 18 * 60),
-  // Grid starts at 4pm, matching the confirmed 4:00pm start of Frank Walker's
-  // Main Stage set (Miami New Times' published 2026 set times).
-  "ultra-miami": consecutiveDays(2027, 2, 26, 3, 16 * 60),
-  // Grid starts at 8pm, matching the confirmed doors/first-set time on
-  // ultraeurope.com's published 2026 set times.
-  "ultra-europe": consecutiveDays(2027, 6, 9, 3, 20 * 60),
+  // Grid starts at 4pm. The festival_sets data (Illenium/Bzrp Main Stage,
+  // Vini Vici/Armin van Buuren b2b Marlon Hoffstadt Worldwide Stage) is the
+  // real, already-happened Friday, Mar 27, 2026 -- previously mislabeled
+  // 2027.
+  "ultra-miami": consecutiveDays(2026, 2, 27, 3, 16 * 60),
+  // Grid starts at 8pm. The festival_sets data (Subtronics/Oliver Heldens
+  // Main Stage, Miss Monique/Adam Beyer Resistance stage) is the real,
+  // already-happened Friday, Jul 10, 2026 -- previously mislabeled 2027.
+  "ultra-europe": consecutiveDays(2026, 6, 10, 3, 20 * 60),
   // DJ Mag's Tomorrowland Winter 2026 coverage confirms specific artists on
   // specific days (see the festival_sets table) but not a published daily
   // set-time grid, so these are generic evening-start markers -- only the
-  // two days with confirmed artists are modeled, not the full Mar 20–27
-  // run (a ski festival spans far more days than it has concert content).
-  // 2027's real Sat/Sun fall on Mar 20/21 (previously mislabeled Mar 21/22).
+  // one day with a confirmed artist is modeled (see
+  // 042_stage_and_year_audit_fixes.sql for why the "sun" set was removed
+  // rather than kept), not the full Mar 21-28 run (a ski festival spans far
+  // more days than it has concert content). Real 2026 Saturday is Mar 21.
   "tomorrowland-winter": [
-    { id: "sat", label: "Sat", date: "Mar 20", startMin: 18 * 60 },
-    { id: "sun", label: "Sun", date: "Mar 21", startMin: 18 * 60 },
+    { id: "sat", label: "Sat", date: "Mar 21", startMin: 18 * 60 },
   ],
   // EDC Orlando 2026's day-by-day headliner assignment is confirmed
   // (gottagoorlando.com) but exact set times aren't published yet — the
@@ -484,19 +548,20 @@ const FESTIVAL_DAYS = {
   // poster is loaded -- previously only 2 sparse days existed under a
   // wrong 2027 date.
   "edc-mexico": consecutiveDays(2026, 1, 20, 3, 16 * 60),
-  // Grid starts at 7pm, matching Katseye's confirmed Friday opening slot
-  // (perfil.com / lanacion.com.ar's published 2026 day-by-day schedules).
-  // 2027's real Fri/Sun fall on Mar 12/14 (previously mislabeled Mar 13/15);
-  // Saturday has no lineup data yet but is a real day of the festival, so
-  // it's shown (empty) rather than skipped, same as Electric Forest above.
+  // Grid starts at 7pm. The festival_sets data (Lorde/Tyler Fri,
+  // Sabrina Carpenter/Interpol Sun) is the real, already-happened
+  // Mar 13-15, 2026 edition -- previously mislabeled 2027. Saturday has no
+  // lineup data yet but is a real day of the festival, so it's shown
+  // (empty) rather than skipped, same as Electric Forest above.
   "lollapalooza-argentina": [
-    { id: "fri", label: "Fri", date: "Mar 12", startMin: 19 * 60 },
-    { id: "sat", label: "Sat", date: "Mar 13", startMin: 19 * 60 },
-    { id: "sun", label: "Sun", date: "Mar 14", startMin: 18 * 60 + 45 },
+    { id: "fri", label: "Fri", date: "Mar 13", startMin: 19 * 60 },
+    { id: "sat", label: "Sat", date: "Mar 14", startMin: 19 * 60 },
+    { id: "sun", label: "Sun", date: "Mar 15", startMin: 18 * 60 + 45 },
   ],
-  // Grid starts at noon, matching Baran Kok's confirmed Essence Stage
-  // opening set time (timeout.com/festivawl.com's published 2026 set times).
-  "lollapalooza-berlin": consecutiveDays(2027, 6, 17, 2, 12 * 60),
+  // Grid starts at noon. The festival_sets data (Balu Brigada...Pitbull
+  // closing, Essence Stage) is the real, already-happened Jul 18, 2026 --
+  // previously mislabeled 2027.
+  "lollapalooza-berlin": consecutiveDays(2026, 6, 18, 2, 12 * 60),
   // Secret Dreams 2026's new venue (The Cardinal Center, Marengo OH).
   // Official dates are Fri–Sun Sep 4–6; Thursday Sep 3 is a separate
   // pre-party rather than part of the paid festival days proper. No
