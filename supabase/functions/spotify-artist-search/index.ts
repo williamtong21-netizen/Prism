@@ -2,7 +2,7 @@
 // browser editor), same as spotify-callback/send-push -- see
 // supabase/README.md.
 //
-// Returns a real Spotify artist photo for the artist-profile sheet's
+// Returns real Spotify artist photos for the artist-profile sheet's
 // "Find on Spotify" area, when Spotify's own search has a confident top
 // match. Uses the Client Credentials flow (app-level auth, no user token
 // needed) so this works for every set, not just ones the signed-in user
@@ -10,13 +10,24 @@
 // SPOTIFY_CLIENT_SECRET function secrets as spotify-callback, but never
 // touches a user's own tokens or spotify_connections/spotify_taste.
 //
-// Deliberately returns nothing (no image) rather than guess -- a wrong
+// Deliberately returns no image for an entry rather than guess -- a wrong
 // photo of a real person is worse than no photo. Only returns an image
-// when Spotify's search puts the query as the #1 result AND the
-// returned artist name matches (case-insensitively, ignoring a
-// parenthetical like "(Sunset Set)") -- ambiguous/no-match names (e.g.
-// "Two Guys", "5AM", single-word aliases with no Spotify presence) come
-// back empty and the client shows no image, same as it does today.
+// when Spotify's search puts the query as the #1 result AND the returned
+// artist name matches (case-insensitively, ignoring a parenthetical like
+// "(Sunset Set)").
+//
+// Many festival lineups bill two DJs performing together as one string,
+// e.g. "Armin van Buuren B2B Marlon Hoffstadt" -- that combined string
+// never matches a single Spotify artist, even though both individuals
+// almost certainly have their own real profiles. "B2B" unambiguously means
+// two different people (unlike "&"/"and", which plenty of real duos use as
+// part of their own single Spotify artist name, e.g. "Angus & Julia
+// Stone") so it's the one separator safe to split on automatically.
+// "Presents"/"pres."/"convida"/"convide" billings ("Alok & Family pres.
+// Rave The World") put a promo/event tail after the real headliner's name
+// -- only the part before that marker is a real, searchable artist.
+// Returns `artists`, an array of 1+ resolved names -- most sets resolve to
+// exactly one.
 
 const spotifyClientId = Deno.env.get("SPOTIFY_CLIENT_ID")!;
 const spotifyClientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET")!;
@@ -63,6 +74,72 @@ function normalize(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+// Drops a "presents"/"pres."/"convida"/"convide" promo/guest tail, keeping
+// only the real headliner name before it.
+function stripPresentsTail(name: string): string {
+  return name.split(/\s+(?:presents:?|pres\.?|convida|convide)\s+/i)[0].trim();
+}
+
+// Splits an unambiguous back-to-back billing into its individual names.
+function splitB2B(name: string): string[] {
+  return name
+    .split(/\s+b2b\s+/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// If the whole-string search fails, retries once with "&" swapped for
+// "and" (or vice versa) -- covers real duo/band names stored with the
+// other spelling than Spotify uses (e.g. "Angus and Julia Stone" in our
+// data vs. "Angus & Julia Stone" on Spotify). Not a split -- still one
+// artist, one search.
+function swapConjunction(name: string): string | null {
+  if (/\s&\s/.test(name)) return name.replace(/\s&\s/, " and ");
+  if (/\sand\s/i.test(name)) return name.replace(/\sand\s/i, " & ");
+  return null;
+}
+
+async function searchOne(token: string, name: string) {
+  const res = await fetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=1`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    console.log("spotify search failed", data);
+    return { name, image: null, spotifyUrl: null };
+  }
+  const top = data.artists?.items?.[0];
+  const confident = top && normalize(top.name) === normalize(name);
+  return {
+    name: confident ? top.name : name,
+    image: confident ? top.images?.[0]?.url || null : null,
+    spotifyUrl: confident ? top.external_urls?.spotify || null : null,
+  };
+}
+
+async function resolveArtists(token: string, rawArtist: string) {
+  const primary = stripPresentsTail(rawArtist);
+
+  const direct = await searchOne(token, primary);
+  if (direct.image) return [direct];
+
+  const swapped = swapConjunction(primary);
+  if (swapped) {
+    const viaSwap = await searchOne(token, swapped);
+    if (viaSwap.image) return [{ ...viaSwap, name: primary }];
+  }
+
+  const parts = splitB2B(primary);
+  if (parts.length > 1) {
+    const results = [];
+    for (const part of parts) results.push(await searchOne(token, part));
+    return results;
+  }
+
+  return [direct];
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") {
@@ -85,31 +162,15 @@ Deno.serve(async (req) => {
     }
 
     const token = await getAppToken();
-    const searchRes = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(artist)}&type=artist&limit=1`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const searchData = await searchRes.json();
-    if (!searchRes.ok) {
-      console.log("spotify search failed", searchData);
-      return new Response(JSON.stringify({ image: null }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const artists = await resolveArtists(token, artist);
 
-    const top = searchData.artists?.items?.[0];
-    const confidentMatch = top && normalize(top.name) === normalize(artist);
-    const image = confidentMatch ? top.images?.[0]?.url || null : null;
-    const spotifyUrl = confidentMatch ? top.external_urls?.spotify || null : null;
-
-    return new Response(JSON.stringify({ image, spotifyUrl, matchedName: confidentMatch ? top.name : null }), {
+    return new Response(JSON.stringify({ artists }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.log("top-level error", String(err));
-    return new Response(JSON.stringify({ image: null }), {
+    return new Response(JSON.stringify({ artists: [] }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

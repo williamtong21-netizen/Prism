@@ -8,7 +8,7 @@ import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
 import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
-import { useArtistPhoto } from "./lib/useArtistPhoto";
+import { useArtistPhotos } from "./lib/useArtistPhoto";
 import { useBlocking } from "./lib/useBlocking";
 import { useSchedulePicks } from "./lib/useSchedulePicks";
 import { useFestivalRequests } from "./lib/useFestivalRequests";
@@ -1802,7 +1802,7 @@ export default function FestivalOptimizer() {
   }
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
-  const selectedPhoto = useArtistPhoto(selected?.artist);
+  const selectedPhotos = useArtistPhotos(selected?.artist);
   const [pickedSetsOpen, setPickedSetsOpen] = useState(false);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
   const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
@@ -3620,19 +3620,27 @@ export default function FestivalOptimizer() {
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                  {selectedPhoto ? (
-                    <img
-                      src={selectedPhoto}
-                      alt=""
-                      style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
-                    />
-                  ) : (
-                    <span style={{ width: 52, height: 52, borderRadius: "50%", background: colorForId(selected.artist), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {artistInitials(selected.artist)}
-                    </span>
-                  )}
-                  <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                  <div style={{ display: "flex", flexShrink: 0 }}>
+                    {(selectedPhotos.length > 0 ? selectedPhotos : [{ name: selected.artist, image: null }]).map((p, i) =>
+                      p.image ? (
+                        <img
+                          key={i}
+                          src={p.image}
+                          alt=""
+                          style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: 10 - i }}
+                        />
+                      ) : (
+                        <span
+                          key={i}
+                          style={{ width: 52, height: 52, borderRadius: "50%", background: colorForId(p.name), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "2px solid var(--surface)", marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: 10 - i }}
+                        >
+                          {artistInitials(p.name)}
+                        </span>
+                      )
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0, marginLeft: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: "0.5px" }}>{selected.artist}</span>
                       {ARTIST_VERIFICATION[selected.id] === "verified" && <Icon name="verified" />}
