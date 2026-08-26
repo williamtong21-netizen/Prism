@@ -515,7 +515,16 @@ const FESTIVAL_DAYS = {
     ...consecutiveDays(2026, 6, 17, 3, 14 * 60, { firstId: "fri" }),
     ...consecutiveDays(2026, 6, 24, 3, 14 * 60, { firstId: "fri", suffix: "2" }),
   ],
-  "lost-lands": consecutiveDays(2026, 8, 18, 3, 18 * 60),
+  // Wed Sep 16 / Thu Sep 17 are Lost Lands' real early-arrival pre-party
+  // days (lostlandsfestival.com + frontgatetickets.com's "Early Entry"
+  // product both confirm these dates; campgrounds open at midnight each
+  // day). The festival's own copy only says music "starts in the early
+  // afternoon" with no exact time published, so 1pm is a generic marker
+  // (same convention as edc-orlando's evening-start markers below), not a
+  // confirmed gate time. No festival_sets data exists for these two days
+  // either (see 040_lost_lands_remove_bad_sets.sql) -- shown anyway since
+  // they're real days of the event, same pattern as Electric Forest above.
+  "lost-lands": [...consecutiveDays(2026, 8, 16, 2, 13 * 60), ...consecutiveDays(2026, 8, 18, 3, 18 * 60)],
   // Grid starts at 4pm. The festival_sets data (Illenium/Bzrp Main Stage,
   // Vini Vici/Armin van Buuren b2b Marlon Hoffstadt Worldwide Stage) is the
   // real, already-happened Friday, Mar 27, 2026 -- previously mislabeled
