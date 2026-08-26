@@ -2248,6 +2248,16 @@ export default function FestivalOptimizer() {
     if (lineupSubview === "matches") return s.match == null || s.match >= threshold || schedulePickedIds.has(s.id);
     return true; // full
   });
+  // Some real festivals (e.g. Lost Lands) only publish a day-level lineup
+  // this far out -- no per-artist stage/time yet. Rather than show a
+  // broken/empty time-grid (every set's `stage` is null, so it'd match no
+  // column) or fabricate times that don't exist, these days render as a
+  // flat "pick who you want to see" checklist instead. The exact same
+  // festival_sets rows just grow real stage_id/start_min/end_min once the
+  // festival actually publishes them -- at that point this flag flips to
+  // false on its own and the real grid takes over, no data migration or
+  // per-festival code needed.
+  const hasTimeData = daySets.length === 0 || daySets.some((s) => s.start != null);
 
   const TABS = [
     { id: "home", label: "Home", icon: "home" },
@@ -2941,12 +2951,57 @@ export default function FestivalOptimizer() {
               ))}
             </div>
 
-            {lineupSubview === "schedule" && visibleSets.length === 0 ? (
+            {visibleSets.length === 0 ? (
               <div className="facet-card" style={{ padding: "32px 20px", textAlign: "center" }}>
-                <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)" }}>Nothing on your schedule for this day yet.</div>
-                <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>
-                  Tap any set in Full Lineup or % Match to add it.
+                <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)" }}>
+                  {lineupSubview === "schedule" ? "Nothing on your schedule for this day yet." : "No lineup for this day yet."}
                 </div>
+                <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>
+                  {lineupSubview === "schedule" ? "Tap any set in Full Lineup or % Match to add it." : "Check back once it's announced."}
+                </div>
+              </div>
+            ) : !hasTimeData ? (
+              // No real per-artist stage/time published yet for this day (see
+              // `hasTimeData` above) -- a flat "pick who you want to see"
+              // checklist instead of a time-grid that would have nothing to
+              // position sets against.
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {visibleSets.map((s, i) => {
+                  const isPicked = schedulePickedIds.has(s.id);
+                  const crewAlsoIn = schedulePickCrewOverlap[s.id]?.length || 0;
+                  return (
+                    <div
+                      key={s.id}
+                      className={`facet-mini${isPicked ? " facet-mini-picked" : ""}`}
+                      style={{ "--shine-delay": `${(i % 6) * 0.8}s`, display: "flex", alignItems: "center", gap: 4, padding: "10px 12px", boxShadow: isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none" }}
+                    >
+                      <div
+                        role="button" tabIndex={0}
+                        onClick={() => setSelected(s)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelected(s); }}
+                        style={{ position: "relative", zIndex: 3, flex: 1, minWidth: 0, cursor: "pointer" }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</span>
+                          {ARTIST_POSTS.some((a) => a.artistOf === s.id) && (
+                            <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
+                          )}
+                        </div>
+                        {crewAlsoIn > 0 && (
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#9D6BFF", marginTop: 2 }}>👥 {crewAlsoIn} crew too</div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => toggleSchedulePick(s.id)}
+                        aria-label={isPicked ? `Remove ${s.artist} from your schedule` : `Add ${s.artist} to your schedule`}
+                        aria-pressed={isPicked}
+                        style={{ position: "relative", zIndex: 3, background: "none", border: "none", padding: 10, margin: -10, cursor: "pointer", display: "flex", flexShrink: 0 }}
+                      >
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke={isPicked ? "#9D6BFF" : "var(--text-dimmer)"} fill={isPicked ? "#9D6BFF" : "none"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8-6-3.5-6 3.5 1.3-6.8-5-4.7 6.8-.8z"/></svg>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
             <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
