@@ -8,6 +8,7 @@ import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
 import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
+import { useArtistPhoto } from "./lib/useArtistPhoto";
 import { useBlocking } from "./lib/useBlocking";
 import { useSchedulePicks } from "./lib/useSchedulePicks";
 import { useFestivalRequests } from "./lib/useFestivalRequests";
@@ -1790,6 +1791,7 @@ export default function FestivalOptimizer() {
   }
   const [threshold, setThreshold] = useState(60);
   const [selected, setSelected] = useState(null);
+  const selectedPhoto = useArtistPhoto(selected?.artist);
   const [pickedSetsOpen, setPickedSetsOpen] = useState(false);
   const [view, setView] = useState("home"); // home | mine | crew | map | community
   const { packedItems, toggleItem: togglePackedItem } = usePackingState(profile?.id);
@@ -3607,16 +3609,25 @@ export default function FestivalOptimizer() {
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: "0.5px" }}>{selected.artist}</span>
-                    {ARTIST_VERIFICATION[selected.id] === "verified" && <Icon name="verified" />}
-                  </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
-                    {activeStages.find((st) => st.id === selected.stage)?.name} · {fmtTime(selected.start, selected.day, selected.festival)}–{fmtTime(selected.end, selected.day, selected.festival)} · {selected.genre}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  {selectedPhoto && (
+                    <img
+                      src={selectedPhoto}
+                      alt=""
+                      style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
+                    />
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, letterSpacing: "0.5px" }}>{selected.artist}</span>
+                      {ARTIST_VERIFICATION[selected.id] === "verified" && <Icon name="verified" />}
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", marginTop: 2 }}>
+                      {activeStages.find((st) => st.id === selected.stage)?.name} · {fmtTime(selected.start, selected.day, selected.festival)}–{fmtTime(selected.end, selected.day, selected.festival)} · {selected.genre}
+                    </div>
                   </div>
                 </div>
-                <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
+                <button onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer", flexShrink: 0 }}>×</button>
               </div>
               <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
                 {(() => {

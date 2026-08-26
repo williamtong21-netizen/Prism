@@ -45,6 +45,21 @@ Supabase dashboard:
 Spotify's Development Mode caps new apps at 5 authorized users total until
 Extended Quota Mode is granted -- see the Feb 2026 developer policy update.
 
+## Artist photos (lineup profile sheet)
+
+One manual step, no migration needed:
+
+1. **Deploy the Edge Function.** Edge Functions -> deploy a new function
+   named `spotify-artist-search`, paste in
+   `functions/spotify-artist-search/index.ts`.
+
+   Reuses the same `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` secrets
+   as `spotify-callback` above (Supabase function secrets are
+   project-wide, not per-function -- no need to set them again if
+   Spotify connect is already deployed). Uses the Client Credentials
+   flow (app-level, no user token) so it works for every set, not just
+   signed-in users who've personally connected Spotify.
+
 ## Account deletion
 
 One manual step, no migration needed (every per-user table already
