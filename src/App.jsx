@@ -1166,6 +1166,17 @@ export function artistSearchLinks(artist) {
   };
 }
 
+// Fallback avatar initials for artists with no confident Spotify photo
+// match (no artist-logo source exists to fall back to instead) — one or
+// two letters from the real name, ignoring a trailing set-specific
+// qualifier the same way artistSearchLinks does.
+export function artistInitials(artist) {
+  const cleaned = artist.replace(/\s*\([^)]*\)\s*$/, "").trim() || artist;
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 export function matchColor(match) {
   if (match >= 85) return "#3DF2E0";
   if (match >= 60) return "#FFB23D";
@@ -3610,12 +3621,16 @@ export default function FestivalOptimizer() {
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                  {selectedPhoto && (
+                  {selectedPhoto ? (
                     <img
                       src={selectedPhoto}
                       alt=""
                       style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
                     />
+                  ) : (
+                    <span style={{ width: 52, height: 52, borderRadius: "50%", background: colorForId(selected.artist), color: "#0F0B1A", fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {artistInitials(selected.artist)}
+                    </span>
                   )}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
