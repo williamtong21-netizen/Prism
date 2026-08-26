@@ -1141,9 +1141,13 @@ export function fmtTime(offsetMin, dayId = "fri", festivalId = "bonnaroo") {
 // No real per-artist Spotify/SoundCloud profile URLs exist in the data --
 // these are search links, not guaranteed direct profile links, and are
 // labeled as such everywhere they're shown rather than implied to be an
-// exact match.
+// exact match. Strips a trailing "(Sunset Set)"/"(2 Hour Set)"/"(Detox)"
+// style qualifier before searching -- that's set-specific commentary, not
+// part of the artist's actual name, and searching it verbatim returns
+// worse (often zero) results.
 export function artistSearchLinks(artist) {
-  const q = encodeURIComponent(artist);
+  const cleaned = artist.replace(/\s*\([^)]*\)\s*$/, "").trim() || artist;
+  const q = encodeURIComponent(cleaned);
   return {
     spotify: `https://open.spotify.com/search/${q}`,
     soundcloud: `https://soundcloud.com/search/sounds?q=${q}`,
