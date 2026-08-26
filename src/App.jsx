@@ -386,6 +386,10 @@ const FESTIVALS = [
   { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
   { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026", hasData: true },
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
+  // Real confirmed 2027 dates/venue per soundhavenfestival.com -- no
+  // lineup announced yet as of this writing, same "track it, don't fake
+  // a schedule" pattern as the other hasData-less entries here.
+  { id: "sound-haven", name: "Sound Haven Music Festival", location: "Tracy City, TN", dates: "Jul 29–Aug 1, 2027" },
   { id: "new-orleans-jazz-fest", name: "New Orleans Jazz Fest", location: "New Orleans, LA", dates: "Apr 22–May 2, 2027", noCamping: true },
   { id: "bourbon-and-beyond", name: "Bourbon & Beyond", location: "Louisville, KY", dates: "Sep 24–27, 2026", hasData: true },
   // A small, deliberately short list of internationally major festivals --
