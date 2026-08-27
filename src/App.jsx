@@ -188,6 +188,17 @@ const FESTIVAL_STAGES = {
     { id: "ballroom", name: "The Ballroom", color: "#FFB23D" },
     { id: "canopy", name: "The Canopy", color: "#5FD97A" },
   ],
+  // Real North Coast Music Festival 2026 stage names, per
+  // northcoastfestival.com/music/schedule/'s own set-time graphics (The
+  // Stadium, The Shipyard, The Vega, Fire Pit, OCB Dome, Silent Disco).
+  "north-coast": [
+    { id: "stadium", name: "The Stadium", color: "#3DF2E0" },
+    { id: "shipyard", name: "The Shipyard", color: "#FF3DA6" },
+    { id: "vega", name: "The Vega", color: "#9D6BFF" },
+    { id: "firepit", name: "Fire Pit", color: "#FFB23D" },
+    { id: "ocbdome", name: "OCB Dome", color: "#5FD97A" },
+    { id: "silentdisco", name: "Silent Disco", color: "#FF7A3D" },
+  ],
   // Real Rock in Rio 2026 stage names, per rockinrio.com/rio/pt-br/line-up/'s
   // own stage headers (Palco Mundo, Palco Sunset, New Dance Order, Espaço
   // Favela, Global Village, Supernova).
@@ -384,6 +395,12 @@ const FESTIVALS = [
   { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
   { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", hasData: true, noCamping: true },
   { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
+  // Real, current 2026 edition (SeatGeek Stadium, Bridgeview -- marketed
+  // and listed here as "Chicago, IL" same as Lollapalooza/Riot Fest/Summer
+  // Smash above), Sep 4-6, 2026 -- about a week out as of this writing.
+  // Full 125-set schedule transcribed from northcoastfestival.com's own
+  // set-time graphics (see 048_north_coast_music_festival.sql).
+  { id: "north-coast", name: "North Coast Music Festival", location: "Chicago, IL", dates: "Sep 4–6, 2026", hasData: true, noCamping: true },
   { id: "boston-calling", name: "Boston Calling", location: "Allston, MA", dates: "Jun 4–6, 2027", noCamping: true },
   { id: "nocturnal-wonderland", name: "Nocturnal Wonderland", location: "San Bernardino, CA", dates: "Sep 19–20, 2026", hasData: true },
   { id: "wakaan", name: "Wakaan Music Festival", location: "Ozark, AR", dates: "Oct 1–3, 2026" },
@@ -619,6 +636,10 @@ const FESTIVAL_DAYS = {
   // Riot Fest 2026 (Sep 18-20). Gates open 11:30am per riotfest.org's own
   // daily schedule graphics -- matches the offset baseline used for the
   // real set times now loaded.
+  // North Coast Music Festival 2026 (Sep 4-6), 2pm-12am daily -- earliest
+  // published set across all 3 days/6 stages is 2:00pm per
+  // northcoastfestival.com's own set-time graphics.
+  "north-coast": consecutiveDays(2026, 8, 4, 3, 14 * 60),
   "riot-fest": consecutiveDays(2026, 8, 18, 3, 11 * 60 + 30),
   // Nocturnal Wonderland 2026 (Sep 19-20), 3pm-12am daily per Insomniac's
   // own event listing.
