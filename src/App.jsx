@@ -2009,6 +2009,23 @@ export default function FestivalOptimizer() {
     if (code) spotify.handleCallback(code, state).then(() => setProfileOpen(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
+
+  // Crew invite deep link (?join=CODE, from the Crew tab's Share button).
+  // Captured into localStorage on the very first render, before auth even
+  // resolves -- the email magic-link flow redirects to a bare origin
+  // (useAuth.js's emailRedirectTo has no path/query), which would
+  // otherwise silently drop the code for anyone who wasn't already signed
+  // in. Falls back to a previously-stashed code on a later re-render (e.g.
+  // this same component tree re-rendering through the sign-in screens).
+  const [pendingJoinCode] = useState(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("join");
+    if (fromUrl) {
+      localStorage.setItem("prism:pendingJoinCode", fromUrl);
+      window.history.replaceState(null, "", "/");
+      return fromUrl;
+    }
+    return localStorage.getItem("prism:pendingJoinCode") || null;
+  });
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
@@ -2153,6 +2170,7 @@ export default function FestivalOptimizer() {
   const [joinCrewOpen, setJoinCrewOpen] = useState(false);
   const [crewActionError, setCrewActionError] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
@@ -2198,6 +2216,31 @@ export default function FestivalOptimizer() {
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [notifiedCrew, setNotifiedCrew] = useState(false);
   const { crews, createCrew: createCrewRemote, joinCrew, setCrewPersistent: setCrewPersistentRemote, renameCrew, removeMember: removeCrewMember, leaveCrew, disbandCrew } = useCrews(profile?.id);
+
+  // Runs once profile+code are both ready (right after sign-in, for a
+  // brand-new user; immediately, for one already signed in). Waits on
+  // profile.id rather than just mounting eagerly, since join_crew_by_code
+  // needs a real auth.uid() to attribute the join to.
+  useEffect(() => {
+    if (!profile?.id || !pendingJoinCode) return;
+    let cancelled = false;
+    (async () => {
+      const result = await joinCrew(pendingJoinCode);
+      localStorage.removeItem("prism:pendingJoinCode");
+      if (cancelled) return;
+      if (result?.error) {
+        pushNotification({ type: "crew", title: "Couldn't join that crew", body: result.error.message || "The invite link may be expired or invalid." });
+        return;
+      }
+      setActiveCrewId(result.data.id);
+      if (result.data.festival_id) setCurrentFestival(result.data.festival_id);
+      setView("crew");
+      pushNotification({ type: "crew", title: `You joined ${result.data.name}!`, body: "Check out who else is already in." });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id, pendingJoinCode]);
+
   const [myCrewsOpen, setMyCrewsOpen] = useState(false);
   const [openMemberCard, setOpenMemberCard] = useState(null);
   const [editingCrewId, setEditingCrewId] = useState(null);
@@ -2443,9 +2486,38 @@ export default function FestivalOptimizer() {
     const result = await joinCrew(code);
     if (result?.data) {
       setActiveCrewId(result.data.id);
+      // The code might belong to a crew for a different festival than
+      // whichever one happens to be open right now -- follow it there,
+      // same as a shared invite link does, rather than landing the user
+      // on a crew that doesn't match anything else currently on screen.
+      if (result.data.festival_id) setCurrentFestival(result.data.festival_id);
       setJoinCrewOpen(false);
     }
     return result;
+  }
+
+  // Opens the device's native share sheet (Messages, WhatsApp, email,
+  // AirDrop, whatever the OS offers) when available, so sending an invite
+  // is one tap instead of "copy the code, then go find them in another
+  // app and paste it yourself." Desktop browsers (and anywhere else
+  // navigator.share doesn't exist) fall back to copying the link, same
+  // affordance as the code field right above this button.
+  async function shareInviteLink(crew) {
+    if (!crew) return;
+    const url = `${window.location.origin}/?join=${encodeURIComponent(crew.code)}`;
+    const shareData = { title: "Join my crew on Prism", text: `Join "${crew.name}" on Prism — tap this to hop in:`, url };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // AbortError from the user dismissing the share sheet is normal,
+        // not a failure worth surfacing.
+      }
+      return;
+    }
+    await navigator.clipboard?.writeText(url);
+    setInviteLinkCopied(true);
+    setTimeout(() => setInviteLinkCopied(false), 1500);
   }
 
   async function pushNotification(base) {
@@ -4156,8 +4228,12 @@ export default function FestivalOptimizer() {
                 </button>
               </div>
 
-              <button disabled={!isOnline} style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: isOnline ? "var(--text)" : "var(--text-dimmer)", cursor: isOnline ? "pointer" : "not-allowed", marginBottom: 6 }}>
-                Share invite link
+              <button
+                disabled={!isOnline}
+                onClick={() => shareInviteLink(activeCrew)}
+                style={{ width: "100%", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, padding: "11px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: isOnline ? "var(--text)" : "var(--text-dimmer)", cursor: isOnline ? "pointer" : "not-allowed", marginBottom: 6 }}
+              >
+                {inviteLinkCopied ? "Link copied" : "Share invite link"}
               </button>
               {!isOnline && (
                 <p style={{ fontSize: 11, color: "#FFB23D", margin: "0 0 16px" }}>Invites need a connection — try again once you're back online.</p>
