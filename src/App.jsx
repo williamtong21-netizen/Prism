@@ -2171,6 +2171,7 @@ export default function FestivalOptimizer() {
   const [crewActionError, setCrewActionError] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
   const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
+  const [inviteLinkError, setInviteLinkError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
@@ -2515,9 +2516,20 @@ export default function FestivalOptimizer() {
       }
       return;
     }
-    await navigator.clipboard?.writeText(url);
-    setInviteLinkCopied(true);
-    setTimeout(() => setInviteLinkCopied(false), 1500);
+    try {
+      if (!navigator.clipboard) throw new Error("no clipboard API");
+      await navigator.clipboard.writeText(url);
+      setInviteLinkCopied(true);
+      setTimeout(() => setInviteLinkCopied(false), 1500);
+    } catch {
+      // Real browsers can still deny clipboard-write in some contexts
+      // (no direct user-gesture chain, permissions policy, etc.) --
+      // surface that honestly instead of the button silently doing
+      // nothing, rather than assuming the write succeeded the way the
+      // code field's own Copy button above does.
+      setInviteLinkError("Couldn't copy the link — copy the code above instead.");
+      setTimeout(() => setInviteLinkError(""), 3000);
+    }
   }
 
   async function pushNotification(base) {
@@ -4235,6 +4247,9 @@ export default function FestivalOptimizer() {
               >
                 {inviteLinkCopied ? "Link copied" : "Share invite link"}
               </button>
+              {inviteLinkError && (
+                <p style={{ fontSize: 11, color: "#FF3DA6", margin: "0 0 16px" }}>{inviteLinkError}</p>
+              )}
               {!isOnline && (
                 <p style={{ fontSize: 11, color: "#FFB23D", margin: "0 0 16px" }}>Invites need a connection — try again once you're back online.</p>
               )}
