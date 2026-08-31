@@ -27,6 +27,19 @@ Supabase dashboard:
    `dm_messages`, event `INSERT`, target the `send-push` function. That's
    what actually fires a push every time a DM is sent.
 
+## Camp pin crew alerts
+
+Two manual steps beyond running `057_camp_pin_crew_alerts.sql` (needs push
+notifications, above, already set up -- reuses its VAPID secrets):
+
+1. **Deploy the Edge Function.** Edge Functions -> deploy a new function
+   named `send-camp-pin-push`, paste in
+   `functions/send-camp-pin-push/index.ts`. No new secrets to set.
+2. **Wire the trigger.** Database -> Webhooks -> create one on
+   `camp_pins`, event `INSERT` only (not update/delete — moving an
+   existing pin shouldn't re-alert the crew), target the
+   `send-camp-pin-push` function.
+
 ## Spotify connect
 
 Two manual steps beyond running `015_spotify_connections.sql`, both in the

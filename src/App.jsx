@@ -2533,6 +2533,9 @@ export default function FestivalOptimizer() {
     } else if (n.type === "set" && n.meta?.festival) {
       setCurrentFestival(n.meta.festival);
       setView("mine");
+    } else if (n.type === "camp_pin" && n.meta?.festival) {
+      setCurrentFestival(n.meta.festival);
+      setView("map");
     } else if (n.type === "community") {
       setView("community");
     }
@@ -4947,8 +4950,8 @@ export default function FestivalOptimizer() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {notifications.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center" }}>Nothing yet.</p>}
                 {notifications.map((n) => {
-                  const iconName = n.type === "dm" ? "messages" : n.type === "set" ? "schedule" : n.type === "community" ? "community" : "verified";
-                  const color = n.type === "dm" ? "#9D6BFF" : n.type === "set" ? "#3DF2E0" : n.type === "community" ? "#5FD97A" : "#FFB23D";
+                  const iconName = n.type === "dm" ? "messages" : n.type === "set" ? "schedule" : n.type === "camp_pin" ? "map" : n.type === "community" ? "community" : "verified";
+                  const color = n.type === "dm" ? "#9D6BFF" : n.type === "set" ? "#3DF2E0" : n.type === "camp_pin" ? (PIN_TYPES[n.meta?.pinType]?.color || "#FF3DA6") : n.type === "community" ? "#5FD97A" : "#FFB23D";
                   return (
                     <button
                       key={n.id}
