@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
+import { Capacitor } from '@capacitor/core'
 import './index.css'
 import App from './App.jsx'
 
@@ -44,7 +45,16 @@ function hasPendingAuthRedirect() {
   return /[?&]code=/.test(window.location.search) || /access_token=/.test(window.location.hash)
 }
 
-if ('serviceWorker' in navigator) {
+// The native iOS/Android wrapper (Capacitor) bundles this same build
+// directly into the app binary and updates by shipping a new binary
+// through the App Store/Play Store, not by fetching new JS at runtime --
+// there's nothing for a service worker to do there, and registering one
+// anyway is a real risk (stale cached JS surviving an update) for zero
+// offline/caching benefit. So the whole SW registration + reload-on-update
+// dance below is web-PWA only. (vite.config.js sets injectRegister: false
+// so this replaces, not duplicates, vite-plugin-pwa's usual auto-injected
+// registerSW.js.)
+if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
   let reloaded = false
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloaded) return
@@ -60,6 +70,9 @@ if ('serviceWorker' in navigator) {
         window.location.reload()
       }
     }, 200)
+  })
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
   })
 }
 

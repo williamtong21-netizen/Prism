@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "./supabaseClient";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -14,7 +15,15 @@ function urlBase64ToUint8Array(base64String) {
 
 export function usePushSubscription(profileId) {
   const [subscribed, setSubscribed] = useState(false);
-  const [supported] = useState(() => "serviceWorker" in navigator && "PushManager" in window);
+  // Native builds don't register the service worker this relies on (see
+  // main.jsx) -- real push there needs @capacitor/push-notifications
+  // against APNs/FCM instead, which is separate, not-yet-built work. Web
+  // Push support is irrelevant either way once that lands, but until then
+  // this must stay false on native so `navigator.serviceWorker.ready`
+  // below never gets awaited with no SW ever going to control the page.
+  const [supported] = useState(
+    () => !Capacitor.isNativePlatform() && "serviceWorker" in navigator && "PushManager" in window
+  );
 
   useEffect(() => {
     if (!supported) return;

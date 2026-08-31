@@ -25,3 +25,19 @@ dist-ssr
 
 # local Claude Code preview config (machine-specific)
 .claude/
+
+# Capacitor: these are `npx cap sync`'s copy of dist/ + capacitor.config.ts
+# into the native projects, not native source -- `npm run cap:sync` (or
+# cap:ios/cap:android) regenerates them from the real source before every
+# build, so committing them would just be ~80MB of duplicated build output
+# (dist/ itself, unminified assets and all, mirrored into both platforms).
+ios/App/App/public
+ios/App/App/capacitor.config.json
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+# Native build output (Xcode DerivedData-style build/ dir, Gradle caches)
+ios/App/build
+android/app/build
+android/.gradle
+android/build
+android/local.properties

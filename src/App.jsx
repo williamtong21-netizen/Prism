@@ -16,6 +16,7 @@ import { useAttendingFestivals } from "./lib/useAttendingFestivals";
 import { useFestivalSets } from "./lib/useFestivalSets";
 import { useCommunity } from "./lib/useCommunity";
 import { useMyKarma } from "./lib/useMyKarma";
+import { useCapacitorBridge } from "./lib/useCapacitorBridge";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
 // this code before they're even signed in — see src/components/CommunityViews.jsx.
@@ -1976,7 +1977,7 @@ export default function FestivalOptimizer() {
   // otherwise silently drop the code for anyone who wasn't already signed
   // in. Falls back to a previously-stashed code on a later re-render (e.g.
   // this same component tree re-rendering through the sign-in screens).
-  const [pendingJoinCode] = useState(() => {
+  const [pendingJoinCode, setPendingJoinCode] = useState(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("join");
     if (fromUrl) {
       localStorage.setItem("prism:pendingJoinCode", fromUrl);
@@ -1984,6 +1985,13 @@ export default function FestivalOptimizer() {
       return fromUrl;
     }
     return localStorage.getItem("prism:pendingJoinCode") || null;
+  });
+  // Native-app equivalent of the ?join= URL param above -- the deep link
+  // arrives later, as an OS event, rather than being present at mount, so
+  // it needs a real setter instead of just the lazy useState initializer.
+  useCapacitorBridge((code) => {
+    localStorage.setItem("prism:pendingJoinCode", code);
+    setPendingJoinCode(code);
   });
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);

@@ -22,6 +22,14 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate',
+      // Registration is done by hand in main.jsx instead of the
+      // auto-injected <script src="/registerSW.js">, so it can be gated
+      // behind `!Capacitor.isNativePlatform()` — the native iOS/Android
+      // wrapper bundles this same build directly into the app binary, so
+      // there's nothing for a service worker to cache/serve there, and a
+      // stray SW registration inside Capacitor's WebView is pure risk
+      // (stale JS surviving an App Store update) for zero benefit.
+      injectRegister: false,
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Prism — Festival Companion',

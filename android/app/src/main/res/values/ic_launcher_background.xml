@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive icon background layer, sits behind ic_launcher_foreground.png.
+         Matches the app's brand background (see vite.config.js manifest
+         theme_color/background_color) rather than the Capacitor default white. -->
+    <color name="ic_launcher_background">#0F0B1A</color>
+</resources>
