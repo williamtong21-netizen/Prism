@@ -188,6 +188,13 @@ const FESTIVAL_STAGES = {
     { id: "ballroom", name: "The Ballroom", color: "#FFB23D" },
     { id: "canopy", name: "The Canopy", color: "#5FD97A" },
   ],
+  // Real Bass Canyon 2026 stage names, per basscanyon.com's own official
+  // "Set Times" graphic (Canyon, Hilltop, Starlight).
+  "bass-canyon": [
+    { id: "canyon", name: "Canyon", color: "#3DF2E0" },
+    { id: "hilltop", name: "Hilltop", color: "#FF3DA6" },
+    { id: "starlight", name: "Starlight", color: "#9D6BFF" },
+  ],
   // Real North Coast Music Festival 2026 stage names, per
   // northcoastfestival.com/music/schedule/'s own set-time graphics (The
   // Stadium, The Shipyard, The Vega, Fire Pit, OCB Dome, Silent Disco).
@@ -395,6 +402,12 @@ const FESTIVALS = [
   { id: "dreamville", name: "Dreamville Festival", location: "Raleigh, NC", dates: "2027 dates not yet announced", noCamping: true },
   { id: "all-things-go", name: "All Things Go Festival", location: "Columbia, MD", dates: "Sep 25–27, 2026", hasData: true, noCamping: true },
   { id: "riot-fest", name: "Riot Fest", location: "Chicago, IL", dates: "Sep 18–20, 2026", hasData: true, noCamping: true },
+  // Real, already-happened 2026 edition (Aug 14-16 -- passed as of this
+  // writing), added as a real historical record same as Coachella/
+  // Governors Ball/Outside Lands above. Full 88-set schedule transcribed
+  // from basscanyon.com's own official set-times graphic (see
+  // 049_bass_canyon_music_festival.sql).
+  { id: "bass-canyon", name: "Bass Canyon", location: "George, WA", dates: "Aug 14–16, 2026", hasData: true },
   // Real, current 2026 edition (SeatGeek Stadium, Bridgeview -- marketed
   // and listed here as "Chicago, IL" same as Lollapalooza/Riot Fest/Summer
   // Smash above), Sep 4-6, 2026 -- about a week out as of this writing.
@@ -640,6 +653,10 @@ const FESTIVAL_DAYS = {
   // published set across all 3 days/6 stages is 2:00pm per
   // northcoastfestival.com's own set-time graphics.
   "north-coast": consecutiveDays(2026, 8, 4, 3, 14 * 60),
+  // Bass Canyon 2026 (Aug 14-16), 2:30pm-12am daily -- earliest published
+  // set across all 3 days/3 stages is 2:30pm per basscanyon.com's own
+  // set-times graphic.
+  "bass-canyon": consecutiveDays(2026, 7, 14, 3, 14 * 60 + 30),
   "riot-fest": consecutiveDays(2026, 8, 18, 3, 11 * 60 + 30),
   // Nocturnal Wonderland 2026 (Sep 19-20), 3pm-12am daily per Insomniac's
   // own event listing.
@@ -773,6 +790,10 @@ const FESTIVAL_MAP_IMAGES = {
   // -- shows all 6 real stages (Stadium/Shipyard/Vega/Firepit/OCB.../Silent
   // Disco) plus gates, parking, and amenities.
   "north-coast": { src: "/festival-maps/north-coast.jpg", year: 2026 },
+  // Real official 2026 camping map, per basscanyon.com/camping/ -- same
+  // "camping map only" situation as Lost Lands below (the stage-layout
+  // grounds map isn't published as a standalone image).
+  "bass-canyon": { src: "/festival-maps/bass-canyon.jpg", year: 2026, note: "Camping map only — the festival hasn't published a separate stage-layout grounds map as a standalone image." },
   // Riot Fest's 2026 map isn't published yet (last year's dropped just
   // days before the festival) -- this is 2025's official map.
   "riot-fest": { src: "/festival-maps/riot-fest.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
@@ -813,6 +834,7 @@ const FESTIVAL_LINEUP_IMAGES = {
   // northcoastfestival.com's own homepage -- matches the real festival_sets
   // roster above artist-for-artist.
   "north-coast": { src: "/festival-lineups/north-coast.jpg", year: 2026 },
+  "bass-canyon": { src: "/festival-lineups/bass-canyon.jpg", year: 2026 },
   // Camp Flog Gnaw 2026's own official poster (campfloggnaw.com) doesn't
   // split artists by day at all (Nov 14-15 is shown as one flat lineup) --
   // even less structure than Nocturnal Wonderland/All Things Go had, so
