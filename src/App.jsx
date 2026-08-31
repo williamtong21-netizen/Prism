@@ -3062,11 +3062,11 @@ export default function FestivalOptimizer() {
             ) : (
               <>
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
-              <div style={{ marginBottom: 14 }}>
+              <div style={{ marginBottom: 14, display: "flex", justifyContent: "center" }}>
                 <button
                   onClick={() => setLineupFlyerOpen(true)}
                   className="facet-card"
-                  style={{ display: "flex", justifyContent: "center", width: "100%", padding: 0, cursor: "pointer" }}
+                  style={{ display: "block", maxWidth: "100%", padding: 0, cursor: "pointer" }}
                 >
                   <img
                     src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
