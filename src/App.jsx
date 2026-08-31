@@ -811,7 +811,32 @@ const FESTIVAL_MAP_IMAGES = {
 // graphic at all -- its own site (rockinrio.com/rio/line-up) is a
 // per-day, per-stage interactive listing, and its social pushes are
 // per-day PDF press releases. There's no genuine single image to show.
+// Tomorrowland/Tomorrowland Winter have the same situation for the
+// opposite reason -- 500+ artists across dozens of stages/events is too
+// large for any single flat poster to hold; the festival's own promo art
+// is thematic (this year's "Consciencia" key art) rather than a text
+// lineup grid, and the real per-day/stage bill only exists as an
+// interactive site/app tool, same as Rock in Rio.
+//
+// The 11 entries below (edc-vegas through coachella) were a real gap found
+// this session -- these festivals all have real festival_sets data but had
+// never gotten a flyer added, unlike the "no single poster exists" cases
+// above. Each was verified against its own official announcement/poster
+// (several already-passed 2026 editions' posters recovered via
+// BrooklynVegan's own upload, since the festivals' own sites had already
+// moved on to promoting a later edition by the time this was found).
 const FESTIVAL_LINEUP_IMAGES = {
+  "edc-vegas": { src: "/festival-lineups/edc-vegas.jpg", year: 2026 },
+  "ultra-miami": { src: "/festival-lineups/ultra-miami.jpg", year: 2026 },
+  "ultra-europe": { src: "/festival-lineups/ultra-europe.png", year: 2026 },
+  "electric-forest": { src: "/festival-lineups/electric-forest.jpg", year: 2026 },
+  coachella: { src: "/festival-lineups/coachella.jpg", year: 2026 },
+  bonnaroo: { src: "/festival-lineups/bonnaroo.jpg", year: 2026 },
+  "governors-ball": { src: "/festival-lineups/governors-ball.jpg", year: 2026 },
+  lollapalooza: { src: "/festival-lineups/lollapalooza.jpg", year: 2026 },
+  "outside-lands": { src: "/festival-lineups/outside-lands.jpg", year: 2026 },
+  "lollapalooza-argentina": { src: "/festival-lineups/lollapalooza-argentina.jpg", year: 2026 },
+  "lollapalooza-berlin": { src: "/festival-lineups/lollapalooza-berlin.webp", year: 2026 },
   "edc-mexico": { src: "/festival-lineups/edc-mexico.jpg", year: 2026 },
   acl: { src: "/festival-lineups/acl.webp", year: 2026 },
   // Lost Lands' own official lineup graphics (lostlandsfestival.com/lineup)
