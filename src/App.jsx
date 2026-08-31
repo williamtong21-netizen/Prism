@@ -923,10 +923,12 @@ const FESTIVAL_LINEUP_IMAGES = {
   // roster above artist-for-artist.
   "north-coast": { src: "/festival-lineups/north-coast.jpg", year: 2026 },
   "bass-canyon": { src: "/festival-lineups/bass-canyon.jpg", year: 2026 },
-  // Official Paxahau "Stages & Showcases" schedule graphic (via
-  // rawdetroit.org's Mar 2026 lineup-announcement coverage) -- cross-
-  // checked artist-for-artist against 050_movement_detroit_music_festival.sql's
-  // DJ Mag-sourced set times, matched exactly.
+  // Official Paxahau lineup poster, via DJ LIFE Magazine's Jan 2026
+  // lineup-announcement coverage -- cross-checked artist-for-artist
+  // against 050_movement_detroit_music_festival.sql's DJ Mag-sourced set
+  // times (via rawdetroit.org's separate "Stages & Showcases" schedule
+  // graphic, used only for that cross-check, not as the flyer itself --
+  // its wide table-grid layout crops illegibly at thumbnail size).
   "movement-detroit": { src: "/festival-lineups/movement-detroit.jpg", year: 2026 },
   // Official hardsummer.com lineup poster ("phase 2" reveal).
   "hard-summer": { src: "/festival-lineups/hard-summer.jpg", year: 2026 },
