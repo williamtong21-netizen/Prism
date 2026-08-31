@@ -3062,25 +3062,24 @@ export default function FestivalOptimizer() {
             ) : (
               <>
             {lineupSubview === "full" && FESTIVAL_LINEUP_IMAGES[currentFestival] && !lineupFlyerLoadFailed[currentFestival] && (
-              <div style={{ marginBottom: 14, display: "flex", justifyContent: "center" }}>
-                <button
-                  onClick={() => setLineupFlyerOpen(true)}
-                  className="facet-card"
-                  style={{ display: "block", maxWidth: "100%", padding: 0, cursor: "pointer" }}
-                >
-                  <img
-                    src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
-                    alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
-                    draggable={false}
-                    style={{ width: "auto", maxWidth: "100%", height: 260, maxHeight: 260, display: "block", WebkitUserDrag: "none", userSelect: "none" }}
-                    onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
-                    onDragStart={(e) => e.preventDefault()}
-                  />
-                </button>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", textAlign: "center", margin: "6px 0 0" }}>
-                  Tap to see the full lineup, full size
-                </p>
-              </div>
+              <button
+                onClick={() => setLineupFlyerOpen(true)}
+                className="facet-card"
+                style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "10px 12px", marginBottom: 14, cursor: "pointer", textAlign: "left" }}
+              >
+                <img
+                  src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
+                  alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
+                  draggable={false}
+                  style={{ position: "relative", zIndex: 3, width: 52, height: 52, borderRadius: 8, objectFit: "cover", flexShrink: 0, WebkitUserDrag: "none", userSelect: "none" }}
+                  onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+                <div style={{ position: "relative", zIndex: 3, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Official lineup flyer</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginTop: 2 }}>Tap to view full size</div>
+                </div>
+              </button>
             )}
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
@@ -3194,6 +3193,7 @@ export default function FestivalOptimizer() {
                           const isConflict = conflicts.has(s.id);
                           const isPicked = schedulePickedIds.has(s.id);
                           const crewAlsoIn = schedulePickCrewOverlap[s.id]?.length || 0;
+                          const stateColor = isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match);
                           return (
                             <div
                               key={s.id}
@@ -3202,8 +3202,9 @@ export default function FestivalOptimizer() {
                               style={{
                                 "--shine-delay": `${(i % 6) * 0.8}s`,
                                 position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
-                                padding: "6px 7px", background: "var(--surface)",
-                                border: `1px solid ${isConflict ? "#FF3DA6" : isPicked ? "#9D6BFF" : dimmed ? "var(--border)" : matchColor(s.match)}`,
+                                padding: "6px 7px 6px 8px", background: "var(--surface)",
+                                borderTop: `1px solid ${stateColor}`, borderRight: `1px solid ${stateColor}`, borderBottom: `1px solid ${stateColor}`,
+                                borderLeft: `3px solid ${stage.color}`,
                                 boxShadow: isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
                                 opacity: dimmed ? 0.35 : 1,
                               }}
