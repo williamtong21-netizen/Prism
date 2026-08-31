@@ -849,6 +849,14 @@ const FESTIVAL_MAP_IMAGES = {
   // "camping map only" situation as Lost Lands below (the stage-layout
   // grounds map isn't published as a standalone image).
   "bass-canyon": { src: "/festival-maps/bass-canyon.jpg", year: 2026, note: "Camping map only — the festival hasn't published a separate stage-layout grounds map as a standalone image." },
+  // Official movementfestival.com 2026 grounds map, recovered via the
+  // Wayback Machine.
+  "movement-detroit": { src: "/festival-maps/movement-detroit.jpg", year: 2026 },
+  // Official hardsummer.com 2026 grounds map.
+  "hard-summer": { src: "/festival-maps/hard-summer.png", year: 2026 },
+  // Official pnw.beyondwonderland.com 2026 grounds map, recovered via
+  // the Wayback Machine.
+  "beyond-wonderland": { src: "/festival-maps/beyond-wonderland.jpg", year: 2026 },
   // Riot Fest's 2026 map isn't published yet (last year's dropped just
   // days before the festival) -- this is 2025's official map.
   "riot-fest": { src: "/festival-maps/riot-fest.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
@@ -915,6 +923,17 @@ const FESTIVAL_LINEUP_IMAGES = {
   // roster above artist-for-artist.
   "north-coast": { src: "/festival-lineups/north-coast.jpg", year: 2026 },
   "bass-canyon": { src: "/festival-lineups/bass-canyon.jpg", year: 2026 },
+  // Official Paxahau "Stages & Showcases" schedule graphic (via
+  // rawdetroit.org's Mar 2026 lineup-announcement coverage) -- cross-
+  // checked artist-for-artist against 050_movement_detroit_music_festival.sql's
+  // DJ Mag-sourced set times, matched exactly.
+  "movement-detroit": { src: "/festival-lineups/movement-detroit.jpg", year: 2026 },
+  // Official hardsummer.com lineup poster ("phase 2" reveal).
+  "hard-summer": { src: "/festival-lineups/hard-summer.jpg", year: 2026 },
+  // Official pnw.beyondwonderland.com lineup poster, via EDM.com's Jan
+  // 2026 lineup-announcement coverage (the live site has since rotated
+  // to its 2027 edition).
+  "beyond-wonderland": { src: "/festival-lineups/beyond-wonderland.jpg", year: 2026 },
   // Camp Flog Gnaw 2026's own official poster (campfloggnaw.com) doesn't
   // split artists by day at all (Nov 14-15 is shown as one flat lineup) --
   // even less structure than Nocturnal Wonderland/All Things Go had, so
@@ -946,6 +965,9 @@ const FESTIVAL_CAMPGROUND_MAP_IMAGES = {
   // publish that one as a PDF only, which can't render as an <img>), so
   // this camping map is the one real graphic shown for this entry.
   "reading-leeds": { src: "/festival-maps/reading-leeds.jpg", year: 2026, note: "Reading's own campsite map — Leeds (the other half of this combined listing) has a separate map on its own site." },
+  // Official pnw.beyondwonderland.com 2026 camping map, recovered via
+  // the Wayback Machine (same source as its grounds map above).
+  "beyond-wonderland": { src: "/festival-maps/beyond-wonderland-camping.jpg", year: 2026 },
 };
 
 // Verified artist posts — visually distinct from crowd posts, always pinned
