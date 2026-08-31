@@ -4210,7 +4210,19 @@ export default function FestivalOptimizer() {
                 <span style={{ flex: 1, fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, letterSpacing: "1.5px", color: "#3DF2E0" }}>{activeCrew?.code}</span>
                 <button
                   disabled={!isOnline}
-                  onClick={() => { navigator.clipboard?.writeText(activeCrew?.code || ""); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1500); }}
+                  onClick={async () => {
+                    try {
+                      if (!navigator.clipboard) throw new Error("no clipboard API");
+                      await navigator.clipboard.writeText(activeCrew?.code || "");
+                      setInviteLinkError("");
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 1500);
+                    } catch {
+                      // Same clipboard-write-denied gap as shareInviteLink's fallback below --
+                      // don't claim success when the browser refused the write.
+                      setInviteLinkError("Couldn't copy — select and copy the code above instead.");
+                    }
+                  }}
                   style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "6px 11px", borderRadius: 7, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed" }}
                 >
                   {codeCopied ? "Copied" : "Copy"}
