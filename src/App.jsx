@@ -769,6 +769,10 @@ const FESTIVAL_MAP_IMAGES = {
   "bourbon-and-beyond": { src: "/festival-maps/bourbon-and-beyond.jpg", year: 2026 },
   aftershock: { src: "/festival-maps/aftershock.jpg", year: 2026 },
   "shaky-knees": { src: "/festival-maps/shaky-knees.jpg", year: 2026 },
+  // Real official 2026 grounds map, per northcoastfestival.com/experience/map-2/
+  // -- shows all 6 real stages (Stadium/Shipyard/Vega/Firepit/OCB.../Silent
+  // Disco) plus gates, parking, and amenities.
+  "north-coast": { src: "/festival-maps/north-coast.jpg", year: 2026 },
   // Riot Fest's 2026 map isn't published yet (last year's dropped just
   // days before the festival) -- this is 2025's official map.
   "riot-fest": { src: "/festival-maps/riot-fest.jpg", year: 2025, note: "2026's map isn't published yet — this is last year's official map." },
@@ -805,6 +809,10 @@ const FESTIVAL_LINEUP_IMAGES = {
   "all-things-go": { src: "/festival-lineups/all-things-go.jpg", year: 2026 },
   "shaky-knees": { src: "/festival-lineups/shaky-knees.jpg", year: 2026 },
   aftershock: { src: "/festival-lineups/aftershock.jpg", year: 2026 },
+  // Real official 2026 poster (NC26_lineup...FINAL...png), per
+  // northcoastfestival.com's own homepage -- matches the real festival_sets
+  // roster above artist-for-artist.
+  "north-coast": { src: "/festival-lineups/north-coast.jpg", year: 2026 },
   // Camp Flog Gnaw 2026's own official poster (campfloggnaw.com) doesn't
   // split artists by day at all (Nov 14-15 is shown as one flat lineup) --
   // even less structure than Nocturnal Wonderland/All Things Go had, so
