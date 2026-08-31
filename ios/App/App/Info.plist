@@ -51,18 +51,20 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<!-- Portrait-only on both idioms, matching the web manifest's own
+	     `orientation: 'portrait'` (vite.config.js) -- the layout is phone-
+	     width-locked and untested in landscape, on iPhone or iPad, so
+	     letting the OS rotate it would just break it. Left universal
+	     (TARGETED_DEVICE_FAMILY "1,2") rather than iPhone-only: it runs
+	     fine on iPad today, just not iPad-optimized yet -- a real product
+	     call, not a config detail, so not changed without asking. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
