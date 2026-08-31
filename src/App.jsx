@@ -3248,8 +3248,9 @@ export default function FestivalOptimizer() {
                       className={`facet-mini${isPicked ? " facet-mini-picked" : ""}`}
                       style={{
                         "--shine-delay": `${(i % 6) * 0.8}s`, display: "flex", alignItems: "center", gap: 4, padding: "10px 12px",
-                        boxShadow: highlightSetId === s.id ? "0 0 0 2px #3DF2E0, 0 0 20px rgba(61,242,224,0.55)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
-                        transition: "box-shadow 0.3s ease",
+                        background: highlightSetId === s.id ? "rgba(255,201,64,0.22)" : "transparent",
+                        boxShadow: highlightSetId === s.id ? "0 0 0 2px #FFC940, 0 0 20px rgba(255,201,64,0.5)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
+                        transition: "background 0.3s ease, box-shadow 0.3s ease",
                       }}
                     >
                       <div
@@ -3314,13 +3315,14 @@ export default function FestivalOptimizer() {
                               style={{
                                 "--shine-delay": `${(i % 6) * 0.8}s`,
                                 position: "absolute", top: s.start * PX_PER_MIN + 3, height: (s.end - s.start) * PX_PER_MIN - 6, left: 3, right: 3,
-                                padding: "6px 7px 6px 8px", background: "var(--surface)",
+                                padding: "6px 7px 6px 8px",
+                                background: highlightSetId === s.id ? "rgba(255,201,64,0.22)" : "var(--surface)",
                                 borderTop: `1px solid ${stateColor}`, borderRight: `1px solid ${stateColor}`, borderBottom: `1px solid ${stateColor}`,
                                 borderLeft: `3px solid ${stage.color}`,
-                                boxShadow: highlightSetId === s.id ? "0 0 0 2px #3DF2E0, 0 0 20px rgba(61,242,224,0.55)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
+                                boxShadow: highlightSetId === s.id ? "0 0 0 2px #FFC940, 0 0 20px rgba(255,201,64,0.5)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
                                 opacity: dimmed ? 0.35 : 1,
                                 zIndex: highlightSetId === s.id ? 5 : undefined,
-                                transition: "box-shadow 0.3s ease",
+                                transition: "background 0.3s ease, box-shadow 0.3s ease",
                               }}
                             >
                               <div style={{ position: "relative", zIndex: 3, display: "flex", alignItems: "center", gap: 4 }}>
