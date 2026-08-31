@@ -3331,9 +3331,11 @@ export default function FestivalOptimizer() {
                                   <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
                                 )}
                               </div>
-                              <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
-                                {crewAlsoIn ? `👥 ${crewAlsoIn} crew too` : matchLabel(s.match)}
-                              </div>
+                              {(crewAlsoIn > 0 || s.match != null) && (
+                                <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
+                                  {crewAlsoIn ? `👥 ${crewAlsoIn} crew too` : matchLabel(s.match)}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
