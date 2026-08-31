@@ -2149,6 +2149,16 @@ export default function FestivalOptimizer() {
   const [openMapPin, setOpenMapPin] = useState(null);
   const [pinActionError, setPinActionError] = useState("");
 
+  // Lineup artist search -- typing a name here jumps to the day it plays
+  // and briefly highlights that exact set in the schedule grid (or in the
+  // flat checklist, for days with no per-artist time data yet). setCardRefs
+  // holds a DOM node per set id so the jump can scrollIntoView() it once
+  // the target day's sets are actually on the page.
+  const [artistSearchQuery, setArtistSearchQuery] = useState("");
+  const [highlightSetId, setHighlightSetId] = useState(null);
+  const [pendingJumpId, setPendingJumpId] = useState(null);
+  const setCardRefs = useRef({});
+
   useEffect(() => {
     localStorage.setItem("prism:lastFestival", currentFestival);
   }, [currentFestival]);
@@ -2399,6 +2409,43 @@ export default function FestivalOptimizer() {
   // false on its own and the real grid takes over, no data migration or
   // per-festival code needed.
   const hasTimeData = daySets.length === 0 || daySets.some((s) => s.start != null);
+
+  // Searches the *whole* festival (every day), not just the day currently
+  // selected -- that's the point, so you can find someone without already
+  // knowing what day they're on.
+  const artistSearchMatches = useMemo(() => {
+    const q = artistSearchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const dayOrder = Object.fromEntries(activeDays.map((d, i) => [d.id, i]));
+    return effectiveSets
+      .filter((s) => s.festival === currentFestival && s.artist.toLowerCase().includes(q))
+      .sort((a, b) => (dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99) || (a.start ?? 0) - (b.start ?? 0))
+      .slice(0, 8);
+  }, [artistSearchQuery, effectiveSets, currentFestival, activeDays]);
+
+  function jumpToSet(s) {
+    setView("mine");
+    setLineupSubview("full");
+    setCurrentDay(s.day);
+    setArtistSearchQuery("");
+    setPendingJumpId(s.id);
+  }
+
+  // Runs after every render where a jump is pending -- on the first pass
+  // right after setCurrentDay, the target day's cards haven't mounted (and
+  // their ref) yet, so this simply no-ops and waits for the render that
+  // `visibleSets` (which changes identity once the new day's sets compute)
+  // triggers once they have.
+  useEffect(() => {
+    if (!pendingJumpId) return;
+    const el = setCardRefs.current[pendingJumpId];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    setHighlightSetId(pendingJumpId);
+    setPendingJumpId(null);
+    const t = setTimeout(() => setHighlightSetId(null), 2600);
+    return () => clearTimeout(t);
+  }, [pendingJumpId, visibleSets]);
 
   const TABS = [
     { id: "home", label: "Home", icon: "home" },
@@ -2726,6 +2773,65 @@ export default function FestivalOptimizer() {
               <span style={{ fontSize: 12, color: "#FFD9A0", lineHeight: 1.4 }}>
                 Offline — showing your saved schedule, crew, and map.{queuedActions > 0 ? ` ${queuedActions} action${queuedActions > 1 ? "s" : ""} will sync when you're back.` : ""}
               </span>
+            </div>
+          )}
+
+          {view === "mine" && (
+            <div style={{ position: "relative", marginTop: 12 }}>
+              <svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input
+                value={artistSearchQuery}
+                onChange={(e) => setArtistSearchQuery(e.target.value)}
+                placeholder="Search this lineup for an artist…"
+                aria-label="Search this lineup for an artist"
+                style={{
+                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                  background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
+                  padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
+                }}
+              />
+              {artistSearchQuery && (
+                <button
+                  onClick={() => setArtistSearchQuery("")}
+                  aria-label="Clear search"
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-dimmer)", fontSize: 16, cursor: "pointer", padding: 4 }}
+                >
+                  ×
+                </button>
+              )}
+              {artistSearchQuery.trim() && (
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 10, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
+                  {artistSearchMatches.length === 0 ? (
+                    <div style={{ padding: "12px 14px", fontSize: 12.5, color: "var(--text-dim)" }}>
+                      No one named "{artistSearchQuery.trim()}" in this lineup.
+                    </div>
+                  ) : (
+                    artistSearchMatches.map((s, i) => (
+                      <button
+                        key={s.id}
+                        onClick={() => jumpToSet(s)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, width: "100%", textAlign: "left",
+                          padding: "10px 14px", background: "none", border: "none", cursor: "pointer",
+                          borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.artist}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)", marginTop: 2 }}>
+                            {activeDays.find((d) => d.id === s.day)?.label || s.day} · {activeStages.find((st) => st.id === s.stage)?.name || "Stage TBA"}
+                          </div>
+                        </div>
+                        {s.start != null && (
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            {fmtTime(s.start, s.day, currentFestival)}
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -3076,7 +3182,7 @@ export default function FestivalOptimizer() {
                   onDragStart={(e) => e.preventDefault()}
                 />
                 <div style={{ position: "relative", zIndex: 3, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Official lineup flyer</div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>Official lineup flyer</div>
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginTop: 2 }}>Tap to view full size</div>
                 </div>
               </button>
@@ -3138,8 +3244,13 @@ export default function FestivalOptimizer() {
                   return (
                     <div
                       key={s.id}
+                      ref={(el) => { setCardRefs.current[s.id] = el; }}
                       className={`facet-mini${isPicked ? " facet-mini-picked" : ""}`}
-                      style={{ "--shine-delay": `${(i % 6) * 0.8}s`, display: "flex", alignItems: "center", gap: 4, padding: "10px 12px", boxShadow: isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none" }}
+                      style={{
+                        "--shine-delay": `${(i % 6) * 0.8}s`, display: "flex", alignItems: "center", gap: 4, padding: "10px 12px",
+                        boxShadow: highlightSetId === s.id ? "0 0 0 2px #3DF2E0, 0 0 20px rgba(61,242,224,0.55)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
+                        transition: "box-shadow 0.3s ease",
+                      }}
                     >
                       <div
                         role="button" tabIndex={0}
@@ -3197,6 +3308,7 @@ export default function FestivalOptimizer() {
                           return (
                             <div
                               key={s.id}
+                              ref={(el) => { setCardRefs.current[s.id] = el; }}
                               className={`set-card facet-mini${isPicked ? " facet-mini-picked" : ""}`}
                               onClick={() => setSelected(s)}
                               style={{
@@ -3205,8 +3317,10 @@ export default function FestivalOptimizer() {
                                 padding: "6px 7px 6px 8px", background: "var(--surface)",
                                 borderTop: `1px solid ${stateColor}`, borderRight: `1px solid ${stateColor}`, borderBottom: `1px solid ${stateColor}`,
                                 borderLeft: `3px solid ${stage.color}`,
-                                boxShadow: isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
+                                boxShadow: highlightSetId === s.id ? "0 0 0 2px #3DF2E0, 0 0 20px rgba(61,242,224,0.55)" : isPicked ? "0 0 10px rgba(157,107,255,0.35)" : "none",
                                 opacity: dimmed ? 0.35 : 1,
+                                zIndex: highlightSetId === s.id ? 5 : undefined,
+                                transition: "box-shadow 0.3s ease",
                               }}
                             >
                               <div style={{ position: "relative", zIndex: 3, display: "flex", alignItems: "center", gap: 4 }}>
