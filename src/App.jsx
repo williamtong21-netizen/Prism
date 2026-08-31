@@ -2057,6 +2057,10 @@ export default function FestivalOptimizer() {
   const [festivalSearch, setFestivalSearch] = useState("");
   const [festivalsExpanded, setFestivalsExpanded] = useState(false);
   const [festivalRegionFilter, setFestivalRegionFilter] = useState("All");
+  const [festivalSort, setFestivalSort] = useState(() => localStorage.getItem("prism:festivalSort") || "date"); // "date" | "alpha"
+  useEffect(() => {
+    localStorage.setItem("prism:festivalSort", festivalSort);
+  }, [festivalSort]);
   const [pickerExpanded, setPickerExpanded] = useState(false);
   const [sharing, setSharing] = useState({});
   const [revealed, setRevealed] = useState(false);
@@ -2976,7 +2980,25 @@ export default function FestivalOptimizer() {
               </button>
             </div>
 
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px", marginBottom: 10 }}>YOUR FESTIVALS</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.3px" }}>YOUR FESTIVALS</div>
+              <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                {[{ id: "date", label: "Date" }, { id: "alpha", label: "A–Z" }].map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setFestivalSort(opt.id)}
+                    style={{
+                      fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: "uppercase",
+                      padding: "4px 9px", borderRadius: 20, border: "1px solid " + (festivalSort === opt.id ? "#3DF2E0" : "var(--border)"),
+                      background: festivalSort === opt.id ? "rgba(61,242,224,0.12)" : "transparent",
+                      color: festivalSort === opt.id ? "#3DF2E0" : "var(--text-dimmer)", cursor: "pointer",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div style={{ position: "relative", marginBottom: 12 }}>
               <svg viewBox="0 0 24 24" width="15" height="15" stroke="var(--text-dimmer)" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -3028,6 +3050,7 @@ export default function FestivalOptimizer() {
                   .filter((f) => !q || f.name.toLowerCase().includes(q) || f.location.toLowerCase().includes(q))
                   .filter((f) => festivalRegionFilter === "All" || festivalRegion(f) === festivalRegionFilter)
                   .sort((a, b) => {
+                    if (festivalSort === "alpha") return a.name.localeCompare(b.name);
                     const da = festivalStartDate(a), db = festivalStartDate(b);
                     const ua = da && da >= now, ub = db && db >= now;
                     if (ua !== ub) return ua ? -1 : 1; // upcoming-dated festivals first
