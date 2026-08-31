@@ -195,6 +195,35 @@ const FESTIVAL_STAGES = {
     { id: "hilltop", name: "Hilltop", color: "#FF3DA6" },
     { id: "starlight", name: "Starlight", color: "#9D6BFF" },
   ],
+  // Real Movement Detroit 2026 stage names, per Paxahau's own set times
+  // (see 050_movement_detroit_music_festival.sql).
+  "movement-detroit": [
+    { id: "movement", name: "Movement Stage", color: "#3DF2E0" },
+    { id: "waterfront", name: "Waterfront Stage", color: "#FF3DA6" },
+    { id: "stargate", name: "Stargate Stage", color: "#9D6BFF" },
+    { id: "underground", name: "Underground Stage", color: "#FFB23D" },
+    { id: "pyramid", name: "Pyramid Stage", color: "#5FD97A" },
+    { id: "detroit", name: "Detroit Stage", color: "#FF7A3D" },
+  ],
+  // Real HARD Summer 2026 stage names, per hardsummer.com's own set
+  // times (see 051_hard_summer_music_festival.sql). "Green" and "Purple"
+  // get the literal colors their names already promise.
+  "hard-summer": [
+    { id: "hard", name: "HARD", color: "#3DF2E0" },
+    { id: "harder", name: "HARDER", color: "#FF3DA6" },
+    { id: "green", name: "Green", color: "#5FD97A" },
+    { id: "purple", name: "Purple", color: "#9D6BFF" },
+    { id: "pink", name: "Pink", color: "#FF8FC4" },
+    { id: "icecreamtruck", name: "Ice Cream Truck", color: "#FFB23D" },
+    { id: "beatbox", name: "Beatbox Art Car", color: "#4D96FF" },
+  ],
+  // Real Beyond Wonderland at the Gorge 2026 stage names, per the
+  // festival's own set times (see 052_beyond_wonderland_music_festival.sql).
+  "beyond-wonderland": [
+    { id: "queensvalley", name: "Queen's Valley", color: "#3DF2E0" },
+    { id: "madhatterscastle", name: "Mad Hatter's Castle", color: "#FF3DA6" },
+    { id: "caterpillarsgarden", name: "Caterpillar's Garden", color: "#9D6BFF" },
+  ],
   // Real North Coast Music Festival 2026 stage names, per
   // northcoastfestival.com/music/schedule/'s own set-time graphics (The
   // Stadium, The Shipyard, The Vega, Fire Pit, OCB Dome, Silent Disco).
@@ -408,6 +437,22 @@ const FESTIVALS = [
   // from basscanyon.com's own official set-times graphic (see
   // 049_bass_canyon_music_festival.sql).
   { id: "bass-canyon", name: "Bass Canyon", location: "George, WA", dates: "Aug 14–16, 2026", hasData: true },
+  // Real, complete 2026 schedule (all 3 days, all 6 stages) transcribed
+  // from DJ Mag's set-times coverage -- see
+  // 050_movement_detroit_music_festival.sql. Hart Plaza is an urban
+  // downtown-Detroit venue, no camping.
+  { id: "movement-detroit", name: "Movement Detroit", location: "Detroit, MI", dates: "May 23–25, 2026", hasData: true, noCamping: true },
+  // Real, complete 2026 schedule (both days, all 7 stages) transcribed
+  // from hardsummer.com's own set-times pages -- see
+  // 051_hard_summer_music_festival.sql. Hollywood Park (Inglewood, next
+  // to SoFi Stadium) is an urban lot venue, no camping.
+  { id: "hard-summer", name: "HARD Summer", location: "Inglewood, CA", dates: "Aug 1–2, 2026", hasData: true, noCamping: true },
+  // Real, complete 2026 schedule (both days, all 3 stages) transcribed
+  // from the festival's own official set-times pages, recovered via the
+  // Wayback Machine -- see 052_beyond_wonderland_music_festival.sql. The
+  // Gorge Amphitheatre (same venue as Bass Canyon above) has real
+  // on-site camping.
+  { id: "beyond-wonderland", name: "Beyond Wonderland at the Gorge", location: "George, WA", dates: "Jun 27–28, 2026", hasData: true },
   // Real, current 2026 edition (SeatGeek Stadium, Bridgeview -- marketed
   // and listed here as "Chicago, IL" same as Lollapalooza/Riot Fest/Summer
   // Smash above), Sep 4-6, 2026 -- about a week out as of this writing.
@@ -657,6 +702,16 @@ const FESTIVAL_DAYS = {
   // set across all 3 days/3 stages is 2:30pm per basscanyon.com's own
   // set-times graphic.
   "bass-canyon": consecutiveDays(2026, 7, 14, 3, 14 * 60 + 30),
+  // Movement Detroit 2026 (May 23-25, real Sat/Sun/Mon). Every day's
+  // earliest confirmed stage start is 2:00pm per DJ Mag's set times.
+  "movement-detroit": consecutiveDays(2026, 4, 23, 3, 14 * 60),
+  // HARD Summer 2026 (Aug 1-2, real Sat/Sun). Every stage on both days
+  // starts at 2:00pm per hardsummer.com's own set times.
+  "hard-summer": consecutiveDays(2026, 7, 1, 2, 14 * 60),
+  // Beyond Wonderland at the Gorge 2026 (Jun 27-28, real Sat/Sun). Both
+  // days' earliest confirmed stage start (Mad Hatter's Castle) is 3:00pm
+  // per the festival's own official set times.
+  "beyond-wonderland": consecutiveDays(2026, 5, 27, 2, 15 * 60),
   "riot-fest": consecutiveDays(2026, 8, 18, 3, 11 * 60 + 30),
   // Nocturnal Wonderland 2026 (Sep 19-20), 3pm-12am daily per Insomniac's
   // own event listing.
