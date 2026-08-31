@@ -4662,6 +4662,7 @@ export default function FestivalOptimizer() {
               </button>
 
               <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16 }}>
+                <a href="/support.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--text-dimmer)" }}>Support</a>
                 <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--text-dimmer)" }}>Privacy Policy</a>
                 <a href="/terms.html" target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--text-dimmer)" }}>Terms of Service</a>
               </div>

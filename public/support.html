@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Support — Prism</title>
+<style>
+  :root {
+    --bg: #0F0B1A; --surface: #171229; --border: #2A2440;
+    --text: #F5F0FF; --text-muted: #8B85A3; --text-dim: #5B5470;
+    --teal: #3DF2E0; --purple: #9D6BFF; --pink: #FF3DA6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    line-height: 1.65; max-width: 720px; margin: 0 auto; padding: 48px 24px 80px;
+  }
+  h1 { font-family: 'Bebas Neue', 'Inter', sans-serif; letter-spacing: 1px; font-size: 34px; margin: 0 0 4px; }
+  h2 { font-family: 'Bebas Neue', 'Inter', sans-serif; letter-spacing: 0.5px; font-size: 20px; color: var(--teal); margin: 40px 0 12px; }
+  p, li { color: var(--text-muted); font-size: 15px; }
+  strong { color: var(--text); }
+  a { color: var(--purple); }
+  .subtitle { color: var(--text-dim); font-size: 15px; margin: 0 0 32px; }
+  .home-link { display: inline-block; margin-bottom: 24px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-dim); text-decoration: none; }
+
+  .contact-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; margin: 0 0 40px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .contact-card div p { margin: 4px 0 0; }
+  .contact-card .label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin: 0; }
+  .contact-card a.email {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--teal); text-decoration: none;
+    border: 1px solid var(--teal); border-radius: 20px; padding: 9px 16px; white-space: nowrap;
+  }
+
+  details { border: 1px solid var(--border); border-radius: 12px; padding: 4px 16px; margin-bottom: 10px; background: var(--surface); }
+  details[open] { padding-bottom: 14px; }
+  summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--text); font-size: 14.5px; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; float: right; color: var(--text-dim); font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details p, details li { font-size: 14px; margin-top: 8px; }
+  details ol, details ul { margin: 8px 0 0; padding-left: 20px; }
+
+  .status-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
+  .status-pill {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 10px; border-radius: 20px;
+    background: rgba(61,242,224,0.1); color: var(--teal); border: 1px solid rgba(61,242,224,0.3);
+  }
+</style>
+</head>
+<body>
+  <a class="home-link" href="/">← Back to Prism</a>
+  <h1>Support</h1>
+  <p class="subtitle">Answers to the questions we hear most, and a direct line for everything else.</p>
+
+  <div class="contact-card">
+    <div>
+      <p class="label">Still stuck?</p>
+      <p>We read every email ourselves — usually same day.</p>
+    </div>
+    <a class="email" href="mailto:privacy@prismfest.io">privacy@prismfest.io</a>
+  </div>
+
+  <h2>Signing in</h2>
+
+  <details>
+    <summary>How do I sign in? There's no password field.</summary>
+    <p>That's intentional — Prism doesn't use passwords at all. Enter your email on the sign-in screen and we send a one-tap link. Tap it and you're in. No password to create, remember, or reset.</p>
+  </details>
+
+  <details>
+    <summary>I didn't get the sign-in email</summary>
+    <ol>
+      <li>Check spam/junk — the sender is our authentication provider, and first-time emails sometimes land there.</li>
+      <li>Give it a minute; delivery is usually instant but can lag briefly.</li>
+      <li>Still nothing? Go back and request a new link — the old one expires after a while, so a fresh one is the fix, not waiting longer on the first.</li>
+    </ol>
+  </details>
+
+  <h2>Crews</h2>
+
+  <details>
+    <summary>How do I start or join a crew?</summary>
+    <p>From the <strong>Crew</strong> tab: <strong>+ New crew</strong> to start one, or <strong>Join with a code</strong> if someone already sent you one. A shared invite link (from a crew's Invite sheet) drops you straight in without typing a code at all.</p>
+  </details>
+
+  <details>
+    <summary>Can I be in more than one crew?</summary>
+    <p>Yes — different crews for different festivals, or a crew someone's marked to persist everywhere. Open <strong>My crews</strong> from the Crew tab to see and jump between all of them, whichever festival you're currently viewing.</p>
+  </details>
+
+  <details>
+    <summary>Someone left, or I need to remove a member</summary>
+    <p>Tap a member's card in the crew roster for options. Whoever created a crew can remove members or disband it entirely; anyone can leave a crew themselves at any time.</p>
+  </details>
+
+  <h2>Safety and moderation</h2>
+
+  <details>
+    <summary>How do I report or block someone?</summary>
+    <p>Every post, comment, and profile has a report option — tap it, pick a reason, and it's sent for review. Blocking someone (from their profile card or a message thread) stops them from messaging you or seeing your activity, immediately.</p>
+  </details>
+
+  <details>
+    <summary>I need help at a festival right now</summary>
+    <p>Tap <strong>Safety info</strong> from the Home screen — it has on-site medical locations for that festival, a step-by-step protocol if you're separated from your crew, a one-tap way to alert your crew you need help, and crisis-support numbers. For a life-threatening emergency, call 911 directly.</p>
+  </details>
+
+  <h2>Schedules and data</h2>
+
+  <details>
+    <summary>A set time or stage looks wrong</summary>
+    <p>Schedules come from each festival's own public announcements, but festivals do change lineups and times, sometimes last-minute. Always cross-check anything you're planning around against the festival's own official app or site. If you spot something that's simply wrong on our end (not the festival's own change), email us the festival and set — we'll fix it.</p>
+  </details>
+
+  <details>
+    <summary>Do you sell my data?</summary>
+    <p>No. No ads, no data sales, nothing shared with advertisers. See the <a href="/privacy.html">Privacy Policy</a> for exactly what's collected and why.</p>
+  </details>
+
+  <details>
+    <summary>How do I delete my account?</summary>
+    <p><strong>Profile → Settings → Delete account.</strong> This is immediate and permanent — it removes your profile, messages, camp pins, packing lists, Spotify connection, and every schedule pick. One thing worth knowing first: if you created a crew, deleting your account disbands it for everyone in it, not just you.</p>
+  </details>
+
+  <h2>Something else</h2>
+  <p>Bug, feature idea, or a question this page didn't answer — <a href="mailto:privacy@prismfest.io">privacy@prismfest.io</a>. Tell us what festival and what you were doing when it happened, if it's a bug; that's usually the fastest way for us to reproduce and fix it.</p>
+</body>
+</html>
