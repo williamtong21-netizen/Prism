@@ -3527,7 +3527,7 @@ export default function FestivalOptimizer() {
             onClick={() => setCampingMapOpen(false)}
           >
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
-              <button onClick={() => setCampingMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
+              <button onClick={() => setCampingMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer" }}>×</button>
             </div>
             <div style={{ flex: 1, overflow: "auto", overscrollBehavior: "contain" }} onClick={(e) => e.stopPropagation()}>
               <img
@@ -3578,14 +3578,14 @@ export default function FestivalOptimizer() {
                         padding: "8px 12px", borderRadius: 20, flexShrink: 0,
                         border: `1px solid ${pinPlacing === type ? info.color : "rgba(255,255,255,0.2)"}`,
                         background: pinPlacing === type ? `${info.color}26` : "rgba(255,255,255,0.08)",
-                        color: pinPlacing === type ? info.color : "var(--text)", cursor: "pointer",
+                        color: pinPlacing === type ? info.color : "#F5F0FF", cursor: "pointer",
                       }}
                     >
                       {info.emoji} {pinPlacing === type ? "Tap the map…" : info.label}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text)", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
+                <button onClick={() => setOfficialMapOpen(false)} aria-label="Close" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#F5F0FF", fontSize: 22, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", flexShrink: 0 }}>×</button>
               </div>
 
               {pinActionError && (
@@ -3691,7 +3691,7 @@ export default function FestivalOptimizer() {
             onClick={() => setLineupFlyerOpen(false)}
           >
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "calc(env(safe-area-inset-top, 0px) + 14px) 14px 6px" }}>
-              <button onClick={() => setLineupFlyerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text)", fontSize: 26, cursor: "pointer" }}>×</button>
+              <button onClick={() => setLineupFlyerOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: "#F5F0FF", fontSize: 26, cursor: "pointer" }}>×</button>
             </div>
             <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
               <img
