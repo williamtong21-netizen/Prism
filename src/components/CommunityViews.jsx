@@ -199,7 +199,7 @@ function ReplyBox({ value, onChange, error, onCancel, onSubmit, isOnline, autoFo
 // at 6 levels so a very deep thread doesn't squeeze itself into a sliver —
 // replies past that depth still nest logically, just without extra
 // left-margin per level.
-function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo, setReplyTo, replyText, setReplyText, replyError, setReplyError, onSubmitReply, isOnline, collapsed, toggleCollapse, onReport }) {
+function CommentNode({ comment, depth, postId, scores, myVotes, karma, onVote, replyTo, setReplyTo, replyText, setReplyText, replyError, setReplyError, onSubmitReply, isOnline, collapsed, toggleCollapse, onReport }) {
   const score = scores[comment.id] ?? 1;
   const myVote = myVotes[comment.id] || 0;
   const isCollapsed = collapsed.has(comment.id);
@@ -209,7 +209,7 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
     <div style={{ marginLeft: Math.min(depth, 6) * 14, borderLeft: "2px solid var(--border)", paddingLeft: 11, marginTop: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
         <span>u/{comment.profiles?.handle || "deleted"}</span>
-        <TierBadge username={comment.profiles?.handle} />
+        <TierBadge karma={karma[comment.profiles?.id] ?? 0} />
         <span>· {relativeTime(comment.created_at)}</span>
         {hasChildren && (
           <button
@@ -260,6 +260,7 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
               postId={postId}
               scores={scores}
               myVotes={myVotes}
+              karma={karma}
               onVote={onVote}
               replyTo={replyTo}
               setReplyTo={setReplyTo}
@@ -280,7 +281,7 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
   );
 }
 
-export function Community({ isOnline, currentFestival, posts, comments, scores, myVotes, loading, createPost, createComment, vote, onReport }) {
+export function Community({ isOnline, currentFestival, posts, comments, scores, myVotes, karma, loading, createPost, createComment, vote, onReport }) {
   const artistPosts = ARTIST_POSTS.filter((a) => a.festival === currentFestival);
   const [sort, setSort] = useState("hot");
   const [flairFilter, setFlairFilter] = useState(null);
@@ -364,7 +365,7 @@ export function Community({ isOnline, currentFestival, posts, comments, scores, 
         <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 700, margin: "10px 0 4px" }}>{p.title}</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginBottom: 12 }}>
           <span>u/{p.profiles?.handle || "deleted"}</span>
-          <TierBadge username={p.profiles?.handle} />
+          <TierBadge karma={karma[p.author_id] ?? 0} />
           <span>· {relativeTime(p.created_at)} · {v} upvotes</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
@@ -389,6 +390,7 @@ export function Community({ isOnline, currentFestival, posts, comments, scores, 
               postId={p.id}
               scores={scores}
               myVotes={myVotes}
+              karma={karma}
               onVote={vote}
               replyTo={replyTo}
               setReplyTo={setReplyTo}
@@ -514,7 +516,7 @@ export function Community({ isOnline, currentFestival, posts, comments, scores, 
                   <div style={{ fontSize: 13.5, fontWeight: 700, margin: "6px 0 5px", lineHeight: 1.35 }}>{p.title}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
                     <span>u/{p.profiles?.handle || "deleted"}</span>
-                    <TierBadge username={p.profiles?.handle} />
+                    <TierBadge karma={karma[p.author_id] ?? 0} />
                     <span>· {relativeTime(p.created_at)} · {commentCount} comment{commentCount === 1 ? "" : "s"}</span>
                   </div>
                 </div>

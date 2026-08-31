@@ -15,6 +15,7 @@ import { useFestivalRequests } from "./lib/useFestivalRequests";
 import { useAttendingFestivals } from "./lib/useAttendingFestivals";
 import { useFestivalSets } from "./lib/useFestivalSets";
 import { useCommunity } from "./lib/useCommunity";
+import { useMyKarma } from "./lib/useMyKarma";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
 // this code before they're even signed in — see src/components/CommunityViews.jsx.
@@ -1234,57 +1235,15 @@ export function getTier(karma) {
   return [...TIERS].reverse().find((t) => karma >= t.min) || TIERS[0];
 }
 
-// Mock cumulative karma per community member — stands in for a real
-// lifetime-upvotes count tracked server-side.
-export const USER_KARMA = {
-  you: 340,
-  nightowl_kai: 4200,
-  sunset_mira: 610,
-  basshead22: 95,
-  hydro_homie: 1450,
-  ravecat: 210,
-  goodsamaritan_dj: 40,
-  lostit_help: 320,
-  scheduleupdates: 2100,
-  melodic_wanderer: 880,
-  dreamstate_: 60,
-  desertdaze: 175,
-  polocamper: 920,
-  sunscreen_ss: 55,
-  ravekid22: 30,
-  indiehead: 1340,
-  shoegaze4life: 210,
-  forestfam: 140,
-  glowstick_gwen: 760,
-  treehugger99: 90,
-  goodsamaritan2: 35,
-  queens_local: 480,
-  nyc_festgoer: 1050,
-  subway_samaritan: 25,
-  chicago_raver: 310,
-  loop_local: 690,
-  artofloving_fan: 155,
-  fogcity_fest: 505,
-  sf_native: 3100,
-  goldengate_finder: 45,
-  atx_local: 260,
-  sixthstreet: 830,
-  speedway_raver: 195,
-  vegasveteran: 2600,
-  kineticfam: 415,
-  boom_local: 570,
-  peoplefamily: 1180,
-  globaljourney: 300,
-  bassheadohio: 230,
-  legendvalley_vet: 1900,
-  thornvillelocal: 640,
-};
-
-export function TierBadge({ username }) {
-  const tier = getTier(USER_KARMA[username] ?? 0);
+// Real karma, from the profile_karma view (056_profile_karma.sql) --
+// callers fetch it (useMyKarma for your own, useCommunity's karma map
+// for whoever authored a visible post/comment) and pass the number in
+// directly, so this stays a plain, un-fetching presentational component.
+export function TierBadge({ karma = 0 }) {
+  const tier = getTier(karma);
   return (
     <span
-      title={`${tier.label} · ${(USER_KARMA[username] ?? 0).toLocaleString()} karma`}
+      title={`${tier.label} · ${karma.toLocaleString()} karma`}
       style={{
         display: "inline-flex", alignItems: "center", gap: 4,
         fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, whiteSpace: "nowrap",
@@ -2353,9 +2312,10 @@ export default function FestivalOptimizer() {
   const { sets: festivalSets } = useFestivalSets(currentFestival);
   const {
     posts: communityPosts, comments: communityComments, scores: communityScores, myVotes: communityMyVotes,
-    loading: communityLoading, createPost: createCommunityPost, createComment: createCommunityComment, vote: voteCommunity,
-    reportContent: reportCommunityContent,
+    karma: communityKarma, loading: communityLoading, createPost: createCommunityPost, createComment: createCommunityComment,
+    vote: voteCommunity, reportContent: reportCommunityContent,
   } = useCommunity(profile?.id, currentFestival);
+  const { karma: myKarma } = useMyKarma(profile?.id);
 
   // Real match data, as far as it goes: festivalSets' own match value is
   // otherwise entirely simulated (see the comment at the top of this
@@ -4037,6 +3997,7 @@ export default function FestivalOptimizer() {
                 createPost={createCommunityPost}
                 createComment={createCommunityComment}
                 vote={voteCommunity}
+                karma={communityKarma}
                 onReport={(target) => setReportTarget(target)}
               />
             </Suspense>
@@ -4490,7 +4451,7 @@ export default function FestivalOptimizer() {
                     <>
                       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px" }}>{profile.name}</div>
                       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dimmer)" }}>@{profile.handle}</div>
-                      <div style={{ marginTop: 4 }}><TierBadge username="you" /></div>
+                      <div style={{ marginTop: 4 }}><TierBadge karma={myKarma} /></div>
                     </>
                   )}
                 </div>

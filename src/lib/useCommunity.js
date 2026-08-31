@@ -19,6 +19,7 @@ export function useCommunity(profileId, festivalId) {
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
   const [votes, setVotes] = useState([]); // flat [{voter_id, post_id, comment_id, value}]
+  const [karma, setKarma] = useState({}); // profile_id -> total karma (profile_karma view)
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -48,9 +49,17 @@ export function useCommunity(profileId, festivalId) {
       voteRows = voteResults.flatMap((r) => r.data || []);
     }
 
+    const authorIds = [...new Set([...(postRows || []).map((p) => p.author_id), ...commentRows.map((c) => c.author_id)])];
+    let karmaMap = {};
+    if (authorIds.length) {
+      const { data: karmaRows } = await supabase.from("profile_karma").select("profile_id, karma").in("profile_id", authorIds);
+      for (const row of karmaRows || []) karmaMap[row.profile_id] = row.karma;
+    }
+
     setPosts(postRows || []);
     setComments(commentRows);
     setVotes(voteRows);
+    setKarma(karmaMap);
     setLoading(false);
   }, [festivalId]);
 
@@ -162,5 +171,5 @@ export function useCommunity(profileId, festivalId) {
     return {};
   }
 
-  return { posts, comments, scores, myVotes, loading, createPost, createComment, vote, reportContent, refresh };
+  return { posts, comments, scores, myVotes, karma, loading, createPost, createComment, vote, reportContent, refresh };
 }
