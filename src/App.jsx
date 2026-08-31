@@ -3066,13 +3066,13 @@ export default function FestivalOptimizer() {
                 <button
                   onClick={() => setLineupFlyerOpen(true)}
                   className="facet-card"
-                  style={{ display: "block", width: "100%", padding: 0, cursor: "pointer" }}
+                  style={{ display: "flex", justifyContent: "center", width: "100%", padding: 0, cursor: "pointer" }}
                 >
                   <img
                     src={FESTIVAL_LINEUP_IMAGES[currentFestival].src}
                     alt={`${FESTIVALS.find((f) => f.id === currentFestival)?.name} official lineup flyer`}
                     draggable={false}
-                    style={{ width: "100%", display: "block", maxHeight: 260, objectFit: "contain", background: "var(--bg)", WebkitUserDrag: "none", userSelect: "none" }}
+                    style={{ width: "auto", maxWidth: "100%", height: 260, maxHeight: 260, display: "block", WebkitUserDrag: "none", userSelect: "none" }}
                     onError={() => setLineupFlyerLoadFailed((prev) => ({ ...prev, [currentFestival]: true }))}
                     onDragStart={(e) => e.preventDefault()}
                   />
