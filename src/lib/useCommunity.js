@@ -149,5 +149,18 @@ export function useCommunity(profileId, festivalId) {
     return { data: null };
   }
 
-  return { posts, comments, scores, myVotes, loading, createPost, createComment, vote, refresh };
+  // Files a report against a post or comment -- same shape as
+  // useBlocking.js's report() for a person, just aimed at content
+  // instead. No moderation queue reads this yet (see
+  // 055_community_content_reports.sql); it exists so the path is real,
+  // not a placeholder that silently does nothing.
+  async function reportContent(targetId, isComment, reason, details) {
+    if (!profileId) return { error: { message: "Not signed in." } };
+    const column = isComment ? "comment_id" : "post_id";
+    const { error } = await supabase.from("community_reports").insert({ reporter_id: profileId, [column]: targetId, reason, details: details || null });
+    if (error) return { error };
+    return {};
+  }
+
+  return { posts, comments, scores, myVotes, loading, createPost, createComment, vote, reportContent, refresh };
 }

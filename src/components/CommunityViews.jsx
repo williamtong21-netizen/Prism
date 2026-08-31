@@ -199,7 +199,7 @@ function ReplyBox({ value, onChange, error, onCancel, onSubmit, isOnline, autoFo
 // at 6 levels so a very deep thread doesn't squeeze itself into a sliver —
 // replies past that depth still nest logically, just without extra
 // left-margin per level.
-function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo, setReplyTo, replyText, setReplyText, replyError, setReplyError, onSubmitReply, isOnline, collapsed, toggleCollapse }) {
+function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo, setReplyTo, replyText, setReplyText, replyError, setReplyError, onSubmitReply, isOnline, collapsed, toggleCollapse, onReport }) {
   const score = scores[comment.id] ?? 1;
   const myVote = myVotes[comment.id] || 0;
   const isCollapsed = collapsed.has(comment.id);
@@ -234,6 +234,12 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
             >
               reply
             </button>
+            <button
+              onClick={() => onReport({ kind: "comment", id: comment.id, label: comment.text.slice(0, 60) })}
+              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "none", color: "var(--text-dimmer)", cursor: "pointer", padding: "2px 6px" }}
+            >
+              report
+            </button>
           </div>
           {replyTo === comment.id && (
             <ReplyBox
@@ -265,6 +271,7 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
               isOnline={isOnline}
               collapsed={collapsed}
               toggleCollapse={toggleCollapse}
+              onReport={onReport}
             />
           ))}
         </>
@@ -273,7 +280,7 @@ function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo,
   );
 }
 
-export function Community({ isOnline, currentFestival, posts, comments, scores, myVotes, loading, createPost, createComment, vote }) {
+export function Community({ isOnline, currentFestival, posts, comments, scores, myVotes, loading, createPost, createComment, vote, onReport }) {
   const artistPosts = ARTIST_POSTS.filter((a) => a.festival === currentFestival);
   const [sort, setSort] = useState("hot");
   const [flairFilter, setFlairFilter] = useState(null);
@@ -364,6 +371,12 @@ export function Community({ isOnline, currentFestival, posts, comments, scores, 
           <button onClick={() => vote(p.id, false, 1)} disabled={!isOnline} aria-label="Upvote" style={voteBtnStyle}>▲</button>
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: myVote ? "#9D6BFF" : "var(--text-dim)" }}>{v}</span>
           <button onClick={() => vote(p.id, false, -1)} disabled={!isOnline} aria-label="Downvote" style={voteBtnStyle}>▼</button>
+          <button
+            onClick={() => onReport({ kind: "post", id: p.id, label: p.title.slice(0, 60) })}
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "none", color: "var(--text-dimmer)", cursor: "pointer", padding: "2px 6px", marginLeft: 4 }}
+          >
+            report
+          </button>
         </div>
 
         <div>
@@ -387,6 +400,7 @@ export function Community({ isOnline, currentFestival, posts, comments, scores, 
               isOnline={isOnline}
               collapsed={collapsed}
               toggleCollapse={toggleCollapse}
+              onReport={onReport}
             />
           ))}
         </div>

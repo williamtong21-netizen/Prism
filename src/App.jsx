@@ -2031,7 +2031,11 @@ export default function FestivalOptimizer() {
   const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
   const { threads: realThreads, openThreadWith, sendMessage: sendRealMessage } = useDMs(profile?.id);
   const { blockedIds, block: blockUser, unblock: unblockUser, report: reportUser } = useBlocking(profile?.id);
-  const [reportTarget, setReportTarget] = useState(null); // { id, name } | null
+  // { kind: "user" | "post" | "comment", id, label } | null -- "user"
+  // reports a person (kind defaults to "user" for the two call sites
+  // that predate Community's post/comment reporting); label is a
+  // person's name for a user report, or a short excerpt for content.
+  const [reportTarget, setReportTarget] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [reportDetails, setReportDetails] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
@@ -2058,7 +2062,9 @@ export default function FestivalOptimizer() {
     if (!reportTarget || !reportReason || reportSubmitting) return;
     setReportSubmitting(true);
     setReportError("");
-    const result = await reportUser(reportTarget.id, reportReason, reportDetails.trim());
+    const result = (reportTarget.kind || "user") === "user"
+      ? await reportUser(reportTarget.id, reportReason, reportDetails.trim())
+      : await reportCommunityContent(reportTarget.id, reportTarget.kind === "comment", reportReason, reportDetails.trim());
     setReportSubmitting(false);
     if (result?.error) {
       setReportError(result.error.message || "Couldn't send that report — try again.");
@@ -2348,6 +2354,7 @@ export default function FestivalOptimizer() {
   const {
     posts: communityPosts, comments: communityComments, scores: communityScores, myVotes: communityMyVotes,
     loading: communityLoading, createPost: createCommunityPost, createComment: createCommunityComment, vote: voteCommunity,
+    reportContent: reportCommunityContent,
   } = useCommunity(profile?.id, currentFestival);
 
   // Real match data, as far as it goes: festivalSets' own match value is
@@ -4030,6 +4037,7 @@ export default function FestivalOptimizer() {
                 createPost={createCommunityPost}
                 createComment={createCommunityComment}
                 vote={voteCommunity}
+                onReport={(target) => setReportTarget(target)}
               />
             </Suspense>
           </div>
@@ -5010,7 +5018,7 @@ export default function FestivalOptimizer() {
                               <div style={{ position: "fixed", inset: 0, zIndex: 29 }} onClick={() => setDmMenuOpen(false)} />
                               <div className="sheet-frame" style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", minWidth: 150, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
                                 <button
-                                  onClick={() => { setDmMenuOpen(false); setReportTarget({ id: t.other.id, name: t.other.name }); }}
+                                  onClick={() => { setDmMenuOpen(false); setReportTarget({ kind: "user", id: t.other.id, label: t.other.name }); }}
                                   style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: "10px 14px", fontSize: 13, color: "var(--text)", cursor: "pointer" }}
                                 >
                                   Report {t.other.name}
@@ -5173,7 +5181,7 @@ export default function FestivalOptimizer() {
             onPick={(id) => {
               setReportPickerOpen(false);
               const m = allCrewMembers.find((x) => x.id === id);
-              if (m) setReportTarget({ id: m.id, name: m.name });
+              if (m) setReportTarget({ kind: "user", id: m.id, label: m.name });
             }}
           />
         )}
@@ -5185,14 +5193,19 @@ export default function FestivalOptimizer() {
             <div className="frame sheet-frame" onClick={(e) => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #FF3DA6", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", maxHeight: "85dvh", overflowY: "auto" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)", margin: "0 auto 16px" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px", color: "#FF3DA6" }}>Report {reportTarget.name}</div>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.5px", color: "#FF3DA6" }}>
+                  Report {reportTarget.kind === "post" ? "this post" : reportTarget.kind === "comment" ? "this comment" : reportTarget.label}
+                </div>
                 <button onClick={closeReportSheet} aria-label="Close" style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: 20, cursor: "pointer" }}>×</button>
               </div>
 
               {reportSubmitted ? (
                 <div style={{ marginTop: 20, textAlign: "center" }}>
                   <div style={{ fontSize: 14, color: "#5FD97A", fontWeight: 700 }}>Report sent</div>
-                  <p style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 8 }}>Thanks — our team will review it. You can also block {reportTarget.name} from a DM thread's ⋯ menu.</p>
+                  <p style={{ fontSize: 12.5, color: "var(--text-dim)", marginTop: 8 }}>
+                    Thanks — our team will review it.
+                    {(reportTarget.kind || "user") === "user" && ` You can also block ${reportTarget.label} from a DM thread's ⋯ menu.`}
+                  </p>
                   <button onClick={closeReportSheet} style={{ marginTop: 16, width: "100%", background: "var(--border)", border: "none", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
                 </div>
               ) : (
