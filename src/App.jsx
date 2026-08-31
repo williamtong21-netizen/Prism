@@ -3519,7 +3519,7 @@ export default function FestivalOptimizer() {
 
         {view === "crew" && (
           <div style={{ padding: "0 14px" }}>
-            {crews.length > 0 && (
+            {crews.length > 0 && activeCrew && (
               <button
                 onClick={() => setMyCrewsOpen(true)}
                 className="facet-card"
@@ -3583,6 +3583,58 @@ export default function FestivalOptimizer() {
             )}
 
             {!activeCrew ? (
+              crews.length > 0 ? (
+                // You're in crews, just none tied to the festival currently
+                // showing -- this IS the crew hub for that case, listing
+                // every crew across every festival with a one-tap "Go"
+                // (same data/action as the "My crews" sheet), so landing
+                // here never falsely reads as "you have no crews at all."
+                <div className="facet-card" style={{ padding: "18px 16px" }}>
+                  <div style={{ position: "relative", zIndex: 3, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <div style={{ fontSize: 12.5, color: "var(--text-dim)" }}>
+                      No crew for {FESTIVALS.find((f) => f.id === currentFestival)?.name} yet — your {crews.length === 1 ? "crew" : `${crews.length} crews`}:
+                    </div>
+                    <button
+                      onClick={() => setMyCrewsOpen(true)}
+                      style={{ flexShrink: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "none", color: "var(--text-dimmer)", cursor: "pointer" }}
+                    >
+                      Manage →
+                    </button>
+                  </div>
+                  <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                    {crews.map((c) => (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-dimmer)", marginTop: 1 }}>
+                            {c.members.length + 1} members · {c.persistent ? "persists everywhere" : FESTIVALS.find((f) => f.id === c.festival)?.name || c.festival}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => { if (!c.persistent) setCurrentFestival(c.festival); setActiveCrewId(c.id); }}
+                          style={{ flexShrink: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.1)", borderRadius: 20, padding: "5px 11px", color: "#3DF2E0", cursor: "pointer" }}
+                        >
+                          Go
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ position: "relative", zIndex: 3, display: "flex", gap: 8, justifyContent: "center", paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                    <button
+                      onClick={openCreateCrew}
+                      style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "9px 15px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}
+                    >
+                      + Start one here
+                    </button>
+                    <button
+                      onClick={() => setJoinCrewOpen(true)}
+                      style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "9px 15px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}
+                    >
+                      Join with a code
+                    </button>
+                  </div>
+                </div>
+              ) : (
               <div className="facet-card" style={{ padding: "32px 20px", textAlign: "center" }}>
                 <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)", marginBottom: 12 }}>
                   No crew yet for {FESTIVALS.find((f) => f.id === currentFestival)?.name}.
@@ -3608,6 +3660,7 @@ export default function FestivalOptimizer() {
                   </button>
                 </div>
               </div>
+              )
             ) : (
               <>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
