@@ -1888,6 +1888,7 @@ export default function FestivalOptimizer() {
     setTheme(next);
   }
   const [threshold, setThreshold] = useState(60);
+  const stageGridRef = useRef(null);
   const [selected, setSelected] = useState(null);
   const selectedPhotos = useArtistPhotos(selected?.artist);
   const [pickedSetsOpen, setPickedSetsOpen] = useState(false);
@@ -3122,7 +3123,35 @@ export default function FestivalOptimizer() {
                 })}
               </div>
             ) : (
-            <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ position: "relative", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
+              {activeStages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => stageGridRef.current?.scrollBy({ left: -220, behavior: "smooth" })}
+                    aria-label="Scroll stages left"
+                    style={{
+                      position: "absolute", left: 62, top: 8, zIndex: 5, width: 26, height: 26, borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-dim)",
+                      cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                  </button>
+                  <button
+                    onClick={() => stageGridRef.current?.scrollBy({ left: 220, behavior: "smooth" })}
+                    aria-label="Scroll stages right"
+                    style={{
+                      position: "absolute", right: 8, top: 8, zIndex: 5, width: 26, height: 26, borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-dim)",
+                      cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+                  </button>
+                </>
+              )}
               <div style={{ display: "flex", paddingTop: 8, paddingBottom: 8 }}>
                 <div style={{ width: 60, flexShrink: 0, background: "var(--surface)", borderRight: "1px solid var(--border)" }}>
                   <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
@@ -3133,7 +3162,7 @@ export default function FestivalOptimizer() {
                     ))}
                   </div>
                 </div>
-                <div style={{ display: "flex", flex: 1, minWidth: 0, overflowX: "auto" }}>
+                <div ref={stageGridRef} style={{ display: "flex", flex: 1, minWidth: 0, overflowX: "auto" }}>
                   {activeStages.map((stage) => (
                     <div key={stage.id} style={{ flex: "1 0 110px", borderRight: "1px solid var(--border)" }}>
                       <div style={{ position: "relative", height: timelineEnd * PX_PER_MIN }}>
