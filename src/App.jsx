@@ -14,6 +14,7 @@ import { useSchedulePicks } from "./lib/useSchedulePicks";
 import { useFestivalRequests } from "./lib/useFestivalRequests";
 import { useAttendingFestivals } from "./lib/useAttendingFestivals";
 import { useFestivalSets } from "./lib/useFestivalSets";
+import { useCommunity } from "./lib/useCommunity";
 
 // Lazy-loaded so a first-time visitor's sign-in screen doesn't have to fetch
 // this code before they're even signed in — see src/components/CommunityViews.jsx.
@@ -1377,7 +1378,7 @@ function toDisplayFriends(members) {
   return (members || []).map((m) => ({ id: m.id, name: m.name, initial: m.name[0].toUpperCase(), color: colorForId(m.id, m.color) }));
 }
 
-function relativeTime(iso) {
+export function relativeTime(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "just now";
@@ -2300,6 +2301,10 @@ export default function FestivalOptimizer() {
   }, [currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { sets: festivalSets } = useFestivalSets(currentFestival);
+  const {
+    posts: communityPosts, comments: communityComments, scores: communityScores, myVotes: communityMyVotes,
+    loading: communityLoading, createPost: createCommunityPost, createComment: createCommunityComment, vote: voteCommunity,
+  } = useCommunity(profile?.id, currentFestival);
 
   // Real match data, as far as it goes: festivalSets' own match value is
   // otherwise entirely simulated (see the comment at the top of this
@@ -3929,7 +3934,19 @@ export default function FestivalOptimizer() {
         {view === "community" && (
           <div style={{ padding: "0 14px" }}>
             <Suspense fallback={null}>
-              <Community key={currentFestival} isOnline={isOnline} onQueue={() => setQueuedActions((n) => n + 1)} currentFestival={currentFestival} />
+              <Community
+                key={currentFestival}
+                isOnline={isOnline}
+                currentFestival={currentFestival}
+                posts={communityPosts}
+                comments={communityComments}
+                scores={communityScores}
+                myVotes={communityMyVotes}
+                loading={communityLoading}
+                createPost={createCommunityPost}
+                createComment={createCommunityComment}
+                vote={voteCommunity}
+              />
             </Suspense>
           </div>
         )}

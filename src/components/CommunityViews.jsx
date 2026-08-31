@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon, TierBadge, matchColor, fmtTime, matchLabel, voteBtnStyle, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, FESTIVAL_POSTS, ArtistAvatarFor } from "../App.jsx";
+import { Icon, TierBadge, matchColor, fmtTime, matchLabel, relativeTime, voteBtnStyle, FLAIRS, ARTIST_VERIFICATION, ARTIST_POSTS, ArtistAvatarFor } from "../App.jsx";
 
 // Split out of App.jsx (lazy-loaded from the Lineup/Crew/Community tabs) so
 // a first-time visitor's initial sign-in load doesn't have to fetch this
@@ -141,137 +141,264 @@ export function CrewCompare({ sets, friends, sharing, onToggleSharing, onSelect,
   );
 }
 
-export function Community({ isOnline, onQueue, currentFestival }) {
-  const posts = FESTIVAL_POSTS[currentFestival] || [];
+// Builds the nested reply tree for one post out of the flat comments list
+// -- comments self-reference via parent_id, so a reply can be arbitrarily
+// deep (a reply to a reply to a reply), not just one flat level under the
+// post the way the old mock data modeled it.
+function buildCommentTree(comments, postId) {
+  const byParent = {};
+  for (const c of comments) {
+    if (c.post_id !== postId) continue;
+    const key = c.parent_id || "root";
+    (byParent[key] ||= []).push(c);
+  }
+  function attach(list) {
+    return [...list]
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map((c) => ({ ...c, children: attach(byParent[c.id] || []) }));
+  }
+  return attach(byParent.root || []);
+}
+
+function ReplyBox({ value, onChange, error, onCancel, onSubmit, isOnline, autoFocus }) {
+  return (
+    <div style={{ marginTop: 8 }}>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Add a reply…"
+        rows={2}
+        autoFocus={autoFocus}
+        style={{
+          width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
+          background: "var(--surface)", border: `1px solid ${error ? "#FF3DA6" : "var(--border)"}`, borderRadius: 10,
+          padding: "9px 11px", resize: "none", outline: "none",
+        }}
+      />
+      {error && <p style={{ fontSize: 11, color: "#FF3DA6", margin: "5px 0 0" }}>{error}</p>}
+      {!isOnline && <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0" }}>You're offline — reconnect to reply.</p>}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+        {onCancel && (
+          <button onClick={onCancel} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "7px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}>
+            Cancel
+          </button>
+        )}
+        <button
+          onClick={onSubmit}
+          disabled={!isOnline}
+          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 14px", borderRadius: 8, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed", opacity: isOnline ? 1 : 0.6 }}
+        >
+          Reply
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// One comment plus its nested children, indented by depth. Indent is capped
+// at 6 levels so a very deep thread doesn't squeeze itself into a sliver —
+// replies past that depth still nest logically, just without extra
+// left-margin per level.
+function CommentNode({ comment, depth, postId, scores, myVotes, onVote, replyTo, setReplyTo, replyText, setReplyText, replyError, setReplyError, onSubmitReply, isOnline, collapsed, toggleCollapse }) {
+  const score = scores[comment.id] ?? 1;
+  const myVote = myVotes[comment.id] || 0;
+  const isCollapsed = collapsed.has(comment.id);
+  const hasChildren = comment.children.length > 0;
+
+  return (
+    <div style={{ marginLeft: Math.min(depth, 6) * 14, borderLeft: "2px solid var(--border)", paddingLeft: 11, marginTop: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
+        <span>u/{comment.profiles?.handle || "deleted"}</span>
+        <TierBadge username={comment.profiles?.handle} />
+        <span>· {relativeTime(comment.created_at)}</span>
+        {hasChildren && (
+          <button
+            onClick={() => toggleCollapse(comment.id)}
+            style={{ background: "none", border: "none", color: "var(--text-dimmer)", cursor: "pointer", fontFamily: "inherit", fontSize: 10.5, padding: 0 }}
+          >
+            {isCollapsed ? `[+${comment.children.length}]` : "[–]"}
+          </button>
+        )}
+      </div>
+      {!isCollapsed && (
+        <>
+          <p style={{ fontSize: 13, color: "var(--text)", margin: "3px 0 6px", lineHeight: 1.5 }}>{comment.text}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => onVote(comment.id, true, 1)} disabled={!isOnline} aria-label="Upvote" style={voteBtnStyle}>▲</button>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: myVote ? "#9D6BFF" : "var(--text-dim)" }}>{score}</span>
+            <button onClick={() => onVote(comment.id, true, -1)} disabled={!isOnline} aria-label="Downvote" style={voteBtnStyle}>▼</button>
+            <button
+              onClick={() => { setReplyTo(replyTo === comment.id ? null : comment.id); setReplyText(""); setReplyError(""); }}
+              disabled={!isOnline}
+              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, background: "none", border: "none", color: "#3DF2E0", cursor: isOnline ? "pointer" : "default", padding: "2px 6px", opacity: isOnline ? 1 : 0.6 }}
+            >
+              reply
+            </button>
+          </div>
+          {replyTo === comment.id && (
+            <ReplyBox
+              value={replyText}
+              onChange={setReplyText}
+              error={replyError}
+              isOnline={isOnline}
+              autoFocus
+              onCancel={() => { setReplyTo(null); setReplyText(""); setReplyError(""); }}
+              onSubmit={() => onSubmitReply(postId, comment.id)}
+            />
+          )}
+          {comment.children.map((child) => (
+            <CommentNode
+              key={child.id}
+              comment={child}
+              depth={depth + 1}
+              postId={postId}
+              scores={scores}
+              myVotes={myVotes}
+              onVote={onVote}
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              replyError={replyError}
+              setReplyError={setReplyError}
+              onSubmitReply={onSubmitReply}
+              isOnline={isOnline}
+              collapsed={collapsed}
+              toggleCollapse={toggleCollapse}
+            />
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+export function Community({ isOnline, currentFestival, posts, comments, scores, myVotes, loading, createPost, createComment, vote }) {
   const artistPosts = ARTIST_POSTS.filter((a) => a.festival === currentFestival);
   const [sort, setSort] = useState("hot");
   const [flairFilter, setFlairFilter] = useState(null);
   const [openPost, setOpenPost] = useState(null);
-  const [votes, setVotes] = useState({});
-  const [pendingVotes, setPendingVotes] = useState({});
-  const [myPosts, setMyPosts] = useState([]);
-  const [extraComments, setExtraComments] = useState({}); // postId -> [comment, ...]
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeFlair, setComposeFlair] = useState("vibes");
   const [composeTitle, setComposeTitle] = useState("");
   const [composeError, setComposeError] = useState("");
+  // Nested-reply state is shared across the whole open thread rather than
+  // per-comment -- only one reply box is ever open at a time, so there's
+  // nothing to gain from tracking text/errors per comment id.
+  const [replyTo, setReplyTo] = useState(null); // null | "post" | a comment id
   const [replyText, setReplyText] = useState("");
   const [replyError, setReplyError] = useState("");
+  const [collapsed, setCollapsed] = useState(() => new Set());
 
-  function vote(id, base, delta) {
-    if (!isOnline) {
-      setPendingVotes((prev) => ({ ...prev, [id]: (prev[id] || 0) + delta }));
-      onQueue && onQueue();
-      return;
-    }
-    setVotes((prev) => {
-      const current = prev[id] ?? base;
-      const already = prev[id] != null;
-      return { ...prev, [id]: already ? current : current + delta };
+  function toggleCollapse(id) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
   }
 
-  function submitPost() {
+  async function submitPost() {
     if (!composeTitle.trim()) {
       setComposeError("Write something first");
       return;
     }
-    const newPost = {
-      id: `mine-${Date.now()}`,
-      flair: composeFlair,
-      title: composeTitle.trim(),
-      author: "you",
-      votes: 1,
-      time: isOnline ? "just now" : "queued",
-      comments: [],
-      queued: !isOnline,
-    };
-    setMyPosts((prev) => [newPost, ...prev]);
+    const { error } = await createPost(composeFlair, composeTitle.trim());
+    if (error) {
+      setComposeError(error.message || "Couldn't post — try again.");
+      return;
+    }
     setComposeTitle("");
     setComposeError("");
     setComposeOpen(false);
-    if (!isOnline) onQueue && onQueue();
   }
 
-  function submitReply(postId) {
+  async function submitReply(postId, parentId) {
     if (!replyText.trim()) {
       setReplyError("Write a reply first");
       return;
     }
-    const newComment = { id: `mine-c-${Date.now()}`, author: "you", text: replyText.trim(), votes: 1, queued: !isOnline };
-    setExtraComments((prev) => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }));
+    const { error } = await createComment(postId, parentId, replyText.trim());
+    if (error) {
+      setReplyError(error.message || "Couldn't reply — try again.");
+      return;
+    }
     setReplyText("");
     setReplyError("");
-    if (!isOnline) onQueue && onQueue();
+    setReplyTo(null);
   }
 
-  const allPosts = [
-    ...myPosts,
-    ...posts.map((p) => (extraComments[p.id] ? { ...p, comments: [...p.comments, ...extraComments[p.id]] } : p)),
-  ];
-
-  const sorted = allPosts.filter((p) => !flairFilter || p.flair === flairFilter).sort((a, b) => {
-    const av = votes[a.id] ?? a.votes, bv = votes[b.id] ?? b.votes;
+  const sorted = posts.filter((p) => !flairFilter || p.flair === flairFilter).sort((a, b) => {
+    const av = scores[a.id] ?? 1, bv = scores[b.id] ?? 1;
     if (sort === "top") return bv - av;
-    if (sort === "new") return allPosts.indexOf(a) - allPosts.indexOf(b);
-    return bv + a.comments.length - (av + b.comments.length);
+    if (sort === "new") return new Date(b.created_at) - new Date(a.created_at);
+    const aComments = comments.filter((c) => c.post_id === a.id).length;
+    const bComments = comments.filter((c) => c.post_id === b.id).length;
+    return bv + bComments - (av + aComments);
   });
 
   if (openPost) {
-    const p = allPosts.find((post) => post.id === openPost) || openPost;
-    const v = (votes[p.id] ?? p.votes) + (pendingVotes[p.id] || 0);
+    const p = posts.find((post) => post.id === openPost);
+    if (!p) {
+      return (
+        <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "16px 16px" }}>
+          <button onClick={() => setOpenPost(null)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>← back</button>
+          <p style={{ fontSize: 13, color: "var(--text-dimmer)", marginTop: 12 }}>This post is gone.</p>
+        </div>
+      );
+    }
+    const v = scores[p.id] ?? 1;
+    const myVote = myVotes[p.id] || 0;
+    const tree = buildCommentTree(comments, p.id);
     return (
       <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: "16px 16px" }}>
         <button onClick={() => setOpenPost(null)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "var(--text-dim)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12 }}>← back</button>
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: FLAIRS[p.flair].color, border: `1px solid ${FLAIRS[p.flair].color}`, borderRadius: 5, padding: "2px 7px" }}>{FLAIRS[p.flair].label}</span>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: FLAIRS[p.flair].color, border: `1px solid ${FLAIRS[p.flair].color}`, borderRadius: 5, padding: "2px 7px" }}>{FLAIRS[p.flair]?.label || p.flair}</span>
         <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 700, margin: "10px 0 4px" }}>{p.title}</h2>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dimmer)", marginBottom: 12 }}>
-          <span>u/{p.author}</span>
-          <TierBadge username={p.author} />
-          <span>· {p.time} · {v} upvotes{pendingVotes[p.id] ? " · queued" : ""}</span>
+          <span>u/{p.profiles?.handle || "deleted"}</span>
+          <TierBadge username={p.profiles?.handle} />
+          <span>· {relativeTime(p.created_at)} · {v} upvotes</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {p.comments.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)" }}>No comments yet — be the first to reply.</p>}
-          {p.comments.map((c) => {
-            const cv = (votes[c.id] ?? c.votes) + (pendingVotes[c.id] || 0);
-            return (
-              <div key={c.id} style={{ borderLeft: "2px solid var(--border)", paddingLeft: 11 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
-                  <span>u/{c.author}</span>
-                  <TierBadge username={c.author} />
-                </div>
-                <p style={{ fontSize: 13, color: "var(--text)", margin: "3px 0 6px", lineHeight: 1.5 }}>{c.text}</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <button onClick={() => vote(c.id, c.votes, 1)} aria-label="Upvote" style={voteBtnStyle}>▲</button>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: pendingVotes[c.id] ? "#FFB23D" : "var(--text-dim)" }}>{cv}</span>
-                  <button onClick={() => vote(c.id, c.votes, -1)} aria-label="Downvote" style={voteBtnStyle}>▼</button>
-                </div>
-              </div>
-            );
-          })}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+          <button onClick={() => vote(p.id, false, 1)} disabled={!isOnline} aria-label="Upvote" style={voteBtnStyle}>▲</button>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: myVote ? "#9D6BFF" : "var(--text-dim)" }}>{v}</span>
+          <button onClick={() => vote(p.id, false, -1)} disabled={!isOnline} aria-label="Downvote" style={voteBtnStyle}>▼</button>
+        </div>
+
+        <div>
+          {tree.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)" }}>No comments yet — be the first to reply.</p>}
+          {tree.map((c) => (
+            <CommentNode
+              key={c.id}
+              comment={c}
+              depth={0}
+              postId={p.id}
+              scores={scores}
+              myVotes={myVotes}
+              onVote={vote}
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              replyError={replyError}
+              setReplyError={setReplyError}
+              onSubmitReply={submitReply}
+              isOnline={isOnline}
+              collapsed={collapsed}
+              toggleCollapse={toggleCollapse}
+            />
+          ))}
         </div>
 
         <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-          <textarea
-            value={replyText}
-            onChange={(e) => { setReplyText(e.target.value); if (replyError) setReplyError(""); }}
-            placeholder="Add a reply…"
-            rows={2}
-            style={{
-              width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
-              background: "var(--surface)", border: `1px solid ${replyError ? "#FF3DA6" : "var(--border)"}`, borderRadius: 10,
-              padding: "9px 11px", resize: "none", outline: "none",
-            }}
+          <ReplyBox
+            value={replyTo === "post" ? replyText : ""}
+            onChange={(v) => { setReplyTo("post"); setReplyText(v); }}
+            error={replyTo === "post" ? replyError : ""}
+            isOnline={isOnline}
+            onSubmit={() => submitReply(p.id, null)}
           />
-          {replyError && <p style={{ fontSize: 11, color: "#FF3DA6", margin: "5px 0 0" }}>{replyError}</p>}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-            <button
-              onClick={() => submitReply(p.id)}
-              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 14px", borderRadius: 8, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer" }}
-            >
-              {isOnline ? "Reply" : "Queue reply"}
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -287,7 +414,8 @@ export function Community({ isOnline, onQueue, currentFestival }) {
         </div>
         <button
           onClick={() => setComposeOpen(true)}
-          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "6px 12px", borderRadius: 7, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer", whiteSpace: "nowrap" }}
+          disabled={!isOnline}
+          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "6px 12px", borderRadius: 7, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed", opacity: isOnline ? 1 : 0.6, whiteSpace: "nowrap" }}
         >
           + New post
         </button>
@@ -323,11 +451,11 @@ export function Community({ isOnline, onQueue, currentFestival }) {
             }}
           />
           {composeError && <p style={{ fontSize: 11, color: "#FF3DA6", margin: "5px 0 0" }}>{composeError}</p>}
-          {!isOnline && <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0" }}>Offline — this will post once you're back online.</p>}
+          {!isOnline && <p style={{ fontSize: 11, color: "#FFB23D", margin: "6px 0 0" }}>You're offline — reconnect to post.</p>}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
             <button onClick={() => { setComposeOpen(false); setComposeError(""); }} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", cursor: "pointer" }}>Cancel</button>
-            <button onClick={submitPost} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 14px", borderRadius: 8, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: "pointer" }}>
-              {isOnline ? "Post" : "Queue post"}
+            <button onClick={submitPost} disabled={!isOnline} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, padding: "8px 14px", borderRadius: 8, border: "1px solid #3DF2E0", background: "rgba(61,242,224,0.12)", color: "#3DF2E0", cursor: isOnline ? "pointer" : "not-allowed", opacity: isOnline ? 1 : 0.6 }}>
+              Post
             </button>
           </div>
         </div>
@@ -347,29 +475,40 @@ export function Community({ isOnline, onQueue, currentFestival }) {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {sorted.map((p, i) => {
-          const v = (votes[p.id] ?? p.votes) + (pendingVotes[p.id] || 0);
-          return (
-            <div key={p.id} className="facet-card" style={{ "--shine-delay": `${(i % 5) * 1.1}s`, display: "flex", gap: 10, padding: "11px 12px" }}>
-              <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 26 }}>
-                <button onClick={() => vote(p.id, p.votes, 1)} aria-label="Upvote" style={voteBtnStyle}>▲</button>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: pendingVotes[p.id] ? "#FFB23D" : "var(--text)" }}>{v}</span>
-                <button onClick={() => vote(p.id, p.votes, -1)} aria-label="Downvote" style={voteBtnStyle}>▼</button>
-              </div>
-              <div style={{ position: "relative", zIndex: 3, flex: 1, cursor: "pointer" }} onClick={() => setOpenPost(p.id)}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: FLAIRS[p.flair].color, border: `1px solid ${FLAIRS[p.flair].color}`, borderRadius: 5, padding: "1px 6px" }}>{FLAIRS[p.flair].label}</span>
-                <div style={{ fontSize: 13.5, fontWeight: 700, margin: "6px 0 5px", lineHeight: 1.35 }}>{p.title}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
-                  <span>u/{p.author}</span>
-                  <TierBadge username={p.author} />
-                  <span>· {p.time} · {p.comments.length} comments</span>
+      {loading && posts.length === 0 ? (
+        <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center", padding: "20px 0" }}>Loading…</p>
+      ) : sorted.length === 0 ? (
+        <div className="facet-card" style={{ padding: "32px 20px", textAlign: "center" }}>
+          <div style={{ position: "relative", zIndex: 3, fontSize: 14, color: "var(--text-dim)" }}>Nothing posted here yet.</div>
+          <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: "var(--text-dimmer)", marginTop: 6 }}>Be the first — tap "+ New post" above.</div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {sorted.map((p, i) => {
+            const v = scores[p.id] ?? 1;
+            const myVote = myVotes[p.id] || 0;
+            const commentCount = comments.filter((c) => c.post_id === p.id).length;
+            return (
+              <div key={p.id} className="facet-card" style={{ "--shine-delay": `${(i % 5) * 1.1}s`, display: "flex", gap: 10, padding: "11px 12px" }}>
+                <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 26 }}>
+                  <button onClick={() => vote(p.id, false, 1)} disabled={!isOnline} aria-label="Upvote" style={voteBtnStyle}>▲</button>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: myVote ? "#9D6BFF" : "var(--text)" }}>{v}</span>
+                  <button onClick={() => vote(p.id, false, -1)} disabled={!isOnline} aria-label="Downvote" style={voteBtnStyle}>▼</button>
+                </div>
+                <div style={{ position: "relative", zIndex: 3, flex: 1, cursor: "pointer" }} onClick={() => setOpenPost(p.id)}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: FLAIRS[p.flair]?.color || "var(--text-dim)", border: `1px solid ${FLAIRS[p.flair]?.color || "var(--border)"}`, borderRadius: 5, padding: "1px 6px" }}>{FLAIRS[p.flair]?.label || p.flair}</span>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, margin: "6px 0 5px", lineHeight: 1.35 }}>{p.title}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "var(--text-dimmer)" }}>
+                    <span>u/{p.profiles?.handle || "deleted"}</span>
+                    <TierBadge username={p.profiles?.handle} />
+                    <span>· {relativeTime(p.created_at)} · {commentCount} comment{commentCount === 1 ? "" : "s"}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
