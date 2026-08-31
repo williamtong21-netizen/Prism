@@ -2729,7 +2729,7 @@ export default function FestivalOptimizer() {
             </div>
           )}
 
-          {(view === "mine" || view === "crew") && (
+          {view === "mine" && (
             <div style={{ display: "flex", gap: 6, marginTop: 12, overflowX: "auto" }}>
               {activeDays.map((d) => (
                 <button
