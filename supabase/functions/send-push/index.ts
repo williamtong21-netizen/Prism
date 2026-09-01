@@ -106,12 +106,21 @@ async function getFcmAccessToken() {
   return cachedFcmToken.token;
 }
 
+// Android's the one platform that actually renders a real image in the
+// notification itself (expands to a "big picture" style) -- iOS needs a
+// Notification Service Extension (real native code, a separate Xcode
+// target) to attach one at all, so that side stays plain title/body
+// until that's built. Reusing the existing public PWA icon rather than
+// a bespoke banner asset -- already deployed, already on-brand, no new
+// design work needed for what's otherwise just a config field.
+const fcmImageUrl = "https://prismfest.io/icons/icon-512.png";
+
 async function sendFcm(deviceToken: string, title: string, body: string, meta: Record<string, string>) {
   const accessToken = await getFcmAccessToken();
   return fetch(`https://fcm.googleapis.com/v1/projects/${fcmProjectId}/messages:send`, {
     method: "POST",
     headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
-    body: JSON.stringify({ message: { token: deviceToken, notification: { title, body }, data: meta } }),
+    body: JSON.stringify({ message: { token: deviceToken, notification: { title, body, image: fcmImageUrl }, data: meta } }),
   });
 }
 
