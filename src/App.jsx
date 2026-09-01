@@ -1326,6 +1326,14 @@ const PIN_TYPES = {
   meetup: { emoji: "📍", label: "Meetup", color: "#FFB23D" },
   other: { emoji: "⭐", label: "Other", color: "#9D6BFF" },
 };
+// One place for "what icon/color represents this notification" — used by
+// both the in-app toast and the bell dropdown, so the two surfaces can't
+// quietly drift apart on what a given type looks like.
+function notificationIconAndColor(n) {
+  const icon = n.type === "dm" ? "messages" : n.type === "set" ? "schedule" : n.type === "camp_pin" ? "map" : n.type === "community" ? "community" : "verified";
+  const color = n.type === "dm" ? "#9D6BFF" : n.type === "set" ? "#3DF2E0" : n.type === "camp_pin" ? (PIN_TYPES[n.meta?.pinType]?.color || "#FF3DA6") : n.type === "community" ? "#5FD97A" : "#FFB23D";
+  return { icon, color };
+}
 const LEADER_GOLD = "linear-gradient(135deg, #FFD700, #C9930A)";
 // Gold for the crew's leader, same hash-based color as everyone else
 // otherwise — a plain avatar background, so callers can drop this
@@ -2836,32 +2844,35 @@ export default function FestivalOptimizer() {
         </div>
       )}
 
-      {toast && (
-        <div
-          onClick={() => openNotification(toast)}
-          className="splash-fade"
-          style={{
-            position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: "50%", transform: toastLeaving ? "translate(-50%, -12px)" : "translate(-50%, 0)",
-            opacity: toastLeaving ? 0 : 1, transition: "transform .3s ease, opacity .3s ease",
-            zIndex: 60, width: "calc(100% - 28px)", maxWidth: 402,
-            background: "var(--surface)", border: "1px solid #3DF2E0", borderRadius: 14,
-            padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10,
-            boxShadow: "0 10px 30px rgba(0,0,0,0.4)", cursor: "pointer",
-          }}
-        >
-          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(61,242,224,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-            <Icon name="bell" active={true} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "#3DF2E0", letterSpacing: "0.5px" }}>PRISM</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "var(--text-dimmer)" }}>now</span>
+      {toast && (() => {
+        const { icon, color } = notificationIconAndColor(toast);
+        return (
+          <div
+            onClick={() => openNotification(toast)}
+            className="splash-fade facet-card"
+            style={{
+              "--shine-delay": "0s",
+              position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: "50%", transform: toastLeaving ? "translate(-50%, -12px)" : "translate(-50%, 0)",
+              opacity: toastLeaving ? 0 : 1, transition: "transform .3s ease, opacity .3s ease",
+              zIndex: 60, width: "calc(100% - 28px)", maxWidth: 402,
+              padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10,
+              boxShadow: `0 10px 30px rgba(0,0,0,0.45), 0 0 16px ${color}40`, cursor: "pointer",
+            }}
+          >
+            <div style={{ position: "relative", zIndex: 3, width: 28, height: 28, borderRadius: "50%", background: `${color}22`, border: `1px solid ${color}55`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              <Icon name={icon} active={true} />
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.title}</div>
-            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.body}</div>
+            <div style={{ position: "relative", zIndex: 3, flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, letterSpacing: "1.5px", background: "linear-gradient(90deg, #3DF2E0, #9D6BFF 60%, #FF3DA6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>PRISM</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "var(--text-dimmer)" }}>now</span>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.title}</div>
+              <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{toast.body}</div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <nav className="desktop-sidebar" style={{
         flexDirection: "column", width: 220, flexShrink: 0, gap: 2, padding: "28px 12px",
@@ -5061,8 +5072,7 @@ export default function FestivalOptimizer() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {notifications.length === 0 && <p style={{ fontSize: 13, color: "var(--text-dimmer)", textAlign: "center" }}>Nothing yet.</p>}
                 {notifications.map((n) => {
-                  const iconName = n.type === "dm" ? "messages" : n.type === "set" ? "schedule" : n.type === "camp_pin" ? "map" : n.type === "community" ? "community" : "verified";
-                  const color = n.type === "dm" ? "#9D6BFF" : n.type === "set" ? "#3DF2E0" : n.type === "camp_pin" ? (PIN_TYPES[n.meta?.pinType]?.color || "#FF3DA6") : n.type === "community" ? "#5FD97A" : "#FFB23D";
+                  const { icon: iconName, color } = notificationIconAndColor(n);
                   return (
                     <button
                       key={n.id}
