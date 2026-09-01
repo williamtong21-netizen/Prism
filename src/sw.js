@@ -50,15 +50,35 @@ self.addEventListener("push", (event) => {
 });
 
 // Tapping the OS notification focuses an already-open tab instead of
-// always spawning a new one.
+// always spawning a new one -- and, since this code has no access to the
+// app's own React state to navigate anywhere itself, hands the tapped
+// notification's data (App.jsx's push handlers set it as `data: meta` in
+// showNotification, above) back to that client via postMessage. App.jsx
+// listens for it and does the actual routing (e.g. camp_pin -> that
+// festival's Map), the same place the in-app bell dropdown's tap does.
+// Previously this was a straight focus-or-open with the meta thrown
+// away entirely, so tapping a push always landed wherever the app
+// happened to already be instead of anywhere relevant to the notification.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const meta = event.notification.data || {};
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clientList) => {
       for (const client of clientList) {
-        if ("focus" in client) return client.focus();
+        if ("focus" in client) {
+          await client.focus();
+          client.postMessage({ type: "notification-click", meta });
+          return;
+        }
       }
-      if (self.clients.openWindow) return self.clients.openWindow("/");
+      if (self.clients.openWindow) {
+        const newClient = await self.clients.openWindow("/");
+        // Best-effort -- if the page is still loading when this resolves,
+        // App.jsx's listener isn't mounted yet and this message is missed.
+        // The common case (app already open, backgrounded) goes through
+        // the focus() branch above instead, where the listener is already live.
+        if (newClient) newClient.postMessage({ type: "notification-click", meta });
+      }
     })
   );
 });

@@ -2522,9 +2522,15 @@ export default function FestivalOptimizer() {
     pushNotification(pick);
   }
 
-  function openNotification(n) {
-    markNotificationRead(n.id);
-    setNotificationsOpen(false);
+  // Shared by both the in-app bell dropdown (openNotification below) and
+  // the OS push notification click handler (the useEffect further down) --
+  // a tapped push used to just focus/open the app with no idea which
+  // screen it was even about (src/sw.js's notificationclick had no access
+  // to this state to begin with), landing on whatever view happened to be
+  // open rather than the relevant one. That's a real regression from the
+  // in-app version's behavior, not a difference by design, so both paths
+  // now go through the same navigation.
+  function navigateForNotification(n) {
     if (n.type === "dm") {
       setMessagesOpen(true);
     } else if (n.type === "artist" && n.meta?.festival) {
@@ -2540,6 +2546,29 @@ export default function FestivalOptimizer() {
       setView("community");
     }
   }
+
+  function openNotification(n) {
+    markNotificationRead(n.id);
+    setNotificationsOpen(false);
+    navigateForNotification(n);
+  }
+
+  // The service worker can't reach any of this component's state directly,
+  // so it posts the tapped notification's data back to us instead of
+  // trying to navigate itself. No markNotificationRead here -- this path
+  // doesn't have the notifications-table row id, only the push payload's
+  // own meta, and the row still shows up read/unread correctly next time
+  // the bell dropdown itself is opened.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    function handleMessage(event) {
+      if (event.data?.type !== "notification-click") return;
+      navigateForNotification({ type: event.data.meta?.type, meta: event.data.meta });
+    }
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", handleMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // s.match is null for real-lineup festivals with no personalized listening
   // data yet — treat that as "always show" rather than letting it coerce to
