@@ -1994,17 +1994,19 @@ export default function FestivalOptimizer() {
     setPendingJoinCode(code);
   });
   // Cold-start push-notification tap: src/sw.js's notificationclick opens
-  // a fresh page with ?notif_type=/&notif_festival= rather than trying to
-  // postMessage a page that may not have mounted its listener yet (that
-  // race is real -- see sw.js's comment). Same ?join= pattern: read once
-  // at mount, strip it from the URL, act on it once auth resolves (below).
+  // a fresh page with ?notif_type=&notif_festival=&notif_pin= rather than
+  // trying to postMessage a page that may not have mounted its listener
+  // yet (that race is real -- see sw.js's comment). Same ?join= pattern:
+  // read once at mount, strip it from the URL, act on it once auth
+  // resolves (below).
   const [pendingNotifNav] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const type = params.get("notif_type");
     if (!type) return null;
     const festival = params.get("notif_festival");
+    const pinId = params.get("notif_pin");
     window.history.replaceState(null, "", "/");
-    return { type, meta: { festival } };
+    return { type, meta: { festival, pinId } };
   });
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
@@ -2262,6 +2264,12 @@ export default function FestivalOptimizer() {
   const [pinPlacing, setPinPlacing] = useState(null); // null | 'camp' | 'meetup' | 'other'
   const [openMapPin, setOpenMapPin] = useState(null);
   const [pinActionError, setPinActionError] = useState("");
+  // Set by a camp_pin notification tap (see navigateForNotification) --
+  // the pin data for a just-switched-to festival hasn't loaded yet at
+  // that moment (refreshCampPins below is async), so this just remembers
+  // which pin to open once it does, rather than trying to look it up
+  // immediately against data that isn't there yet.
+  const [pendingMapPinId, setPendingMapPinId] = useState(null);
 
   // Lineup artist search -- typing a name here jumps to the day it plays
   // and briefly highlights that exact set in the schedule grid (or in the
@@ -2280,6 +2288,19 @@ export default function FestivalOptimizer() {
   useEffect(() => {
     if (profile?.id && currentFestival) refreshCampPins(currentFestival);
   }, [profile?.id, currentFestival]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Resolves pendingMapPinId (set by a camp_pin notification tap) once
+  // that festival's pins actually finish loading -- re-runs every time
+  // campPinsByFestival changes, so it doesn't matter whether the data was
+  // already cached or still in flight from the refreshCampPins call above.
+  useEffect(() => {
+    if (!pendingMapPinId) return;
+    const match = (campPinsByFestival[currentFestival] || []).find((p) => p.id === pendingMapPinId);
+    if (match) {
+      setOpenMapPin(match);
+      setPendingMapPinId(null);
+    }
+  }, [pendingMapPinId, campPinsByFestival, currentFestival]);
 
   useEffect(() => {
     const fadeStart = setTimeout(() => setSplashFading(true), 1100);
@@ -2555,6 +2576,8 @@ export default function FestivalOptimizer() {
     } else if (n.type === "camp_pin" && n.meta?.festival) {
       setCurrentFestival(n.meta.festival);
       setView("map");
+      setOfficialMapOpen(true);
+      setPendingMapPinId(n.meta.pinId || null);
     } else if (n.type === "community") {
       setView("community");
     }

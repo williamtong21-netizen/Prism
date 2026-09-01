@@ -86,6 +86,7 @@ self.addEventListener("notificationclick", (event) => {
         const params = new URLSearchParams();
         if (meta.type) params.set("notif_type", meta.type);
         if (meta.festival) params.set("notif_festival", meta.festival);
+        if (meta.pinId) params.set("notif_pin", meta.pinId);
         return self.clients.openWindow(params.toString() ? `/?${params.toString()}` : "/");
       }
     })
