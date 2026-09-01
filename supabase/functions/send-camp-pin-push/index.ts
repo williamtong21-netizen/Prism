@@ -26,7 +26,14 @@ webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-const PIN_LABELS: Record<string, string> = { camp: "camp", meetup: "meetup", other: "" };
+// Emoji match the same PIN_TYPES mapping App.jsx uses for the pin markers
+// themselves (camp 🏕️ / meetup 📍 / other ⭐), so the notification reads
+// as the same visual language as the map, not a generic system alert.
+const PIN_COPY: Record<string, { emoji: string; body: string }> = {
+  camp: { emoji: "🏕️", body: "Their campsite just went up — come find them on the map." },
+  meetup: { emoji: "📍", body: "They're waiting to meet up — tap to see where." },
+  other: { emoji: "⭐", body: "Tap to see where on the map." },
+};
 
 Deno.serve(async (req) => {
   try {
@@ -51,9 +58,9 @@ Deno.serve(async (req) => {
     if (recipientIds.length === 0) return new Response("no recipients", { status: 200 });
 
     const placerName = placer?.name || "Someone in your crew";
-    const label = PIN_LABELS[pinType] ?? "";
-    const title = `${placerName} dropped a pin`;
-    const body = label ? `New ${label} pin — tap to see it on the map.` : "Tap to see it on the map.";
+    const copy = PIN_COPY[pinType] || PIN_COPY.other;
+    const title = `${placerName} dropped a pin ${copy.emoji}`;
+    const body = copy.body;
     const meta = { festival: festivalId, pinType, pinId };
 
     // In-app inbox row for every recipient, regardless of push permission.
