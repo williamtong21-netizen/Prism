@@ -3601,6 +3601,16 @@ export default function FestivalOptimizer() {
                                   <span title="Artist posted an update" style={{ width: 5, height: 5, borderRadius: "50%", background: "#FFB23D", flexShrink: 0 }} />
                                 )}
                               </div>
+                              {/* Unconditional, unlike the crew/match line below — that one only
+                                  renders for personalized-match festivals or when a crew-mate also
+                                  picked this set, which is never true for the real (non-mock)
+                                  lineups that make up most of the app now. Without this, those
+                                  cards were just an artist name floating in an otherwise-empty box
+                                  as tall as the set's real duration -- the time range is the one
+                                  piece of real info every set has, match data or not. */}
+                              <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: "var(--text-dimmer)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {fmtTime(s.start, currentDay, currentFestival)} – {fmtTime(s.end, currentDay, currentFestival)}
+                              </div>
                               {(crewAlsoIn > 0 || s.match != null) && (
                                 <div style={{ position: "relative", zIndex: 3, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, color: crewAlsoIn ? "#9D6BFF" : matchColor(s.match), marginTop: 2 }}>
                                   {crewAlsoIn ? `👥 ${crewAlsoIn} crew too` : matchLabel(s.match)}
