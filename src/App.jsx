@@ -1993,6 +1993,19 @@ export default function FestivalOptimizer() {
     localStorage.setItem("prism:pendingJoinCode", code);
     setPendingJoinCode(code);
   });
+  // Cold-start push-notification tap: src/sw.js's notificationclick opens
+  // a fresh page with ?notif_type=/&notif_festival= rather than trying to
+  // postMessage a page that may not have mounted its listener yet (that
+  // race is real -- see sw.js's comment). Same ?join= pattern: read once
+  // at mount, strip it from the URL, act on it once auth resolves (below).
+  const [pendingNotifNav] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("notif_type");
+    if (!type) return null;
+    const festival = params.get("notif_festival");
+    window.history.replaceState(null, "", "/");
+    return { type, meta: { festival } };
+  });
   const [mustHavesOpen, setMustHavesOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [newDmPickerOpen, setNewDmPickerOpen] = useState(false);
@@ -2569,6 +2582,18 @@ export default function FestivalOptimizer() {
     return () => navigator.serviceWorker.removeEventListener("message", handleMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The cold-start ?notif_type=/&notif_festival= case captured above --
+  // waits for auth to resolve (same reason pendingJoinCode's join effect
+  // does) before navigating, since a fresh page load lands on the sign-in
+  // screen first if there's no session yet to restore.
+  const notifNavDone = useRef(false);
+  useEffect(() => {
+    if (!profile?.id || !pendingNotifNav || notifNavDone.current) return;
+    notifNavDone.current = true;
+    navigateForNotification(pendingNotifNav);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id, pendingNotifNav]);
 
   // s.match is null for real-lineup festivals with no personalized listening
   // data yet — treat that as "always show" rather than letting it coerce to
