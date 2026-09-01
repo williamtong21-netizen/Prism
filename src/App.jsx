@@ -1541,8 +1541,12 @@ const AUTH_SCREEN_SHARED_CSS = `
      on iPadOS). transform doesn't touch the layout box, only the paint, so
      with the default center-center transform-origin the scaled box stays
      centered on the exact same point the unscaled box would have been —
-     correct on every engine, not just Chromium. */
-  @media (display-mode: browser) and (min-width: 700px) {
+     correct on every engine, not just Chromium.
+     Was gated to display-mode: browser (desktop-browser-tab visits only)
+     — dropped so the installed PWA and native app get it too, iPad
+     included, on the same 700px+/1100px+ thresholds already validated
+     against real iPadOS Safari rendering above. */
+  @media (min-width: 700px) {
     .frame { max-width: 460px; transform: scale(1.35); }
     /* Bottom sheets (.sheet-frame) are flex children with
        alignItems:"flex-end", not centered — scaling from the box's own
@@ -1554,7 +1558,7 @@ const AUTH_SCREEN_SHARED_CSS = `
        no transform, avoids both problems. */
     .sheet-frame { transform: none; }
   }
-  @media (display-mode: browser) and (min-width: 1100px) {
+  @media (min-width: 1100px) {
     .frame { max-width: 480px; transform: scale(1.6); }
     .sheet-frame { transform: none; }
   }
@@ -2724,12 +2728,21 @@ export default function FestivalOptimizer() {
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         ${AUTH_SCREEN_SHARED_CSS}
-        /* Browser-tab desktop gets a real left nav rail instead of a
-           scaled-up bottom tab bar; the installed app never sees this —
-           same display-mode gate as the rest of the responsive rules. */
+        /* Any screen wide enough to be a tablet or a desktop gets a real
+           left nav rail instead of a scaled-up bottom tab bar — this used
+           to be gated to display-mode: browser (desktop-browser-tab
+           visits only), which meant the installed PWA and the native app
+           stayed locked to the narrow phone frame regardless of the
+           actual screen size, iPad included. Keying purely off width
+           instead covers both: no real phone reaches 740px even
+           landscape-rotated (iPhone 16 Pro Max tops out ~430px portrait),
+           but every iPad does at 744px+ portrait (iPad mini) and up — and
+           the native wrapper is portrait-locked (see capacitor
+           Info.plist/AndroidManifest), so there's no native-landscape
+           case to worry about crossing this threshold unintentionally. */
         .desktop-sidebar { display: none; }
         .mobile-bottom-nav-wrap { display: flex; }
-        @media (display-mode: browser) and (min-width: 900px) {
+        @media (min-width: 740px) {
           .desktop-sidebar { display: flex; }
           .mobile-bottom-nav-wrap { display: none; }
           /* transform:scale (from AUTH_SCREEN_SHARED_CSS's 1100px rule)
@@ -2743,15 +2756,16 @@ export default function FestivalOptimizer() {
           .main-frame { max-width: 640px; transform: none; }
         }
         /* Sidebar (220px) + .main-frame's 640px cap leaves most of a wide
-           monitor as unused dark background — widen the content column
+           monitor (or a large iPad in portrait, e.g. the 13" Air/Pro at
+           1024px) as unused dark background — widen the content column
            further on bigger screens instead of just centering a narrow
            column in a lot of empty space. Still well short of full-width:
            wide unbroken lines of festival-card text would be harder to
            scan, not easier. */
-        @media (display-mode: browser) and (min-width: 1300px) {
+        @media (min-width: 1300px) {
           .main-frame { max-width: 780px; }
         }
-        @media (display-mode: browser) and (min-width: 1650px) {
+        @media (min-width: 1650px) {
           .main-frame { max-width: 900px; }
         }
         /* Ultrawide monitors (e.g. Odyssey G9, 5120px) still only get
@@ -2760,7 +2774,7 @@ export default function FestivalOptimizer() {
            available. The ambient radial-gradient glows on the page
            background (rather than more column width) are what's meant to
            fill the rest of the space on these screens. */
-        @media (display-mode: browser) and (min-width: 2400px) {
+        @media (min-width: 2400px) {
           .main-frame { max-width: 1100px; }
         }
         .sidebar-tab:hover { background: rgba(61,242,224,0.06); }
