@@ -6,6 +6,8 @@ import { useCrews } from "./lib/useCrews";
 import { useDMs } from "./lib/useDMs";
 import { useCampPins } from "./lib/useCampPins";
 import { usePushSubscription } from "./lib/usePushSubscription";
+import { useNativePushSubscription } from "./lib/useNativePushSubscription";
+import { Capacitor } from "@capacitor/core";
 import { useSpotify } from "./lib/useSpotify";
 import { useSpotifyMatch } from "./lib/useSpotifyMatch";
 import { useArtistPhotos } from "./lib/useArtistPhoto";
@@ -2117,7 +2119,15 @@ export default function FestivalOptimizer() {
   const { notifications, pushNotification: persistNotification, markRead: markNotificationRead } = useNotifications(profile?.id);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
-  const { subscribed: pushSubscribed, subscribe: subscribeToPush, unsubscribe: unsubscribeFromPush } = usePushSubscription(profile?.id);
+  // Web Push (browser/installed-PWA) and native push (APNs/FCM via
+  // Capacitor, once the native wrapper actually ships with real
+  // credentials configured -- see supabase/README.md) are mutually
+  // exclusive on any one device, so only one of these two hooks is ever
+  // "live" -- both still have to be called every render (Rules of Hooks),
+  // each is just an early-return no-op on the platform that isn't theirs.
+  const webPush = usePushSubscription(profile?.id);
+  const nativePush = useNativePushSubscription(profile?.id);
+  const { subscribed: pushSubscribed, subscribe: subscribeToPush, unsubscribe: unsubscribeFromPush } = Capacitor.isNativePlatform() ? nativePush : webPush;
   const [pushError, setPushError] = useState("");
   // Syncs the toggle to whether a real OS push subscription actually
   // exists, rather than defaulting to "on" and lying about it until the

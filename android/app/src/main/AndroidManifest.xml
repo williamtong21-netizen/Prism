@@ -39,4 +39,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required since Android 13 (API 33) for the app to post any
+         notification at all, including FCM push -- without this,
+         PushNotifications.requestPermissions() has nothing to request
+         and notifications are silently blocked regardless of what the
+         user does in-app. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

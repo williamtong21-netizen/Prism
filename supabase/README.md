@@ -40,6 +40,75 @@ notifications, above, already set up -- reuses its VAPID secrets):
    existing pin shouldn't re-alert the crew), target the
    `send-camp-pin-push` function.
 
+## Native push (APNs / FCM)
+
+Web Push (above) only reaches the browser/installed-PWA — Capacitor's
+WebView has no Web Push API at all, so the native iOS/Android app needs
+its own delivery path. `useNativePushSubscription.js` and
+`native_push_tokens` (`058_native_push_tokens.sql`) handle the client and
+storage side already; `send-push` and `send-camp-pin-push` already have
+the APNs/FCM sending code (reusing the exact same triggers/webhooks as
+Web Push, just fanning out to native tokens too) — **none of it can
+actually send anything until the steps below exist**, which need a real
+Apple Developer account and a real Firebase project, neither of which
+exist yet.
+
+**iOS (APNs) — needs the Apple Developer account:**
+1. **Generate an APNs Auth Key.** developer.apple.com -> Certificates,
+   Identifiers & Profiles -> Keys -> new key with the "Apple Push
+   Notifications service (APNs)" capability checked. Downloads once as a
+   `.p8` file — save it somewhere safe, Apple won't let you re-download it.
+   Note the **Key ID** (shown on the key's page) and your **Team ID**
+   (top-right of the developer portal, or Membership page).
+2. **Set function secrets** (Edge Functions -> `send-push` -> Secrets —
+   same project-wide secrets store `send-camp-pin-push` already reads
+   from, no need to set twice):
+   - `APNS_TEAM_ID` — your Apple Developer Team ID.
+   - `APNS_KEY_ID` — the Key ID from step 1.
+   - `APNS_PRIVATE_KEY` — the full contents of the `.p8` file, pasted as-is
+     (including the `-----BEGIN/END PRIVATE KEY-----` lines).
+   - `APNS_BUNDLE_ID` (optional) — defaults to `io.prismfest.app` if unset,
+     which is already correct; only set this if that ever changes.
+   - `APNS_ENV` (optional) — `sandbox` for a debug/development build
+     signed with a development provisioning profile, unset/`production`
+     for a TestFlight or App Store build. Sending with the wrong one is
+     the #1 reason a real device gets nothing.
+3. **Add the capability in Xcode.** `ios/App/App.xcworkspace` ->
+   select the App target -> Signing & Capabilities -> "+ Capability" ->
+   "Push Notifications". This edits the project's code-signing
+   entitlements and needs an actual Team selected in Xcode to do, so it
+   can't be done from a text editor the way everything else here can —
+   it's a real, separate step once you're at the Mac.
+
+**Android (FCM) — needs a Firebase project:**
+1. **Create a Firebase project** (or reuse one) at
+   console.firebase.google.com, add an Android app to it with package
+   name `io.prismfest.app`, and download the generated
+   `google-services.json` into `android/app/google-services.json` (that
+   exact path/filename — the Android Gradle build looks for it there).
+2. **Add the Google Services Gradle plugin** — `android/build.gradle`
+   needs `classpath 'com.google.gms:google-services:4.4.2'` (or current)
+   in its `buildscript.dependencies`, and `android/app/build.gradle`
+   needs `apply plugin: 'com.google.gms.google-services'` at the bottom.
+   Skipped here deliberately: adding this now, with no
+   `google-services.json` present yet, would just break the Android
+   build for no benefit — add both together once the file above exists.
+3. **Create a service account** for server-side sending: Firebase console
+   -> Project settings -> Service accounts -> "Generate new private key"
+   — downloads a JSON file with `client_email` and `private_key` fields.
+4. **Set function secrets** (same project-wide store as above):
+   - `FCM_PROJECT_ID` — the Firebase project's ID (Project settings ->
+     General).
+   - `FCM_CLIENT_EMAIL` — the service account JSON's `client_email`.
+   - `FCM_PRIVATE_KEY` — the service account JSON's `private_key`, pasted
+     as-is (it's already PEM-formatted with escaped `\n`s in the JSON —
+     Supabase's secret editor handles the real newlines fine either way).
+
+Until all of the above exists, `native_push_tokens` stays empty anyway
+(no native build exists yet to register a device token into it), so
+none of this is reachable in practice — it's ready to work the moment
+both platforms' setup is done, with no further code changes.
+
 ## Spotify connect
 
 Two manual steps beyond running `015_spotify_connections.sql`, both in the
