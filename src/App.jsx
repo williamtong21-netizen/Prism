@@ -1730,7 +1730,7 @@ export function SignInScreen({ onSubmit, onVerifyCode, sent, error }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14 }}
+            style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 16 }}
           />
           <button
             type="submit"
@@ -1797,7 +1797,7 @@ function OnboardingScreen({ email, onSubmit }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+            style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 16, fontFamily: "'Inter', sans-serif" }}
           />
         </label>
         <label style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "var(--text-dim)" }}>
@@ -1809,7 +1809,7 @@ function OnboardingScreen({ email, onSubmit }) {
               value={handle}
               onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
               placeholder="willrides"
-              style={{ flex: 1, background: "none", border: "none", padding: "12px 6px", color: "var(--text)", fontSize: 14, fontFamily: "'Inter', sans-serif" }}
+              style={{ flex: 1, background: "none", border: "none", padding: "12px 6px", color: "var(--text)", fontSize: 16, fontFamily: "'Inter', sans-serif" }}
             />
           </div>
         </label>
@@ -3047,7 +3047,7 @@ export default function FestivalOptimizer() {
                 placeholder="Search this lineup for an artist…"
                 aria-label="Search this lineup for an artist"
                 style={{
-                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)",
                   background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
                   padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                 }}
@@ -3266,7 +3266,7 @@ export default function FestivalOptimizer() {
                 placeholder="Search festivals or cities…"
                 aria-label="Search festivals or cities"
                 style={{
-                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                  width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)",
                   background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
                   padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                 }}
@@ -4132,7 +4132,7 @@ export default function FestivalOptimizer() {
                             setOpenMapPin(null);
                           }
                         }}
-                        style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: "var(--text)", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                        style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", outline: "none" }}
                       />
                       <button
                         onClick={() => { deleteCampPin(openMapPin.id, currentFestival); setOpenMapPin(null); }}
@@ -4514,7 +4514,7 @@ export default function FestivalOptimizer() {
                           value={crewNameDraft}
                           onChange={(e) => setCrewNameDraft(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") saveCrewRename(c.id); if (e.key === "Escape") setEditingCrewId(null); }}
-                          style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 14, color: "var(--text)", background: "var(--bg)", border: "1px solid #3DF2E0", borderRadius: 8, padding: "8px 10px", outline: "none" }}
+                          style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)", background: "var(--bg)", border: "1px solid #3DF2E0", borderRadius: 8, padding: "8px 10px", outline: "none" }}
                         />
                         <button onClick={() => saveCrewRename(c.id)} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, padding: "0 12px", borderRadius: 8, border: "none", background: "#3DF2E0", color: "#0F0B1A", cursor: "pointer" }}>Save</button>
                       </div>
@@ -4573,7 +4573,7 @@ export default function FestivalOptimizer() {
                   onKeyDown={(e) => { if (e.key === "Enter") submitNewCrew(); }}
                   placeholder="Crew name"
                   aria-label="New crew name"
-                  style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 15 }}
+                  style={{ width: "100%", marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 16 }}
                 />
               </label>
 
@@ -4613,7 +4613,7 @@ export default function FestivalOptimizer() {
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Display name"
                         aria-label="Display name"
-                        style={{ width: "100%", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 10px", color: "var(--text)", fontSize: 14 }}
+                        style={{ width: "100%", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 10px", color: "var(--text)", fontSize: 16 }}
                       />
                       <div style={{ display: "flex", alignItems: "center", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "0 10px" }}>
                         <span style={{ color: "var(--text-dimmer)", fontSize: 13 }}>@</span>
@@ -4622,7 +4622,7 @@ export default function FestivalOptimizer() {
                           onChange={(e) => setEditHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                           placeholder="handle"
                           aria-label="Handle"
-                          style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "var(--text)", fontSize: 14 }}
+                          style={{ flex: 1, background: "none", border: "none", padding: "6px 4px", color: "var(--text)", fontSize: 16 }}
                         />
                       </div>
                       <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
@@ -4893,7 +4893,7 @@ export default function FestivalOptimizer() {
                   onChange={(e) => setFestivalSearch(e.target.value)}
                   placeholder="Search festivals or cities…"
                   style={{
-                    width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: "var(--text)",
+                    width: "100%", fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)",
                     background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
                     padding: "11px 14px 11px 36px", outline: "none", boxSizing: "border-box",
                   }}
@@ -5297,7 +5297,7 @@ export default function FestivalOptimizer() {
                           placeholder={`Message ${t.other.name}…`}
                           aria-label={`Message ${t.other.name}`}
                           style={{
-                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 13, color: "var(--text)",
+                            flex: 1, fontFamily: "'Inter', sans-serif", fontSize: 16, color: "var(--text)",
                             background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20,
                             padding: "10px 14px", outline: "none",
                           }}

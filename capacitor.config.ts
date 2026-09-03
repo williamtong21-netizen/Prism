@@ -29,6 +29,15 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
   },
+  // Present as a normal https:// origin instead of the default
+  // `capacitor://localhost` scheme. Purely cosmetic to the app itself (still
+  // fully local, no real network hop) but some backends' CORS handling
+  // rejects/mishandles the non-standard `capacitor://` origin outright --
+  // this is the standard documented fix for exactly that class of issue.
+  server: {
+    iosScheme: 'https',
+    androidScheme: 'https',
+  },
 };
 
 export default config;
