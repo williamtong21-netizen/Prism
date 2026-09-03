@@ -41,4 +41,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         config.delegateClass = SceneDelegate.self
         return config
     }
+
+    // Required for @capacitor/push-notifications -- without these, iOS can
+    // successfully hand the app a real APNs device token internally, but
+    // nothing forwards it to Capacitor's JS bridge, so the "registration"
+    // event in JS never fires (and "registrationError" never fires either,
+    // even on failure) -- looks exactly like permanent silence with no
+    // error, forever. This is documented as a required manual step for the
+    // plugin; `npx cap sync` does not add it automatically.
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
 }
