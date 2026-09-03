@@ -29,15 +29,14 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
   },
-  // Present as a normal https:// origin instead of the default
-  // `capacitor://localhost` scheme. Purely cosmetic to the app itself (still
-  // fully local, no real network hop) but some backends' CORS handling
-  // rejects/mishandles the non-standard `capacitor://` origin outright --
-  // this is the standard documented fix for exactly that class of issue.
-  server: {
-    iosScheme: 'https',
-    androidScheme: 'https',
-  },
+  // Do NOT set server.iosScheme/androidScheme to 'https' -- tried that once
+  // to chase a sign-in bug that turned out to be an unrelated corrupted env
+  // var, and it silently broke Capacitor.isNativePlatform() detection: the
+  // app kept running fine but every Capacitor.isNativePlatform() ? native :
+  // web branch (native push registration included) started taking the web
+  // path instead, with no visible error -- just silently wrong data (web
+  // Push subscriptions instead of native APNs/FCM tokens). Default
+  // `capacitor://localhost` scheme is what keeps that detection correct.
 };
 
 export default config;
