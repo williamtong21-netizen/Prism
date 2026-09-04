@@ -66,6 +66,15 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- Required by App Store Connect once TARGETED_DEVICE_FAMILY includes
+	     iPad ("1,2") and the app isn't declaring all four orientations --
+	     without this, upload is rejected outright (error 90474) since Apple
+	     requires either full orientation support or an explicit opt-out of
+	     iPad multitasking (Split View/Slide Over). Portrait-only is the
+	     real, intentional design here, so this is the correct flag, not a
+	     workaround. -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
